@@ -5,15 +5,41 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Budget Logger">
-<title>Budget Logger</title>
+<meta name="apple-mobile-web-app-title" content="Budget">
+<title>Budget</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
-.app{max-width:420px;margin:0 auto;padding:0 0 80px}
-.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:16px 20px 12px;position:sticky;top:0;z-index:10}
-.topbar h1{font-size:18px;font-weight:600;color:#1a1a1a}
-.topbar p{font-size:12px;color:#888;margin-top:2px}
+.app{max-width:480px;margin:0 auto;padding:0 0 72px}
+/* topbar */
+.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:14px 20px 10px;position:sticky;top:0;z-index:20}
+.topbar h1{font-size:17px;font-weight:600;color:#1a1a1a}
+.topbar p{font-size:12px;color:#888;margin-top:1px}
+/* bottom nav */
+.nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #e5e5e3;display:flex;z-index:20;max-width:480px;margin:0 auto}
+.nav-btn{flex:1;padding:10px 4px 12px;border:none;background:none;color:#888;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
+.nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.nav-btn.active{color:#378ADD}
+/* pages */
+.page{display:none}
+.page.active{display:block}
+/* auth */
+.auth-card{background:white;border-radius:14px;padding:24px 20px;margin:20px 16px}
+.auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
+.auth-card p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
+.input-field{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;padding:12px;outline:none;margin-bottom:10px;font-family:inherit}
+.input-field:focus{border-color:#378ADD}
+.signin-btn{width:100%;padding:13px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
+.signin-btn:active{background:#f5f5f5}
+.error-msg{font-size:12px;color:#E24B4A;margin-top:4px;display:none}
+/* status bar */
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:white;border-bottom:1px solid #e5e5e3}
+.status-dot{width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0}
+.status-dot.red{background:#E24B4A}
+.status-dot.amber{background:#EF9F27}
+.status-text{font-size:12px;color:#666;flex:1;margin-left:8px}
+.signout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
+/* add page */
 .section{padding:16px 20px;background:white;margin-bottom:8px}
 .field-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
 .amount-row{display:flex;gap:8px;align-items:center;margin-bottom:16px}
@@ -25,78 +51,125 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .cat-btn{padding:12px 6px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .cat-btn.selected{border:2px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
 .cat-icon{display:block;font-size:18px;margin-bottom:4px}
-textarea{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:15px;padding:10px 12px;resize:none;font-family:inherit;outline:none;min-height:64px}
+textarea{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:15px;padding:10px 12px;resize:none;font-family:inherit;outline:none;min-height:60px}
 textarea:focus{border-color:#378ADD}
 .date-row{display:flex;gap:8px;margin-bottom:16px}
 .date-chip{flex:1;padding:9px 8px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .date-chip.selected{border:2px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
 #custom-date{flex:1.4;padding:8px 10px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;outline:none}
-.add-btn{width:100%;padding:16px;border:none;border-radius:12px;background:#378ADD;color:white;font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.add-btn{width:100%;padding:15px;border:none;border-radius:12px;background:#378ADD;color:white;font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .add-btn:active{background:#185FA5;transform:scale(0.98)}
-.add-btn:disabled{background:#ccc;color:#fff}
-.auth-card{background:white;border-radius:12px;padding:24px 20px;margin:16px}
-.auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
-.auth-card p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
-.input-field{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;padding:12px;outline:none;margin-bottom:10px;font-family:inherit}
-.input-field:focus{border-color:#378ADD}
-.signin-btn{width:100%;padding:13px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
-.signin-btn:active{background:#f5f5f5}
-.status-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:white;border-bottom:1px solid #e5e5e3}
-.status-dot{width:8px;height:8px;border-radius:50%;background:#639922;flex-shrink:0}
-.status-dot.red{background:#E24B4A}
-.status-dot.amber{background:#EF9F27}
-.status-text{font-size:12px;color:#666;flex:1;margin-left:8px}
-.signout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
-.history-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 8px;background:white;margin-top:8px}
+.add-btn:disabled{background:#ccc}
+/* history */
+.history-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 8px;background:white;margin-top:8px}
 .history-header span{font-size:14px;font-weight:600}
 .export-btn{font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
-.entry-list{padding:0 16px;background:white;margin:0 0 8px}
-.entry{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #f0f0ee}
+.entry-list{padding:0 16px;background:white}
+.entry{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid #f0f0ee}
 .entry:last-child{border-bottom:none}
-.entry-icon{width:38px;height:38px;border-radius:10px;background:#f5f5f3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.entry-icon{width:36px;height:36px;border-radius:10px;background:#f5f5f3;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
 .entry-icon.synced{background:#EAF3DE}
 .entry-body{flex:1;min-width:0}
-.entry-cat{font-size:14px;font-weight:600}
+.entry-cat{font-size:13px;font-weight:600}
 .entry-note{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .entry-right{text-align:right;flex-shrink:0}
-.entry-amount{font-size:15px;font-weight:600}
+.entry-amount{font-size:14px;font-weight:600}
 .entry-meta{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px}
 .sync-badge{font-size:10px;background:#EAF3DE;color:#3B6D11;padding:1px 5px;border-radius:4px;font-weight:600}
-.pending-badge{font-size:10px;background:#FAEEDA;color:#854F0B;padding:1px 5px;border-radius:4px;font-weight:600}
-.del-btn{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:6px;border-radius:6px;-webkit-tap-highlight-color:transparent}
-.del-btn:active{color:#E24B4A;background:#FCEBEB}
-.empty{text-align:center;padding:32px 20px;color:#aaa;font-size:14px}
+.del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:6px;border-radius:6px}
+.del-btn:active{color:#E24B4A}
 .summary-bar{display:flex;gap:8px;padding:12px 16px;background:white}
 .sum-card{flex:1;background:#f5f5f3;border-radius:10px;padding:10px 12px}
 .sum-label{font-size:11px;color:#888}
-.sum-val{font-size:16px;font-weight:600;margin-top:2px}
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a1a;color:white;padding:11px 20px;border-radius:12px;font-size:14px;transition:transform 0.2s;z-index:100;white-space:nowrap;max-width:90vw;text-align:center;pointer-events:none}
+.sum-val{font-size:15px;font-weight:600;margin-top:2px}
+.empty{text-align:center;padding:40px 20px;color:#aaa;font-size:14px}
+/* budget view page */
+.page-header{padding:16px 20px 8px;background:white;border-bottom:1px solid #e5e5e3;display:flex;align-items:center;justify-content:space-between}
+.page-header h2{font-size:15px;font-weight:600}
+.refresh-btn{font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:4px}
+.refresh-btn:active{background:#E6F1FB}
+/* month filter */
+.month-scroll{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;background:white;border-bottom:1px solid #f0f0ee;-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.month-scroll::-webkit-scrollbar{display:none}
+.month-chip{padding:6px 14px;border:1px solid #e5e5e3;border-radius:20px;background:white;color:#666;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.month-chip.active{background:#378ADD;color:white;border-color:#378ADD;font-weight:600}
+/* budget summary cards */
+.bsummary{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;background:#f5f5f3}
+.bcard{background:white;border-radius:12px;padding:12px 14px}
+.bcard-label{font-size:11px;color:#888;font-weight:500}
+.bcard-val{font-size:20px;font-weight:700;margin-top:4px}
+.bcard-val.pos{color:#2D7D3A}
+.bcard-val.neg{color:#C0392B}
+.bcard-sub{font-size:11px;color:#aaa;margin-top:2px}
+/* budget rows */
+.budget-rows{background:white;margin-top:8px}
+.brow{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #f5f5f3;gap:10px}
+.brow:last-child{border-bottom:none}
+.brow-date{font-size:12px;color:#888;min-width:52px;flex-shrink:0}
+.brow-day{font-size:11px;color:#bbb;min-width:30px;flex-shrink:0}
+.brow-cats{flex:1;display:flex;flex-wrap:wrap;gap:4px;min-width:0}
+.brow-pill{font-size:11px;padding:2px 7px;border-radius:10px;background:#f0f0ee;color:#555;white-space:nowrap}
+.brow-pill.income{background:#EAF3DE;color:#3B6D11}
+.brow-pill.expense{background:#FAEEDA;color:#854F0B}
+.brow-total{font-size:13px;font-weight:600;text-align:right;flex-shrink:0;min-width:68px}
+.brow-total.pos{color:#2D7D3A}
+.brow-total.neg{color:#C0392B}
+.brow.today-row{background:#fffbf0}
+/* loading skeleton */
+.skel{background:#f0f0ee;border-radius:6px;animation:pulse 1.2s ease-in-out infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
+/* recurring page */
+.rec-section{padding:12px 16px;background:#f5f5f3}
+.rec-card{background:white;border-radius:12px;margin-bottom:8px;overflow:hidden}
+.rec-card-header{padding:12px 14px 8px;border-bottom:1px solid #f5f5f3}
+.rec-card-title{font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.04em}
+.rec-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f8f8f6;gap:10px}
+.rec-row:last-child{border-bottom:none}
+.rec-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.rec-body{flex:1;min-width:0}
+.rec-name{font-size:14px;font-weight:500}
+.rec-detail{font-size:12px;color:#888;margin-top:1px}
+.rec-right{text-align:right;flex-shrink:0}
+.rec-amount{font-size:14px;font-weight:600}
+.rec-freq{font-size:11px;color:#aaa;margin-top:1px}
+.rec-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-top:2px}
+.badge-weekly{background:#E6F1FB;color:#185FA5}
+.badge-fortnightly{background:#EAF3DE;color:#3B6D11}
+.badge-monthly{background:#FAEEDA;color:#854F0B}
+.badge-oneoff{background:#f0f0ee;color:#666}
+.badge-inactive{background:#f0f0ee;color:#aaa}
+.rec-total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:white;border-top:1px solid #e5e5e3;margin-top:8px}
+.rec-total-label{font-size:13px;color:#888}
+.rec-total-val{font-size:16px;font-weight:700}
+/* toast */
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a1a1a;color:white;padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.2s;z-index:100;white-space:nowrap;max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
-.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
-.error-msg{font-size:12px;color:#E24B4A;margin-top:4px;display:none}
 </style>
 </head>
 <body>
 <div class="app">
   <div class="topbar">
-    <h1>Budget logger</h1>
+    <h1 id="page-title">Budget logger</h1>
     <p id="topbar-sub">Connect to Google Sheets to get started</p>
   </div>
 
+  <!-- AUTH -->
   <div id="auth-section">
     <div class="auth-card">
       <h2>Connect Google Sheets</h2>
       <p>Enter your OAuth client secret then tap sign in. Your credentials are stored only on this device.</p>
-      <input class="input-field" type="password" id="secret-input" placeholder="Client secret" autocomplete="off" />
+      <input class="input-field" type="password" id="secret-input" placeholder="Client secret" autocomplete="off">
       <div id="auth-error" class="error-msg"></div>
-      <button class="signin-btn" id="signin-btn" onclick="startAuth()">
+      <button class="signin-btn" onclick="startAuth()">
         <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
         Sign in with Google
       </button>
     </div>
   </div>
 
+  <!-- MAIN (3 pages) -->
   <div id="main-section" style="display:none">
     <div class="status-bar">
       <div class="status-dot" id="status-dot"></div>
@@ -104,68 +177,117 @@ textarea:focus{border-color:#378ADD}
       <button class="signout-btn" onclick="signOut()">Sign out</button>
     </div>
 
-    <div class="section">
-      <div class="field-label">Amount</div>
-      <div class="amount-row">
-        <span class="dollar">$</span>
-        <input type="number" id="amount-input" placeholder="0.00" inputmode="decimal" step="0.01" min="0">
+    <!-- PAGE: ADD -->
+    <div class="page active" id="page-add">
+      <div class="section">
+        <div class="field-label">Amount</div>
+        <div class="amount-row">
+          <span class="dollar">$</span>
+          <input type="number" id="amount-input" placeholder="0.00" inputmode="decimal" step="0.01" min="0">
+        </div>
+        <div class="field-label" style="margin-bottom:10px">Category</div>
+        <div class="cat-grid">
+          <button class="cat-btn selected" data-cat="Other"><span class="cat-icon">🛍️</span>Other</button>
+          <button class="cat-btn" data-cat="Food"><span class="cat-icon">🛒</span>Food</button>
+          <button class="cat-btn" data-cat="Subscriptions"><span class="cat-icon">📱</span>Subscriptions</button>
+          <button class="cat-btn" data-cat="Utilities"><span class="cat-icon">💡</span>Utilities</button>
+          <button class="cat-btn" data-cat="Gym"><span class="cat-icon">🏋️</span>Gym</button>
+          <button class="cat-btn" data-cat="Daycare"><span class="cat-icon">👶</span>Daycare</button>
+        </div>
+        <div class="field-label">Note <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+        <textarea id="note-input" placeholder="What was this for?" rows="2"></textarea>
+        <div class="field-label" style="margin-top:14px;margin-bottom:8px">Date</div>
+        <div class="date-row">
+          <button class="date-chip selected" id="today-btn" onclick="setDate('today')">Today</button>
+          <button class="date-chip" id="yesterday-btn" onclick="setDate('yesterday')">Yesterday</button>
+          <input type="date" id="custom-date" onchange="setDate('custom')">
+        </div>
+        <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
       </div>
 
-      <div class="field-label" style="margin-bottom:10px">Category</div>
-      <div class="cat-grid" id="cat-grid">
-        <button class="cat-btn selected" data-cat="Other" data-col="D"><span class="cat-icon">🛍️</span>Other</button>
-        <button class="cat-btn" data-cat="Food" data-col="M"><span class="cat-icon">🛒</span>Food</button>
-        <button class="cat-btn" data-cat="Subscriptions" data-col="E"><span class="cat-icon">📱</span>Subscriptions</button>
-        <button class="cat-btn" data-cat="Utilities" data-col="F"><span class="cat-icon">💡</span>Utilities</button>
-        <button class="cat-btn" data-cat="Gym" data-col="L"><span class="cat-icon">🏋️</span>Gym</button>
-        <button class="cat-btn" data-cat="Daycare" data-col="K"><span class="cat-icon">👶</span>Daycare</button>
+      <div class="history-header">
+        <span id="history-title">Recent entries</span>
+        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
       </div>
-
-      <div class="field-label">Note <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-      <textarea id="note-input" placeholder="What was this for?" rows="2"></textarea>
-
-      <div class="field-label" style="margin-top:14px;margin-bottom:8px">Date</div>
-      <div class="date-row">
-        <button class="date-chip selected" id="today-btn" onclick="setDate('today')">Today</button>
-        <button class="date-chip" id="yesterday-btn" onclick="setDate('yesterday')">Yesterday</button>
-        <input type="date" id="custom-date" onchange="setDate('custom')">
+      <div class="summary-bar" id="summary-bar" style="display:none">
+        <div class="sum-card"><div class="sum-label">This week</div><div class="sum-val" id="sum-week">$0</div></div>
+        <div class="sum-card"><div class="sum-label">This month</div><div class="sum-val" id="sum-month">$0</div></div>
+        <div class="sum-card"><div class="sum-label">Total</div><div class="sum-val" id="sum-total">$0</div></div>
       </div>
-
-      <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
+      <div class="entry-list" id="entry-list">
+        <div class="empty" id="empty-msg">No expenses logged yet</div>
+      </div>
     </div>
 
-    <div class="history-header">
-      <span id="history-title">Recent entries</span>
-      <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+    <!-- PAGE: BUDGET -->
+    <div class="page" id="page-budget">
+      <div class="page-header">
+        <h2>Budget</h2>
+        <button class="refresh-btn" onclick="loadBudget()">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="month-scroll" id="month-scroll"></div>
+      <div class="bsummary" id="bsummary">
+        <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+      </div>
+      <div class="budget-rows" id="budget-rows">
+        <div class="empty">Loading…</div>
+      </div>
     </div>
-    <div class="summary-bar" id="summary-bar" style="display:none">
-      <div class="sum-card"><div class="sum-label">This week</div><div class="sum-val" id="sum-week">$0</div></div>
-      <div class="sum-card"><div class="sum-label">This month</div><div class="sum-val" id="sum-month">$0</div></div>
-      <div class="sum-card"><div class="sum-label">Total</div><div class="sum-val" id="sum-total">$0</div></div>
-    </div>
-    <div class="entry-list" id="entry-list">
-      <div class="empty" id="empty-msg">No expenses logged yet</div>
+
+    <!-- PAGE: RECURRING -->
+    <div class="page" id="page-recurring">
+      <div class="page-header">
+        <h2>Recurring expenses</h2>
+        <button class="refresh-btn" onclick="loadRecurring()">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="rec-section" id="rec-section">
+        <div class="empty">Loading…</div>
+      </div>
     </div>
   </div>
 </div>
+
+<!-- BOTTOM NAV -->
+<nav class="nav" id="bottom-nav" style="display:none">
+  <button class="nav-btn active" id="nav-add" onclick="switchPage('add')">
+    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Add
+  </button>
+  <button class="nav-btn" id="nav-budget" onclick="switchPage('budget')">
+    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+    Budget
+  </button>
+  <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
+    <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+    Recurring
+  </button>
+</nav>
+
 <div class="toast" id="toast"></div>
 
 <script>
-const CLIENT_ID = '493780737176-ajl3bc41qkn92ufe2qvqhs4d6aeks22d.apps.googleusercontent.com';
-const SHEET_ID = '1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
-const SHEET_NAME = 'Budget';
-const REDIRECT_URI = location.origin + location.pathname;
-const CAT_ICONS = {Other:'🛍️',Food:'🛒',Subscriptions:'📱',Utilities:'💡',Gym:'🏋️',Daycare:'👶'};
-const COL_MAP = {Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K'};
+const CLIENT_ID='493780737176-ajl3bc41qkn92ufe2qvqhs4d6aeks22d.apps.googleusercontent.com';
+const SHEET_ID='1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
+const BUDGET_SHEET='Budget';
+const REC_SHEET='Recurring Expenses';
+const REDIRECT_URI=location.origin+location.pathname.replace(/\/$/,'');
+const CAT_ICONS={Other:'🛍️',Food:'🛒',Subscriptions:'📱',Utilities:'💡',Gym:'🏋️',Daycare:'👶',Savings:'💰',Rent:'🏠',Insurance:'🛡️',Medibank:'🏥',MediBank:'🏥',IN:'💵'};
+const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K'};
+const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-let accessToken = null;
-let tokenExpiry = 0;
-let entries = [];
-let selectedCat = 'Other';
-let selectedDateMode = 'today';
+let accessToken=null,tokenExpiry=0,entries=[],selectedCat='Other',selectedDateMode='today';
+let budgetData=null,recurringData=null,activeBudgetMonth=null;
 
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}}
-
 try{entries=JSON.parse(ls('budget_entries')||'[]')}catch(e){}
 try{const t=JSON.parse(ls('budget_token')||'null');if(t&&t.expiry>Date.now()){accessToken=t.token;tokenExpiry=t.expiry}}catch(e){}
 
@@ -173,225 +295,396 @@ function saveEntries(){ls('budget_entries',JSON.stringify(entries))}
 function saveToken(t,exp){ls('budget_token',JSON.stringify({token:t,expiry:exp}))}
 function clearToken(){accessToken=null;tokenExpiry=0;ls('budget_token','')}
 
-function showToast(msg,dur=2500){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
+function showToast(msg,dur=2400){
+  const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
-
 function setStatus(state,msg){
   const dot=document.getElementById('status-dot');
   dot.className='status-dot'+(state==='ok'?'':state==='warn'?' amber':' red');
   document.getElementById('status-text').textContent=msg;
 }
 
+// Navigation
+function switchPage(page){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('page-'+page).classList.add('active');
+  document.getElementById('nav-'+page).classList.add('active');
+  const titles={add:'Budget logger',budget:'Budget',recurring:'Recurring expenses'};
+  document.getElementById('page-title').textContent=titles[page];
+  if(page==='budget'&&!budgetData)loadBudget();
+  if(page==='recurring'&&!recurringData)loadRecurring();
+}
+
+// Date helpers
 function getSelectedDate(){
   if(selectedDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0]}
   if(selectedDateMode==='custom'){const v=document.getElementById('custom-date').value;if(v)return v}
   return new Date().toISOString().split('T')[0];
 }
-
 function fmtDate(iso){
   const[y,m,d]=iso.split('-');
-  return`${parseInt(d)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]}`
+  return`${parseInt(d)} ${MONTHS[parseInt(m)-1]}`;
 }
-
+function fmtDateShort(iso){
+  const[y,m,d]=iso.split('-');return`${parseInt(d)} ${MONTHS[parseInt(m)-1].slice(0,3)}`;
+}
 function setDate(mode){
   selectedDateMode=mode;
   document.getElementById('today-btn').classList.toggle('selected',mode==='today');
   document.getElementById('yesterday-btn').classList.toggle('selected',mode==='yesterday');
   if(mode!=='custom')document.getElementById('custom-date').value='';
 }
-
-document.getElementById('cat-grid').addEventListener('click',e=>{
-  const btn=e.target.closest('.cat-btn');
-  if(!btn)return;
-  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('selected'));
-  btn.classList.add('selected');
-  selectedCat=btn.dataset.cat;
-});
-
-// OAuth — redirect-based (works in standalone browser/PWA)
-function startAuth(){
-  const secret=document.getElementById('secret-input').value.trim();
-  const err=document.getElementById('auth-error');
-  err.style.display='none';
-  if(!secret){err.textContent='Enter your client secret';err.style.display='block';return}
-  ls('budget_secret',secret);
-  const state=Math.random().toString(36).slice(2);
-  ls('oauth_state',state);
-  const params=new URLSearchParams({
-    client_id:CLIENT_ID,
-    redirect_uri:REDIRECT_URI,
-    response_type:'code',
-    scope:'https://www.googleapis.com/auth/spreadsheets',
-    access_type:'offline',
-    prompt:'consent',
-    state
-  });
-  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params;
+function excelDateToIso(serial){
+  const d=new Date(Date.UTC(1899,11,30)+(serial*86400000));
+  return d.toISOString().split('T')[0];
+}
+function cellToIso(cell){
+  const s=String(cell).trim();
+  if(/^\d{4,5}$/.test(s))return excelDateToIso(parseInt(s));
+  const dmy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(dmy)return`${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
+  const d=new Date(s);if(!isNaN(d))return d.toISOString().split('T')[0];
+  return null;
 }
 
+// Category selector
+document.querySelector('.cat-grid').addEventListener('click',e=>{
+  const btn=e.target.closest('.cat-btn');if(!btn)return;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');selectedCat=btn.dataset.cat;
+});
+
+// Auth
+function startAuth(){
+  const secret=document.getElementById('secret-input').value.trim();
+  const err=document.getElementById('auth-error');err.style.display='none';
+  if(!secret){err.textContent='Enter your client secret';err.style.display='block';return}
+  ls('budget_secret',secret);
+  const state=Math.random().toString(36).slice(2);ls('oauth_state',state);
+  const params=new URLSearchParams({client_id:CLIENT_ID,redirect_uri:REDIRECT_URI,response_type:'code',
+    scope:'https://www.googleapis.com/auth/spreadsheets',access_type:'offline',prompt:'consent',state});
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params;
+}
 async function handleCallback(){
   const params=new URLSearchParams(location.search);
-  const code=params.get('code');
-  const state=params.get('state');
+  const code=params.get('code'),state=params.get('state');
   if(!code)return false;
-  // Clean URL
   history.replaceState({},'',location.pathname);
   if(state!==ls('oauth_state')){showToast('Auth state mismatch',4000);return false}
-  const secret=ls('budget_secret');
-  if(!secret){showToast('Client secret missing — please sign in again');return false}
-  showToast('Completing sign in…',3000);
+  const secret=ls('budget_secret');if(!secret){showToast('Client secret missing');return false}
   try{
-    const res=await fetch('https://oauth2.googleapis.com/token',{
-      method:'POST',
+    const res=await fetch('https://oauth2.googleapis.com/token',{method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({code,client_id:CLIENT_ID,client_secret:secret,redirect_uri:REDIRECT_URI,grant_type:'authorization_code'})
-    });
+      body:new URLSearchParams({code,client_id:CLIENT_ID,client_secret:secret,redirect_uri:REDIRECT_URI,grant_type:'authorization_code'})});
     const data=await res.json();
     if(data.error)throw new Error(data.error_description||data.error);
-    accessToken=data.access_token;
-    tokenExpiry=Date.now()+(data.expires_in*1000);
+    accessToken=data.access_token;tokenExpiry=Date.now()+(data.expires_in*1000);
     saveToken(accessToken,tokenExpiry);
     if(data.refresh_token)ls('budget_refresh',data.refresh_token);
     return true;
-  }catch(e){
-    showToast('Sign-in failed: '+e.message,5000);
-    return false;
-  }
+  }catch(e){showToast('Sign-in failed: '+e.message,5000);return false}
 }
-
 async function maybeRefreshToken(){
   if(accessToken&&tokenExpiry>Date.now()+60000)return true;
-  const refresh=ls('budget_refresh');
-  const secret=ls('budget_secret');
+  const refresh=ls('budget_refresh'),secret=ls('budget_secret');
   if(!refresh||!secret)return false;
   try{
-    const res=await fetch('https://oauth2.googleapis.com/token',{
-      method:'POST',
+    const res=await fetch('https://oauth2.googleapis.com/token',{method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({refresh_token:refresh,client_id:CLIENT_ID,client_secret:secret,grant_type:'refresh_token'})
-    });
-    const data=await res.json();
-    if(data.error)return false;
-    accessToken=data.access_token;
-    tokenExpiry=Date.now()+(data.expires_in*1000);
-    saveToken(accessToken,tokenExpiry);
-    return true;
+      body:new URLSearchParams({refresh_token:refresh,client_id:CLIENT_ID,client_secret:secret,grant_type:'refresh_token'})});
+    const data=await res.json();if(data.error)return false;
+    accessToken=data.access_token;tokenExpiry=Date.now()+(data.expires_in*1000);
+    saveToken(accessToken,tokenExpiry);return true;
   }catch(e){return false}
 }
-
 function signOut(){
-  clearToken();ls('budget_refresh','');
-  accessToken=null;
+  clearToken();ls('budget_refresh','');accessToken=null;
   document.getElementById('main-section').style.display='none';
+  document.getElementById('bottom-nav').style.display='none';
   document.getElementById('auth-section').style.display='block';
   document.getElementById('topbar-sub').textContent='Connect to Google Sheets to get started';
   document.getElementById('secret-input').value='';
 }
-
 function showMain(){
   document.getElementById('auth-section').style.display='none';
   document.getElementById('main-section').style.display='block';
-  document.getElementById('topbar-sub').textContent='Logging to your Google Sheet';
+  document.getElementById('bottom-nav').style.display='flex';
+  document.getElementById('topbar-sub').textContent='Your Google Sheet';
   setStatus('ok','Connected to Google Sheets');
-  render();
+  renderHistory();
 }
 
-function excelDateToIso(serial){
-  // Excel serial: days since 1899-12-30
-  const d=new Date(Date.UTC(1899,11,30)+(serial*86400000));
-  return d.toISOString().split('T')[0];
-}
-
-function cellToIso(cell){
-  const s=String(cell).trim();
-  // Serial number (e.g. 45764)
-  if(/^\d{4,5}$/.test(s)) return excelDateToIso(parseInt(s));
-  // DD/MM/YYYY
-  const dmy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
-  // MM/DD/YYYY
-  const mdy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
-  if(mdy) return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
-  // YYYY-MM-DD already
-  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
-  // Fallback: let JS parse but use UTC to avoid timezone shift
-  const d=new Date(s);
-  if(!isNaN(d)) return d.toISOString().split('T')[0];
-  return null;
-}
-
-async function findRowForDate(dateIso){
-  // Fetch as unformatted values to get serial numbers (most reliable)
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A:A')}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER`;
+// Sheets API helpers
+async function sheetGet(sheetName,range,unformatted=false){
+  await maybeRefreshToken();
+  const extra=unformatted?'?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER':'';
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheetName+'!'+range)}${extra}`;
   const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
-  if(!res.ok)throw new Error('Could not read sheet ('+res.status+')');
-  const data=await res.json();
-  const rows=data.values||[];
+  if(!res.ok)throw new Error('Sheet read failed ('+res.status+')');
+  return(await res.json()).values||[];
+}
+async function findRowForDate(dateIso){
+  const rows=await sheetGet(BUDGET_SHEET,'A:A',true);
   for(let i=1;i<rows.length;i++){
-    const cell=rows[i][0];
-    if(!cell)continue;
-    const iso=cellToIso(cell);
-    if(iso===dateIso)return i+1;
+    const cell=rows[i][0];if(!cell)continue;
+    if(cellToIso(cell)===dateIso)return i+1;
   }
   return null;
 }
-
 async function getCellValue(row,col){
-  const range=`${SHEET_NAME}!${col}${row}`;
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`;
-  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
-  if(!res.ok)return 0;
-  const data=await res.json();
-  return parseFloat((data.values||[[0]])[0][0])||0;
+  const rows=await sheetGet(BUDGET_SHEET,`${col}${row}`,true);
+  return parseFloat((rows[0]||[0])[0])||0;
 }
-
 async function writeToSheet(row,col,newValue){
-  const range=`${SHEET_NAME}!${col}${row}`;
   const existing=await getCellValue(row,col);
   const total=parseFloat((existing+newValue).toFixed(2));
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
-  const res=await fetch(url,{
-    method:'PUT',
-    headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
-    body:JSON.stringify({range,majorDimension:'ROWS',values:[[total]]})
-  });
+  const range=`${BUDGET_SHEET}!${col}${row}`;
+  const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,{
+    method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({range,majorDimension:'ROWS',values:[[total]]})});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Write failed')}
   return total;
 }
 
+// Add expense
 async function addExpense(){
   const amt=parseFloat(document.getElementById('amount-input').value);
   if(!amt||amt<=0){showToast('Enter a valid amount');return}
   const note=document.getElementById('note-input').value.trim();
-  const dateIso=getSelectedDate();
-  const col=COL_MAP[selectedCat];
+  const dateIso=getSelectedDate();const col=COL_MAP[selectedCat];
   const btn=document.getElementById('add-btn');
-  btn.disabled=true;
-  btn.innerHTML='<span class="spinner"></span>';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
   setStatus('amber','Writing to sheet…');
   try{
-    const ok=await maybeRefreshToken();
-    if(!ok)throw new Error('Session expired — please sign in again');
+    const ok=await maybeRefreshToken();if(!ok)throw new Error('Session expired — please sign in again');
     const row=await findRowForDate(dateIso);
-    if(!row)throw new Error(`No row found for ${fmtDate(dateIso)}. Is that date in your Budget tab?`);
+    if(!row)throw new Error(`No row found for ${fmtDate(dateIso)} in Budget tab`);
     const newTotal=await writeToSheet(row,col,amt);
     entries.unshift({id:Date.now(),date:dateIso,cat:selectedCat,amount:amt,note,synced:true,col,row});
-    saveEntries();
+    saveEntries();budgetData=null;
     setStatus('ok','Connected to Google Sheets');
     document.getElementById('amount-input').value='';
     document.getElementById('note-input').value='';
-    render();
-    showToast(`✓ $${amt.toFixed(2)} → ${col}${row} (total now $${newTotal.toFixed(2)})`);
-  }catch(e){
-    setStatus('red','Write failed');
-    showToast(e.message||'Failed to write to sheet',5000);
-  }
-  btn.disabled=false;
-  btn.textContent='Add to sheet';
+    renderHistory();
+    showToast(`✓ $${amt.toFixed(2)} → ${col}${row} (total $${newTotal.toFixed(2)})`);
+  }catch(e){setStatus('red','Write failed');showToast(e.message||'Failed',5000)}
+  btn.disabled=false;btn.textContent='Add to sheet';
 }
+
+// Budget page
+async function loadBudget(){
+  document.getElementById('budget-rows').innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const rows=await sheetGet(BUDGET_SHEET,'A:N',true);
+    // headers: Date, Day, IN, Other, Subscriptions, Utilities, Savings, Rent, Insurance, Medibank, Daycare, Gym, Food, Running Total
+    const headers=rows[0]||[];
+    const data=[];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i];if(!r||!r[0])continue;
+      const iso=cellToIso(r[0]);if(!iso)continue;
+      const row={date:iso,day:r[1]||'',income:parseFloat(r[2])||0,
+        other:parseFloat(r[3])||0,subs:parseFloat(r[4])||0,utils:parseFloat(r[5])||0,
+        savings:parseFloat(r[6])||0,rent:parseFloat(r[7])||0,insurance:parseFloat(r[8])||0,
+        medibank:parseFloat(r[9])||0,daycare:parseFloat(r[10])||0,gym:parseFloat(r[11])||0,
+        food:parseFloat(r[12])||0,runningTotal:parseFloat(r[13])||0};
+      row.totalExpenses=row.other+row.subs+row.utils+row.savings+row.rent+row.insurance+row.medibank+row.daycare+row.gym+row.food;
+      data.push(row);
+    }
+    budgetData=data;
+    // Build month list
+    const months={};
+    data.forEach(r=>{const[y,m]=r.date.split('-');const key=`${y}-${m}`;months[key]=(months[key]||[]); months[key].push(r);});
+    const monthKeys=Object.keys(months).sort();
+    // Default to current month
+    const now=new Date();
+    const curKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    activeBudgetMonth=monthKeys.includes(curKey)?curKey:monthKeys[monthKeys.length-1];
+    renderMonthTabs(monthKeys);
+    renderBudgetMonth();
+  }catch(e){document.getElementById('budget-rows').innerHTML=`<div class="empty">${e.message}</div>`;}
+}
+
+function renderMonthTabs(keys){
+  const scroll=document.getElementById('month-scroll');
+  scroll.innerHTML=keys.map(k=>{
+    const[y,m]=k.split('-');
+    return`<button class="month-chip${k===activeBudgetMonth?' active':''}" onclick="selectMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;
+  }).join('');
+  // Scroll active into view
+  setTimeout(()=>{const a=scroll.querySelector('.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},100);
+}
+
+function selectMonth(key){
+  activeBudgetMonth=key;
+  document.querySelectorAll('.month-chip').forEach(c=>{
+    c.classList.toggle('active',c.textContent.trim()===`${MONTHS[parseInt(key.split('-')[1])-1]} ${key.split('-')[0]}`);
+  });
+  renderBudgetMonth();
+}
+
+function renderBudgetMonth(){
+  if(!budgetData)return;
+  const[y,m]=activeBudgetMonth.split('-');
+  const rows=budgetData.filter(r=>r.date.startsWith(`${y}-${m}`));
+  const todayIso=new Date().toISOString().split('T')[0];
+
+  // Summary
+  const totalIncome=rows.reduce((s,r)=>s+r.income,0);
+  const totalExp=rows.reduce((s,r)=>s+r.totalExpenses,0);
+  const net=totalIncome-totalExp;
+  const lastRow=rows.length?rows[rows.length-1]:null;
+  document.getElementById('bsummary').innerHTML=`
+    <div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$${totalIncome.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+    <div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$${totalExp.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+    <div class="bcard"><div class="bcard-label">Net</div><div class="bcard-val ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}$${Math.abs(net).toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
+    <div class="bcard"><div class="bcard-label">Running total</div><div class="bcard-val ${lastRow&&lastRow.runningTotal>=0?'pos':'neg'}">$${lastRow?lastRow.runningTotal.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0}):'—'}</div><div class="bcard-sub">end of month</div></div>`;
+
+  // Rows — only show days with activity
+  const active=rows.filter(r=>r.income||r.totalExpenses);
+  if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity this month</div>';return;}
+
+  document.getElementById('budget-rows').innerHTML=active.map(r=>{
+    const pills=[];
+    if(r.income)pills.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.rent)pills.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.savings)pills.push(`<span class="brow-pill expense">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.medibank)pills.push(`<span class="brow-pill expense">Medibank $${r.medibank.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.daycare)pills.push(`<span class="brow-pill expense">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.insurance)pills.push(`<span class="brow-pill expense">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.food)pills.push(`<span class="brow-pill expense">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.gym)pills.push(`<span class="brow-pill expense">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.subs)pills.push(`<span class="brow-pill expense">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.utils)pills.push(`<span class="brow-pill expense">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.other)pills.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    const net=r.income-r.totalExpenses;
+    const isToday=r.date===todayIso;
+    return`<div class="brow${isToday?' today-row':''}">
+      <span class="brow-date">${fmtDateShort(r.date)}</span>
+      <span class="brow-day">${(r.day||'').slice(0,3)}</span>
+      <div class="brow-cats">${pills.join('')}</div>
+      <span class="brow-total ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}$${Math.abs(net).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+    </div>`;
+  }).join('');
+}
+
+// Recurring page
+async function loadRecurring(){
+  document.getElementById('rec-section').innerHTML='<div class="empty">Loading…</div>';
+  try{
+    const rows=await sheetGet(REC_SHEET,'A:G');
+    // Find data rows (skip header row 1 and legend section)
+    const data=[];
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i];
+      if(!r||!r[0])continue;
+      if(['HOW TO USE THIS SHEET','Category','Amount ($)','Start Date','Recurrence','Day of Week / Day of Month','Active?'].includes(r[0]))continue;
+      data.push({cat:r[0]||'',desc:r[1]||'',amount:parseFloat(r[2])||0,startDate:r[3]||'',recurrence:r[4]||'',dayInfo:r[5]||'',active:(r[6]||'').toLowerCase()==='yes'});
+    }
+    recurringData=data;
+    renderRecurring(data);
+  }catch(e){document.getElementById('rec-section').innerHTML=`<div class="empty">${e.message}</div>`;}
+}
+
+function renderRecurring(data){
+  // Group by recurrence type
+  const groups={Monthly:[],Fortnightly:[],Weekly:[],'One-Off':[]};
+  data.forEach(r=>{
+    const key=r.recurrence||'One-Off';
+    if(groups[key])groups[key].push(r);else groups['One-Off'].push(r);
+  });
+
+  const freqBadge=f=>{
+    const cls={Monthly:'monthly',Fortnightly:'fortnightly',Weekly:'weekly','One-Off':'oneoff'}[f]||'oneoff';
+    return`<span class="rec-badge badge-${cls}">${f}</span>`;
+  };
+
+  let html='';
+  let monthlyTotal=0;
+  Object.entries(groups).forEach(([freq,items])=>{
+    if(!items.length)return;
+    html+=`<div class="rec-card"><div class="rec-card-header"><div class="rec-card-title">${freq}</div></div>`;
+    items.forEach(r=>{
+      const icon=CAT_ICONS[r.cat]||'💸';
+      const iconBg=r.active?'background:#f0f0ee':'background:#f8f8f8';
+      html+=`<div class="rec-row">
+        <div class="rec-icon" style="${iconBg};opacity:${r.active?1:0.5}">${icon}</div>
+        <div class="rec-body">
+          <div class="rec-name" style="color:${r.active?'#1a1a1a':'#aaa'}">${r.desc||r.cat}</div>
+          <div class="rec-detail">${r.cat}${r.dayInfo?' · '+r.dayInfo:''}</div>
+        </div>
+        <div class="rec-right">
+          <div class="rec-amount" style="color:${r.active?'#1a1a1a':'#aaa'}">$${r.amount.toFixed(2)}</div>
+          ${r.active?freqBadge(freq):'<span class="rec-badge badge-inactive">Paused</span>'}
+        </div>
+      </div>`;
+      // Estimate monthly cost
+      if(r.active){
+        if(freq==='Monthly')monthlyTotal+=r.amount;
+        else if(freq==='Fortnightly')monthlyTotal+=r.amount*2.17;
+        else if(freq==='Weekly')monthlyTotal+=r.amount*4.33;
+      }
+    });
+    html+='</div>';
+  });
+
+  const activeIncome=data.filter(r=>r.active&&r.cat==='IN');
+  const activeExp=data.filter(r=>r.active&&r.cat!=='IN');
+  const estIncomeMonthly=activeIncome.reduce((s,r)=>{
+    const f=r.recurrence;
+    if(f==='Monthly')return s+r.amount;
+    if(f==='Fortnightly')return s+r.amount*2.17;
+    if(f==='Weekly')return s+r.amount*4.33;
+    return s;
+  },0);
+  const estExpMonthly=activeExp.reduce((s,r)=>{
+    const f=r.recurrence;
+    if(f==='Monthly')return s+r.amount;
+    if(f==='Fortnightly')return s+r.amount*2.17;
+    if(f==='Weekly')return s+r.amount*4.33;
+    return s;
+  },0);
+
+  html+=`<div style="background:white;border-radius:12px;padding:14px 16px;margin-bottom:8px">
+    <div style="font-size:12px;color:#888;margin-bottom:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">Estimated monthly</div>
+    <div style="display:flex;gap:8px">
+      <div class="sum-card" style="flex:1"><div class="sum-label">Income</div><div class="sum-val" style="color:#2D7D3A">$${Math.round(estIncomeMonthly).toLocaleString('en-AU')}</div></div>
+      <div class="sum-card" style="flex:1"><div class="sum-label">Expenses</div><div class="sum-val" style="color:#C0392B">$${Math.round(estExpMonthly).toLocaleString('en-AU')}</div></div>
+      <div class="sum-card" style="flex:1"><div class="sum-label">Net</div><div class="sum-val" style="color:${estIncomeMonthly-estExpMonthly>=0?'#2D7D3A':'#C0392B'}">${estIncomeMonthly-estExpMonthly>=0?'+':'-'}$${Math.round(Math.abs(estIncomeMonthly-estExpMonthly)).toLocaleString('en-AU')}</div></div>
+    </div>
+  </div>`;
+
+  document.getElementById('rec-section').innerHTML=html;
+}
+
+// History render
+function renderHistory(){
+  const list=document.getElementById('entry-list'),empty=document.getElementById('empty-msg'),bar=document.getElementById('summary-bar');
+  if(!entries.length){list.innerHTML='';list.appendChild(empty);empty.style.display='';bar.style.display='none';document.getElementById('history-title').textContent='Recent entries';return}
+  empty.style.display='none';bar.style.display='flex';
+  document.getElementById('history-title').textContent=`${entries.length} entr${entries.length===1?'y':'ies'}`;
+  const now=new Date(),wa=new Date(now);wa.setDate(wa.getDate()-7);
+  const ms=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  let wk=0,mo=0,tot=0;
+  entries.forEach(e=>{tot+=e.amount;if(e.date>=wa.toISOString().split('T')[0])wk+=e.amount;if(e.date>=ms)mo+=e.amount});
+  document.getElementById('sum-week').textContent='$'+wk.toFixed(2);
+  document.getElementById('sum-month').textContent='$'+mo.toFixed(2);
+  document.getElementById('sum-total').textContent='$'+tot.toFixed(2);
+  list.innerHTML=entries.slice(0,60).map(e=>`
+    <div class="entry">
+      <div class="entry-icon${e.synced?' synced':''}">${CAT_ICONS[e.cat]||'🛍️'}</div>
+      <div class="entry-body"><div class="entry-cat">${e.cat}</div><div class="entry-note">${e.note||'No note'}</div></div>
+      <div class="entry-right">
+        <div class="entry-amount">$${e.amount.toFixed(2)}</div>
+        <div class="entry-meta"><span>${fmtDate(e.date)}</span>${e.synced?'<span class="sync-badge">synced</span>':''}</div>
+      </div>
+      <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+    </div>`).join('');
+}
+
+function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveEntries();renderHistory();showToast('Entry removed')}
 
 function exportCSV(){
   if(!entries.length){showToast('Nothing to export');return}
@@ -400,41 +693,6 @@ function exportCSV(){
   const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='expenses.csv';a.click();
   showToast('CSV downloaded');
 }
-
-function render(){
-  const list=document.getElementById('entry-list');
-  const empty=document.getElementById('empty-msg');
-  const bar=document.getElementById('summary-bar');
-  if(!entries.length){list.innerHTML='';list.appendChild(empty);empty.style.display='';bar.style.display='none';document.getElementById('history-title').textContent='Recent entries';return}
-  empty.style.display='none';bar.style.display='flex';
-  document.getElementById('history-title').textContent=`${entries.length} entr${entries.length===1?'y':'ies'}`;
-  const now=new Date();
-  const weekAgo=new Date(now);weekAgo.setDate(weekAgo.getDate()-7);
-  const monthStart=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
-  let wk=0,mo=0,tot=0;
-  entries.forEach(e=>{tot+=e.amount;if(e.date>=weekAgo.toISOString().split('T')[0])wk+=e.amount;if(e.date>=monthStart)mo+=e.amount});
-  document.getElementById('sum-week').textContent='$'+wk.toFixed(2);
-  document.getElementById('sum-month').textContent='$'+mo.toFixed(2);
-  document.getElementById('sum-total').textContent='$'+tot.toFixed(2);
-  list.innerHTML=entries.slice(0,60).map(e=>`
-    <div class="entry">
-      <div class="entry-icon${e.synced?' synced':''}">${CAT_ICONS[e.cat]||'🛍️'}</div>
-      <div class="entry-body">
-        <div class="entry-cat">${e.cat}</div>
-        <div class="entry-note">${e.note||'No note'}</div>
-      </div>
-      <div class="entry-right">
-        <div class="entry-amount">$${e.amount.toFixed(2)}</div>
-        <div class="entry-meta">
-          <span>${fmtDate(e.date)}</span>
-          ${e.synced?'<span class="sync-badge">synced</span>':'<span class="pending-badge">local</span>'}
-        </div>
-      </div>
-      <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
-    </div>`).join('');
-}
-
-function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveEntries();render();showToast('Entry removed')}
 
 // Init
 const todayIso=new Date().toISOString().split('T')[0];
@@ -445,12 +703,8 @@ if(savedSecret)document.getElementById('secret-input').value=savedSecret;
 
 (async()=>{
   const fromCallback=await handleCallback();
-  if(fromCallback||(accessToken&&tokenExpiry>Date.now())){
-    showMain();
-  } else {
-    const refreshed=await maybeRefreshToken();
-    if(refreshed)showMain();
-  }
+  if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain()}
+  else{const r=await maybeRefreshToken();if(r)showMain()}
 })();
 </script>
 </body>
