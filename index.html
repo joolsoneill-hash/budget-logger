@@ -31,12 +31,13 @@
   --purple-bg:#1e1a3d;--purple-text:#9d8ff5;
 }
 *{box-sizing:border-box;margin:0;padding:0}
+button,input,select,textarea{font-family:'Inter',system-ui,-apple-system,sans-serif}
 html{height:100%}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);position:relative;min-height:100%;min-height:100dvh;transition:background 0.2s,color 0.2s}
 .app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px 9px;flex-shrink:0;display:flex;align-items:center;gap:10px}
 .topbar-logo{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.topbar-logo svg{width:18px;height:18px;stroke:white;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.topbar-logo svg{width:18px;height:18px;stroke:#c8c8c8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .topbar h1{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .topbar p{font-size:11px;color:var(--text3);margin-top:1px}
 .nav{background:var(--surface);border-top:1px solid var(--border);display:flex;flex-shrink:0}
@@ -76,7 +77,7 @@ textarea:focus{border-color:var(--accent)}
 .date-chip{flex:1;padding:10px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .date-chip.selected{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
 #custom-date{flex:1.4;padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;outline:none}
-.add-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:15px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.add-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#c8c8c8;font-size:15px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .add-btn:active{background:var(--accent-text);transform:scale(0.98)}
 .add-btn:disabled{background:#ccc}
 .history-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 8px;background:var(--surface);margin-top:8px}
@@ -109,7 +110,7 @@ textarea:focus{border-color:var(--accent)}
 .balance-date-chip{flex:1;padding:10px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .balance-date-chip.selected{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
 .balance-custom-date{flex:1.4;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;outline:none}
-.recalc-btn{width:100%;padding:14px;border:none;border-radius:12px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;font-size:15px;font-weight:600;cursor:pointer}
+.recalc-btn{width:100%;padding:14px;border:none;border-radius:12px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:#c8c8c8;font-size:15px;font-weight:600;cursor:pointer}
 .recalc-btn:disabled{background:#ccc}
 .recalc-btn:active{background:var(--accent-text);transform:scale(0.98)}
 .del-btn:active{color:var(--red)}
@@ -157,7 +158,7 @@ textarea:focus{border-color:var(--accent)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
 .budget-rows{background:var(--surface)}
 .brow.today-row{background:var(--accent-bg)}
-.brow-month-sep{padding:8px 16px 4px;font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:0.06em;text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--border);scroll-margin-top:80px}
+.brow-month-sep{padding:10px 16px 6px;font-size:14px;font-weight:700;color:#c8c8c8;letter-spacing:0.08em;text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--border);scroll-margin-top:80px;text-align:center}
 .rt-toggle{display:inline-flex;flex-direction:row;gap:4px;margin-top:6px;align-items:stretch}
 .rt-toggle-btns{display:flex;flex-direction:column;gap:4px}
 .rt-toggle button{padding:5px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:12px;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;font-family:inherit;flex:1}
@@ -202,7 +203,7 @@ textarea:focus{border-color:var(--accent)}
 .form-input:focus{border-color:var(--accent)}
 select.form-input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
 .form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
-.save-rec-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.save-rec-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:#c8c8c8;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
 .save-rec-btn:active{background:var(--accent-text)}
 .save-rec-btn:disabled{background:#ccc}
 .cancel-rec-btn{width:100%;padding:12px;border:1px solid var(--border);border-radius:12px;background:var(--surface);color:var(--text2);font-size:14px;cursor:pointer;margin-top:8px}
@@ -222,7 +223,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .bpopup-edit-label{font-size:13px;color:var(--text3);min-width:80px;flex-shrink:0}
 .bpopup-input{flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text);background:var(--surface);outline:none;font-family:inherit}
 .bpopup-input:focus{border-color:var(--accent)}
-.bpopup-save{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+.bpopup-save{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:#c8c8c8;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
 .bpopup-save:disabled{background:#ccc}
 .bpopup-note{font-size:11px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.4}
 .brow{cursor:pointer;position:relative}
@@ -231,7 +232,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .brow-add-btn:active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(200px);background:var(--text);color:var(--surface);padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.25s;z-index:200;max-width:320px;width:max-content;text-align:center;pointer-events:none;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+.spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:#c8c8c8;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
@@ -782,10 +783,15 @@ async function loadBudget(){
 }
 
 function scrollToMonth(k){
-  const el=document.querySelector('[data-month="'+k+'"]');
+  // Find the first actual row for this month (the day row, not the separator)
+  // so we land on the 1st of the month
+  const sep=document.querySelector('[data-month="'+k+'"]');
   const scrollArea=document.getElementById('scroll-area');
-  if(el&&scrollArea){
-    scrollArea.scrollTo({top:el.offsetTop-4,behavior:'smooth'});
+  if(sep&&scrollArea){
+    const containerRect=scrollArea.getBoundingClientRect();
+    const sepRect=sep.getBoundingClientRect();
+    const offset=sepRect.top - containerRect.top + scrollArea.scrollTop;
+    scrollArea.scrollTo({top:offset,behavior:'smooth'});
   }
   setActiveBudgetMonth(k);
 }
@@ -1012,34 +1018,35 @@ function updateSummaryCards(){
   }
   const rtDisplay=rtVal!=null?'$'+rtVal.toLocaleString('en-AU',{maximumFractionDigits:0}):'—';
   const todaySb=localDateIso();
+  const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
   document.getElementById('bsummary').innerHTML=
     '<div style="grid-column:1/-1;display:flex;gap:6px;align-items:stretch">'+
-      // LEFT: projected balance + toggle chips
+      // LEFT: projected balance value
       '<div class="bcard" style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:4px">'+
         '<div class="bcard-label" style="font-size:10px">Projected balance</div>'+
         '<div class="bcard-val '+rtClass+'" style="font-size:18px;margin-top:2px">'+rtDisplay+'</div>'+
         '<div class="bcard-sub" style="font-size:10px">'+rtSub+'</div>'+
-        '<div class="rt-toggle" style="margin-top:4px;flex-wrap:wrap">'+
-          '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)" style="font-size:11px;padding:5px 8px">Next pay</button>'+
-          '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:11px;padding:5px 8px">Month end</button>'+
-          '<label title="Pick a date" style="position:relative;display:flex;align-items:center;justify-content:center;width:30px;align-self:stretch;border:'+(runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-bg)':'var(--surface)')+';cursor:pointer;flex-shrink:0">'+
-            '<svg width="13" height="13" viewBox="0 0 24 24" stroke="'+(runningTotalMode==='eom'&&eomDate?'var(--accent)':'var(--text2)')+'" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
-            '<input type="date" id="eom-date-input" value="'+eomDate+'" onchange="setEomDate(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">'+
-          '</label>'+
-        '</div>'+
       '</div>'+
-      // RIGHT: inline set balance form
+      // MIDDLE: chips stacked vertically
+      '<div style="display:flex;flex-direction:column;gap:5px;justify-content:center;padding:4px 0">'+
+        '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;'+(runningTotalMode==='payday'?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Next Pay</button>'+
+        '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;'+(runningTotalMode==='eom'&&!eomDate?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Month End</button>'+
+        '<label title="Pick a date" style="position:relative;display:flex;align-items:center;justify-content:center;padding:5px 8px;border:'+(runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-bg)':'var(--surface)')+';cursor:pointer;font-size:11px;color:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-text)':'var(--text2)')+'">'+
+          '<svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
+          '<input type="date" id="eom-date-input" value="'+eomDate+'" onchange="setEomDate(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">'+
+        '</label>'+
+      '</div>'+
+      // RIGHT: set balance (half width of total = flex:1)
       '<div class="bcard" style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:5px">'+
         '<div class="bcard-label" style="font-size:10px">Set balance</div>'+
         '<div style="display:flex;align-items:stretch;gap:4px;margin-top:2px">'+
           '<span style="font-size:16px;font-weight:500;color:var(--text3);align-self:flex-end;padding-bottom:3px">$</span>'+
           '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:16px;font-weight:600;border:none;border-bottom:1.5px solid var(--border);background:transparent;color:var(--text);outline:none;padding-bottom:2px;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;font-family:inherit">'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="flex-shrink:0;width:32px;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
-            '<svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="flex-shrink:0;width:44px;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:#c8c8c8;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
+            calcIcon+
           '</button>'+
         '</div>'+
         '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:8px;padding:5px 8px;background:var(--surface);color:var(--text);outline:none;font-family:inherit;width:100%;margin-top:4px">'+
-        ''+
       '</div>'+
     '</div>';
 }
@@ -1348,7 +1355,7 @@ async function runInlineSetBalance(){
     if(!sheetRow)throw new Error('No row for this date');
     const currentRT=await getCellValue(sheetRow,'N');
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
-    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';return;}
+    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';return;}
     const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
     const nRange='N'+sheetRow+':N'+allDates.length;
     const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
@@ -1361,7 +1368,7 @@ async function runInlineSetBalance(){
     showToast('Balance set ✓');
     loadBudget();
   }catch(e){showToast(e.message||'Failed',3000);}
-  btn.disabled=false;btn.innerHTML='<svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
+  btn.disabled=false;btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
 }
 async function runSetBalanceFromPopup(){
   const newBalance=parseFloat(document.getElementById('sb-popup-amount').value);
