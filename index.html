@@ -920,14 +920,17 @@ function renderAllBudgetRows(){
 
   document.getElementById('budget-rows').innerHTML=html;
 
-  // Scroll to today's row
+  // Scroll to today's row — position it at the top of the scroll area
   const scrollArea=document.getElementById('scroll-area');
   setTimeout(()=>{
     const todayRow=document.querySelector('.today-row');
     if(todayRow&&scrollArea){
-      const rowTop=todayRow.offsetTop;
-      const scrollH=scrollArea.clientHeight;
-      scrollArea.scrollTop=rowTop-scrollH/3;
+      // getBoundingClientRect gives position relative to viewport;
+      // add current scrollTop to get absolute position within scroll container
+      const containerRect=scrollArea.getBoundingClientRect();
+      const rowRect=todayRow.getBoundingClientRect();
+      const offset=rowRect.top - containerRect.top + scrollArea.scrollTop;
+      scrollArea.scrollTop=offset;
     }
   },80);
 
