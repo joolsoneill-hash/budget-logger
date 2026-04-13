@@ -562,7 +562,7 @@ function selectMonth(k){
   document.querySelectorAll('.month-chip').forEach(c=>{const[y,m]=k.split('-');c.classList.toggle('active',c.textContent.trim()===`${MONTHS[parseInt(m)-1]} ${y}`);});
   renderBudgetMonth();
 }
-let runningTotalMode='eom'; // 'eom' = end of month, 'payday' = next pay day
+let runningTotalMode='payday'; // 'eom' = end of month, 'payday' = next pay day
 
 function setRunningTotalMode(mode){
   runningTotalMode=mode;
