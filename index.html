@@ -118,7 +118,10 @@ textarea:focus{border-color:#378ADD}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .rec-section{padding:12px 16px 16px;background:#f5f5f3}
 .rec-card{background:white;border-radius:12px;margin-bottom:8px;overflow:hidden}
-.rec-card-header{padding:10px 14px 8px;border-bottom:1px solid #f5f5f3}
+.rec-card-header{padding:10px 14px 8px;border-bottom:1px solid #f5f5f3;cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between}
+.rec-card-header .chev{font-size:11px;color:#bbb;transition:transform 0.2s;flex-shrink:0}
+.rec-card.collapsed .rec-card-body{display:none}
+.rec-card.collapsed .chev{transform:rotate(-90deg)}
 .rec-card-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em}
 .rec-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid #f8f8f6;gap:8px}
 .rec-row:last-child{border-bottom:none}
@@ -155,6 +158,27 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .save-rec-btn:active{background:#185FA5}
 .save-rec-btn:disabled{background:#ccc}
 .cancel-rec-btn{width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:12px;background:white;color:#666;font-size:14px;cursor:pointer;margin-top:8px}
+
+.bpopup-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.45);z-index:100;align-items:flex-end;justify-content:center}
+.bpopup-wrap.open{display:flex}
+.bpopup{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;padding-bottom:24px}
+.bpopup-header{padding:16px 20px 12px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between}
+.bpopup-header h3{font-size:16px;font-weight:600}
+.bpopup-close{background:none;border:none;font-size:22px;color:#aaa;cursor:pointer}
+.bpopup-body{padding:16px 20px}
+.bpopup-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid #f8f8f6}
+.bpopup-row:last-child{border-bottom:none}
+.bpopup-label{font-size:13px;color:#888}
+.bpopup-val{font-size:13px;font-weight:500;color:#1a1a1a}
+.bpopup-edit-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid #f8f8f6}
+.bpopup-edit-label{font-size:13px;color:#888;min-width:80px;flex-shrink:0}
+.bpopup-input{flex:1;border:1px solid #e5e5e3;border-radius:8px;padding:8px 10px;font-size:14px;color:#1a1a1a;background:white;outline:none;font-family:inherit}
+.bpopup-input:focus{border-color:#378ADD}
+.bpopup-save{width:100%;padding:13px;border:none;border-radius:12px;background:#378ADD;color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+.bpopup-save:disabled{background:#ccc}
+.bpopup-note{font-size:11px;color:#aaa;margin-top:8px;text-align:center;line-height:1.4}
+.brow{cursor:pointer}
+.brow:hover{background:#fafafa}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(200px);background:#1a1a1a;color:white;padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.25s;z-index:200;max-width:320px;width:max-content;text-align:center;pointer-events:none;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
@@ -251,7 +275,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <!-- PAGE RECURRING -->
       <div class="page" id="page-recurring">
         <div class="page-header">
-          <h2>Recurring expenses</h2>
+          <h2>Known expenses</h2>
           <button class="refresh-btn" onclick="loadRecurring()">
             <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Refresh
@@ -336,6 +360,17 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
   </div>
 </div>
 
+<!-- BUDGET ROW DETAIL POPUP -->
+<div class="bpopup-wrap" id="bpopup-wrap" onclick="closeBudgetDetail(event)">
+  <div class="bpopup" onclick="event.stopPropagation()">
+    <div class="bpopup-header">
+      <h3 id="bpopup-title">13 Apr — Tuesday</h3>
+      <button class="bpopup-close" onclick="closeBudgetDetail()">&#x2715;</button>
+    </div>
+    <div class="bpopup-body" id="bpopup-body"></div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <script>
@@ -373,7 +408,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Budget logger',budget:'Budget',recurring:'Recurring expenses'};
+  const titles={add:'Budget logger',budget:'Budget',recurring:'Known expenses'};
   document.getElementById('page-title').textContent=titles[page];
   document.getElementById('scroll-area').scrollTop=0;
   if(page==='budget'&&!budgetData)loadBudget();
@@ -578,7 +613,75 @@ function renderBudgetMonth(){
   if(!budgetData)return;
   const[y,m]=activeBudgetMonth.split('-');
   const rows=budgetData.filter(r=>r.date.startsWith(`${y}-${m}`));
-  const todayIso=new Date().toISOString().split('T')[0];
+  // Budget row detail popup
+const COL_NAMES={income:'IN (income)',other:'Other',subs:'Subscriptions',utils:'Utilities',savings:'Savings',rent:'Rent',insurance:'Insurance',medibank:'Medibank',daycare:'Daycare',gym:'Gym',food:'Food'};
+let budgetDetailData=null;
+
+function openBudgetDetail(encodedData){
+  budgetDetailData=JSON.parse(decodeURIComponent(encodedData));
+  const r=budgetDetailData;
+  const[y,m,d]=r.date.split('-');
+  document.getElementById('bpopup-title').textContent=`${parseInt(d)} ${MONTHS[parseInt(m)-1]} — ${r.day||''}`;
+  const fields=[
+    {key:'income',label:'Income',val:r.income,col:'C'},
+    {key:'other',label:'Other',val:r.other,col:'D'},
+    {key:'subs',label:'Subscriptions',val:r.subs,col:'E'},
+    {key:'utils',label:'Utilities',val:r.utils,col:'F'},
+    {key:'savings',label:'Savings',val:r.savings,col:'G'},
+    {key:'rent',label:'Rent',val:r.rent,col:'H'},
+    {key:'insurance',label:'Insurance',val:r.insurance,col:'I'},
+    {key:'medibank',label:'Medibank',val:r.medibank,col:'J'},
+    {key:'daycare',label:'Daycare',val:r.daycare,col:'K'},
+    {key:'gym',label:'Gym',val:r.gym,col:'L'},
+    {key:'food',label:'Food',val:r.food,col:'M'},
+  ].filter(f=>f.val);
+  const body=document.getElementById('bpopup-body');
+  if(!fields.length){
+    body.innerHTML='<p style="color:#aaa;font-size:14px;padding:20px 0;text-align:center">No activity on this day</p>';
+  }else{
+    body.innerHTML=fields.map(f=>`
+      <div class="bpopup-edit-row">
+        <span class="bpopup-label">${f.label}</span>
+        <input class="bpopup-input" type="number" step="0.01" min="0"
+          id="bpinput-${f.col}" value="${f.val.toFixed(2)}" data-col="${f.col}" data-orig="${f.val.toFixed(2)}">
+      </div>`).join('')+`
+      <button class="bpopup-save" id="bpopup-save-btn" onclick="saveBudgetDetail()">Save changes to sheet</button>
+      <p class="bpopup-note">Editing this day only — future recurring amounts are unchanged</p>`;
+  }
+  document.getElementById('bpopup-wrap').classList.add('open');
+}
+function closeBudgetDetail(e){
+  if(e&&e.target!==document.getElementById('bpopup-wrap'))return;
+  document.getElementById('bpopup-wrap').classList.remove('open');
+  budgetDetailData=null;
+}
+async function saveBudgetDetail(){
+  if(!budgetDetailData)return;
+  const btn=document.getElementById('bpopup-save-btn');
+  btn.textContent='Saving…';btn.disabled=true;
+  const r=budgetDetailData;
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    const sheetRow=await findRowForDate(r.date);
+    if(!sheetRow)throw new Error('Could not find row for this date');
+    const inputs=document.querySelectorAll('.bpopup-input');
+    const writes=[];
+    inputs.forEach(inp=>{
+      const newVal=parseFloat(inp.value)||0;
+      const origVal=parseFloat(inp.dataset.orig)||0;
+      if(Math.abs(newVal-origVal)>0.001)writes.push({col:inp.dataset.col,val:newVal});
+    });
+    if(!writes.length){showToast('No changes to save');btn.textContent='Save changes to sheet';btn.disabled=false;return;}
+    for(const w of writes)await sheetWrite(BUDGET_SHEET,`${w.col}${sheetRow}`,[[w.val]]);
+    budgetData=null;
+    document.getElementById('bpopup-wrap').classList.remove('open');
+    showToast(`Saved ${writes.length} change${writes.length>1?'s':''} ✓`);
+    loadBudget();
+  }catch(e){showToast(e.message||'Save failed',3000);}
+  btn.textContent='Save changes to sheet';btn.disabled=false;
+}
+
+const todayIso=new Date().toISOString().split('T')[0];
   const ti=rows.reduce((s,r)=>s+r.income,0),te=rows.reduce((s,r)=>s+r.totalExpenses,0),net=ti-te;
   const last=rows.length?rows[rows.length-1]:null;
 
@@ -650,7 +753,8 @@ function renderBudgetMonth(){
     if(r.other)p.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
-    return`<div class="brow${r.date===todayIso?' today-row':''}">
+    const rowData=encodeURIComponent(JSON.stringify({date:r.date,day:r.day,income:r.income,other:r.other,subs:r.subs,utils:r.utils,savings:r.savings,rent:r.rent,insurance:r.insurance,medibank:r.medibank,daycare:r.daycare,gym:r.gym,food:r.food,runningTotal:r.runningTotal}));
+    return`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail('${rowData}')">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
       <div class="brow-cats">${p.join('')}</div>
@@ -692,6 +796,12 @@ function freqBadge(f,active){
   return`<span class="rec-badge badge-${cls}">${f}</span>`;
 }
 
+const collapsedGroups=new Set();
+function toggleGroup(freq){
+  if(collapsedGroups.has(freq))collapsedGroups.delete(freq);
+  else collapsedGroups.add(freq);
+  if(recurringData)renderRecurring(recurringData);
+}
 function renderRecurring(data){
   const groups={Monthly:[],Fortnightly:[],'4-Weekly':[],Weekly:[],'One-Off':[]};
   data.forEach(r=>{const k=r.recurrence||'One-Off';(groups[k]||groups['One-Off']).push(r);});
@@ -701,7 +811,13 @@ function renderRecurring(data){
   </button>`;
   Object.entries(groups).forEach(([freq,items])=>{
     if(!items.length)return;
-    html+=`<div class="rec-card"><div class="rec-card-header"><div class="rec-card-title">${freq}</div></div>`;
+    const isCollapsed=collapsedGroups.has(freq);
+    html+=`<div class="rec-card${isCollapsed?' collapsed':''}">
+      <div class="rec-card-header" onclick="toggleGroup('${freq}')">
+        <div class="rec-card-title">${freq}</div>
+        <span class="chev">&#9660;</span>
+      </div>
+      <div class="rec-card-body">`;
     items.forEach(r=>{
       const icon=CAT_ICONS[r.cat]||'💸';
       html+=`<div class="rec-row" data-sheet-row="${r.sheetRow}">
@@ -721,7 +837,7 @@ function renderRecurring(data){
         </div>
       </div>`;
     });
-    html+='</div>';
+    html+='</div></div>';
   });
   const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;return 0;};
   const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
