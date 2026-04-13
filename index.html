@@ -21,6 +21,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .nav-btn.active{color:#378ADD}
 .page{display:none}
 .page.active{display:block}
+#page-budget.active{display:flex}
 .auth-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .auth-card{background:white;border-radius:14px;padding:24px 20px;margin:20px 16px}
 .auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
@@ -110,7 +111,10 @@ textarea:focus{border-color:#378ADD}
 .brow-running{font-size:12px;font-weight:500;text-align:right;flex-shrink:0;min-width:60px;color:#888;border-left:1px solid #f0f0ee;padding-left:8px;margin-left:4px}
 .brow-running.pos{color:#2D7D3A}
 .brow-running.neg{color:#C0392B}
-.brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid #e5e5e3;background:white;gap:10px;position:sticky;top:0;z-index:5}
+.brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid #e5e5e3;background:white;gap:10px}
+.budget-fixed{flex-shrink:0;background:white}
+.budget-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.budget-rows{background:white}
 .brow.today-row{background:#fffbf0}
 .brow-month-sep{padding:8px 16px 4px;font-size:11px;font-weight:700;color:#888;letter-spacing:0.06em;text-transform:uppercase;background:#f5f5f3;border-bottom:1px solid #ececea;scroll-margin-top:80px}
 .rt-toggle{display:inline-flex;border:1px solid #e5e5e3;border-radius:8px;overflow:hidden;margin-top:6px}
@@ -257,22 +261,33 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       </div>
 
       <!-- PAGE BUDGET -->
-      <div class="page" id="page-budget">
-        <div class="page-header">
-          <h2>Budget</h2>
-          <button class="refresh-btn" onclick="loadBudget()">
-            <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-            Refresh
-          </button>
+      <div class="page" id="page-budget" style="display:flex;flex-direction:column;height:100%">
+        <div class="budget-fixed">
+          <div class="page-header">
+            <h2>Budget</h2>
+            <button class="refresh-btn" onclick="loadBudget()">
+              <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+              Refresh
+            </button>
+          </div>
+          <div class="month-scroll" id="month-scroll"></div>
+          <div class="bsummary" id="bsummary">
+            <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+            <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+            <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+            <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+          </div>
+          <div class="brow-header" id="budget-col-header" style="display:none">
+            <span class="brow-date">Date</span>
+            <span class="brow-day">Day</span>
+            <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
+            <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Daily</span>
+            <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
+          </div>
         </div>
-        <div class="month-scroll" id="month-scroll"></div>
-        <div class="bsummary" id="bsummary">
-          <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-          <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-          <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-          <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="budget-scroll" id="budget-scroll">
+          <div class="budget-rows" id="budget-rows"><div class="empty">Loading…</div></div>
         </div>
-        <div class="budget-rows" id="budget-rows"><div class="empty">Loading…</div></div>
       </div>
 
       <!-- PAGE RECURRING -->
@@ -413,7 +428,10 @@ function switchPage(page){
   document.getElementById('nav-'+page).classList.add('active');
   const titles={add:'Budget logger',budget:'Budget',recurring:'Known expenses'};
   document.getElementById('page-title').textContent=titles[page];
-  document.getElementById('scroll-area').scrollTop=0;
+  // Budget has its own scroll container; others use scroll-area
+  const scrollArea=document.getElementById('scroll-area');
+  scrollArea.style.overflowY=page==='budget'?'hidden':'auto';
+  if(page!=='budget')scrollArea.scrollTop=0;
   if(page==='budget'&&!budgetData)loadBudget();
   if(page==='recurring'&&!recurringData)loadRecurring();
 }
@@ -599,17 +617,22 @@ async function loadBudget(){
 }
 
 function scrollToMonth(k){
-  // Scroll the budget rows container to the first row of that month
-  const el=document.querySelector(`[data-month="${k}"]`);
-  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  const el=document.querySelector('[data-month="'+k+'"]');
+  const budgetScroll=document.getElementById('budget-scroll');
+  if(el&&budgetScroll){
+    budgetScroll.scrollTo({top:el.offsetTop-4,behavior:'smooth'});
+  }
   setActiveBudgetMonth(k);
 }
 
 function setActiveBudgetMonth(k){
+  if(activeBudgetMonth===k)return; // no change, skip
   activeBudgetMonth=k;
   document.querySelectorAll('.month-chip').forEach(c=>c.classList.remove('active'));
   const chip=document.getElementById('mchip-'+k);
   if(chip){chip.classList.add('active');chip.scrollIntoView({inline:'center',behavior:'smooth'});}
+  // Update summary cards for this month (no row re-render)
+  if(budgetData)updateSummaryCards();
 }
 
 const budgetRowMap=new Map();
@@ -688,7 +711,7 @@ let runningTotalMode='payday'; // 'eom' = end of month, 'payday' = next pay day
 
 function setRunningTotalMode(mode){
   runningTotalMode=mode;
-  renderAllBudgetRows();
+  updateSummaryCards();
 }
 
 function getNextPayDay(fromDateIso){
@@ -697,19 +720,15 @@ function getNextPayDay(fromDateIso){
   return budgetData.find(r=>r.date>fromDateIso&&r.income>0)||null;
 }
 
-function renderAllBudgetRows(){
+function updateSummaryCards(){
   if(!budgetData)return;
-  const now=new Date();
-  const todayIso=now.toISOString().split('T')[0];
-
-  // Summary cards use today's month data
   const[cy,cm]=activeBudgetMonth.split('-');
-  const monthRows=budgetData.filter(r=>r.date.startsWith(`${cy}-${cm}`));
+  const monthRows=budgetData.filter(r=>r.date.startsWith(cy+'-'+cm));
   const ti=monthRows.reduce((s,r)=>s+r.income,0);
   const te=monthRows.reduce((s,r)=>s+r.totalExpenses,0);
-  const net=ti-te;
+  const now=new Date();
+  const todayIso=now.toISOString().split('T')[0];
   const last=monthRows.length?monthRows[monthRows.length-1]:null;
-
   let rtVal,rtSub,rtClass;
   if(runningTotalMode==='eom'){
     rtVal=last?last.runningTotal:null;
@@ -718,12 +737,11 @@ function renderAllBudgetRows(){
   }else{
     const nextPay=getNextPayDay(todayIso);
     if(nextPay){
-      const allRows=budgetData;
-      const idx=allRows.findIndex(r=>r.date===nextPay.date);
-      const dayBefore=idx>0?allRows[idx-1]:null;
+      const idx=budgetData.findIndex(r=>r.date===nextPay.date);
+      const dayBefore=idx>0?budgetData[idx-1]:null;
       rtVal=dayBefore?dayBefore.runningTotal:null;
       const[py,pm,pd]=nextPay.date.split('-');
-      rtSub=`before ${parseInt(pd)} ${MONTHS[parseInt(pm)-1]}`;
+      rtSub='before '+parseInt(pd)+' '+MONTHS[parseInt(pm)-1];
       rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
     }else{
       rtVal=last?last.runningTotal:null;
@@ -731,38 +749,33 @@ function renderAllBudgetRows(){
       rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
     }
   }
-  const rtDisplay=rtVal!=null?`$${rtVal.toLocaleString('en-AU',{maximumFractionDigits:0})}`:'—';
+  const rtDisplay=rtVal!=null?'$'+rtVal.toLocaleString('en-AU',{maximumFractionDigits:0}):'—';
+  document.getElementById('bsummary').innerHTML=
+    '<div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$'+ti.toLocaleString('en-AU',{maximumFractionDigits:0})+'</div></div>'+
+    '<div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$'+te.toLocaleString('en-AU',{maximumFractionDigits:0})+'</div></div>'+
+    '<div class="bcard" style="grid-column:1/-1"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
+      '<div><div class="bcard-label">Running total</div><div class="bcard-val '+rtClass+'">'+rtDisplay+'</div><div class="bcard-sub">'+rtSub+'</div></div>'+
+      '<div class="rt-toggle" style="flex-shrink:0;margin-top:2px">'+
+        '<button class="'+(runningTotalMode==='eom'?'active':'')+'" onclick="setRunningTotalMode('eom')">End of month</button>'+
+        '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode('payday')">Next pay day</button>'+
+      '</div></div></div>';
+}
 
-  document.getElementById('bsummary').innerHTML=`
-    <div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$${ti.toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
-    <div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$${te.toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
-    <div class="bcard" style="grid-column:1/-1">
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">
-        <div>
-          <div class="bcard-label">Running total</div>
-          <div class="bcard-val ${rtClass}">${rtDisplay}</div>
-          <div class="bcard-sub">${rtSub}</div>
-        </div>
-        <div class="rt-toggle" style="flex-shrink:0;margin-top:2px">
-          <button class="${runningTotalMode==='eom'?'active':''}" onclick="setRunningTotalMode('eom')">End of month</button>
-          <button class="${runningTotalMode==='payday'?'active':''}" onclick="setRunningTotalMode('payday')">Next pay day</button>
-        </div>
-      </div>
-    </div>`;
+function renderAllBudgetRows(){
+  if(!budgetData)return;
+  const now=new Date();
+  const todayIso=now.toISOString().split('T')[0];
 
   // Render ALL active rows across all months
-  const active=budgetData.filter(r=>r.income||r.totalExpenses);
-  if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity</div>';return;}
+  const active=budgetData;
+  if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No data loaded</div>';return;}
 
+  // Show the fixed column header
+  const colHeader=document.getElementById('budget-col-header');
+  if(colHeader)colHeader.style.display='flex';
   budgetRowMap.clear();
   let lastMonth='';
-  let html=`<div class="brow-header">
-    <span class="brow-date">Date</span>
-    <span class="brow-day">Day</span>
-    <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
-    <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Daily</span>
-    <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
-  </div>`;
+  let html='';
 
   active.forEach(r=>{
     const[y,m]=r.date.split('-');
@@ -798,22 +811,29 @@ function renderAllBudgetRows(){
 
   document.getElementById('budget-rows').innerHTML=html;
 
-  // Scroll to today's row
-  const scrollArea=document.getElementById('scroll-area');
+  // Scroll to today's row using the budget-specific scroll container
+  const budgetScroll=document.getElementById('budget-scroll');
   setTimeout(()=>{
     const todayRow=document.querySelector('.today-row');
-    if(todayRow)todayRow.scrollIntoView({block:'center'});
+    if(todayRow&&budgetScroll){
+      const rowTop=todayRow.offsetTop;
+      const scrollH=budgetScroll.clientHeight;
+      budgetScroll.scrollTop=rowTop-scrollH/3;
+    }
   },80);
 
-  // IntersectionObserver: update month chip as user scrolls
+  // IntersectionObserver: update month chip as user scrolls (no re-render)
   if(budgetMonthObserver)budgetMonthObserver.disconnect();
   budgetMonthObserver=new IntersectionObserver(entries=>{
+    // Find the topmost visible separator
+    let topEntry=null;
     entries.forEach(e=>{
       if(e.isIntersecting){
-        setActiveBudgetMonth(e.target.dataset.month);
+        if(!topEntry||e.boundingClientRect.top<topEntry.boundingClientRect.top)topEntry=e;
       }
     });
-  },{root:scrollArea,threshold:0.5,rootMargin:'-20% 0px -70% 0px'});
+    if(topEntry)setActiveBudgetMonth(topEntry.target.dataset.month);
+  },{root:budgetScroll,threshold:0,rootMargin:'0px 0px -80% 0px'});
   document.querySelectorAll('[data-month]').forEach(el=>budgetMonthObserver.observe(el));
 }
 
