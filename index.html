@@ -151,6 +151,7 @@ textarea:focus{border-color:var(--accent)}
 .brow-running{font-size:17px;font-weight:600;text-align:right;flex-shrink:0;min-width:88px;color:var(--text3);border-left:1px solid var(--border);padding-left:8px;margin-left:4px}
 .brow-running.pos{color:var(--green)}
 .brow-running.neg{color:var(--red)}
+.brow-running.income-day{color:var(--green-text)}
 [data-theme="dark"] .brow-running.pos{color:#c8c8c8}
 [data-theme="dark"] .brow-running.neg{color:var(--red)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
@@ -1068,7 +1069,7 @@ function renderAllBudgetRows(){
       <span class="brow-date" style="font-size:13px;color:#c8c8c8;font-weight:500">${fmtDateShort(r.date)}</span>
       <div class="brow-cats">${p.join('')}</div>
       <span class="brow-total ${n===0?'':n>0?'pos':'neg'}">${n===0?'—':(n>0?'+':'-')+'$'+Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
-      <span class="brow-running ${rt>=0?'pos':'neg'}">${rt===0?'—':'$'+rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+      <span class="brow-running ${r.income?'income-day':rt>=0?'pos':'neg'}">${rt===0?'—':'$'+rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
       <button class="brow-add-btn" onclick="event.stopPropagation();openQuickAdd('${r.date}')" title="Add expense">+</button>
     </div>`;
   });
