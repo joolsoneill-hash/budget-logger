@@ -300,12 +300,32 @@ function showMain(){
 }
 
 function excelDateToIso(serial){
-  const d=new Date((serial-25569)*86400*1000);
+  // Excel serial: days since 1899-12-30
+  const d=new Date(Date.UTC(1899,11,30)+(serial*86400000));
   return d.toISOString().split('T')[0];
 }
 
+function cellToIso(cell){
+  const s=String(cell).trim();
+  // Serial number (e.g. 45764)
+  if(/^\d{4,5}$/.test(s)) return excelDateToIso(parseInt(s));
+  // DD/MM/YYYY
+  const dmy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(dmy) return `${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
+  // MM/DD/YYYY
+  const mdy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if(mdy) return `${mdy[3]}-${mdy[1].padStart(2,'0')}-${mdy[2].padStart(2,'0')}`;
+  // YYYY-MM-DD already
+  if(/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  // Fallback: let JS parse but use UTC to avoid timezone shift
+  const d=new Date(s);
+  if(!isNaN(d)) return d.toISOString().split('T')[0];
+  return null;
+}
+
 async function findRowForDate(dateIso){
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A:A')}`;
+  // Fetch as unformatted values to get serial numbers (most reliable)
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A:A')}?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER`;
   const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
   if(!res.ok)throw new Error('Could not read sheet ('+res.status+')');
   const data=await res.json();
@@ -313,9 +333,7 @@ async function findRowForDate(dateIso){
   for(let i=1;i<rows.length;i++){
     const cell=rows[i][0];
     if(!cell)continue;
-    let iso;
-    if(/^\d{4,5}$/.test(String(cell))){iso=excelDateToIso(parseInt(cell))}
-    else{const d=new Date(cell);if(!isNaN(d))iso=d.toISOString().split('T')[0]}
+    const iso=cellToIso(cell);
     if(iso===dateIso)return i+1;
   }
   return null;
