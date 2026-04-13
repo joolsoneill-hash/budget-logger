@@ -48,6 +48,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
 .cat-btn{padding:14px 6px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .cat-btn.selected{border:2px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
+.cat-btn[data-cat="Income"].selected{border:2px solid #3B6D11;background:#EAF3DE;color:#27500A;font-weight:600}
 .cat-icon{display:block;font-size:22px;margin-bottom:5px}
 textarea{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:15px;padding:10px 12px;resize:none;font-family:inherit;outline:none;min-height:60px}
 textarea:focus{border-color:#378ADD}
@@ -111,6 +112,7 @@ textarea:focus{border-color:#378ADD}
 .brow-running.neg{color:#C0392B}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid #e5e5e3;background:white;gap:10px;position:sticky;top:0;z-index:5}
 .brow.today-row{background:#fffbf0}
+.brow-month-sep{padding:8px 16px 4px;font-size:11px;font-weight:700;color:#888;letter-spacing:0.06em;text-transform:uppercase;background:#f5f5f3;border-bottom:1px solid #ececea;scroll-margin-top:80px}
 .rt-toggle{display:inline-flex;border:1px solid #e5e5e3;border-radius:8px;overflow:hidden;margin-top:6px}
 .rt-toggle button{padding:4px 9px;border:none;background:none;font-size:11px;color:#888;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .rt-toggle button.active{background:#378ADD;color:white;font-weight:600}
@@ -228,6 +230,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           <div class="cat-grid">
             <button class="cat-btn selected" data-cat="Other"><span class="cat-icon">🛍️</span>Other</button>
             <button class="cat-btn" data-cat="Food"><span class="cat-icon">🛒</span>Food</button>
+            <button class="cat-btn" data-cat="Income" style="grid-column:1/-1;border-color:#c0ddb0"><span class="cat-icon">💵</span>Income</button>
           </div>
           <div class="field-label">Note <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
           <textarea id="note-input" placeholder="What was this for?" rows="2"></textarea>
@@ -379,8 +382,8 @@ const SHEET_ID='1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
 const BUDGET_SHEET='Budget';
 const REC_SHEET='Recurring Expenses';
 const REDIRECT_URI=location.origin+location.pathname.replace(/\/$/,'');
-const CAT_ICONS={Other:'🛍️',Food:'🛒',Subscriptions:'📱',Utilities:'💡',Gym:'🏋️',Daycare:'👶',Savings:'💰',Rent:'🏠',Insurance:'🛡️',Medibank:'🏥',MediBank:'🏥',IN:'💵'};
-const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K'};
+const CAT_ICONS={Other:'🛍️',Food:'🛒',Income:'💵',Subscriptions:'📱',Utilities:'💡',Gym:'🏋️',Daycare:'👶',Savings:'💰',Rent:'🏠',Insurance:'🛡️',Medibank:'🏥',MediBank:'🏥',IN:'💵'};
+const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K',Income:'C'};
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
 let accessToken=null,tokenExpiry=0,entries=[],selectedCat='Other',selectedDateMode='today';
@@ -562,6 +565,8 @@ async function addExpense(){
   btn.disabled=false;btn.textContent='Add to sheet';
 }
 
+let budgetMonthObserver=null;
+
 async function loadBudget(){
   document.getElementById('budget-rows').innerHTML='<div class="empty">Loading…</div>';
   try{
@@ -579,6 +584,7 @@ async function loadBudget(){
       data.push(row);
     }
     budgetData=data;
+    // Build month tabs from all data
     const months={};
     data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
     const keys=Object.keys(months).sort();
@@ -586,15 +592,24 @@ async function loadBudget(){
     const cur=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
     activeBudgetMonth=keys.includes(cur)?cur:keys[keys.length-1];
     const scroll=document.getElementById('month-scroll');
-    scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" onclick="selectMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;}).join('');
+    scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" id="mchip-${k}" onclick="scrollToMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;}).join('');
     setTimeout(()=>{const a=scroll.querySelector('.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},100);
-    renderBudgetMonth();
+    renderAllBudgetRows();
   }catch(e){document.getElementById('budget-rows').innerHTML=`<div class="empty">${e.message}</div>`;}
 }
-function selectMonth(k){
+
+function scrollToMonth(k){
+  // Scroll the budget rows container to the first row of that month
+  const el=document.querySelector(`[data-month="${k}"]`);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'start'});
+  setActiveBudgetMonth(k);
+}
+
+function setActiveBudgetMonth(k){
   activeBudgetMonth=k;
-  document.querySelectorAll('.month-chip').forEach(c=>{const[y,m]=k.split('-');c.classList.toggle('active',c.textContent.trim()===`${MONTHS[parseInt(m)-1]} ${y}`);});
-  renderBudgetMonth();
+  document.querySelectorAll('.month-chip').forEach(c=>c.classList.remove('active'));
+  const chip=document.getElementById('mchip-'+k);
+  if(chip){chip.classList.add('active');chip.scrollIntoView({inline:'center',behavior:'smooth'});}
 }
 
 const budgetRowMap=new Map();
@@ -673,7 +688,7 @@ let runningTotalMode='payday'; // 'eom' = end of month, 'payday' = next pay day
 
 function setRunningTotalMode(mode){
   runningTotalMode=mode;
-  renderBudgetMonth();
+  renderAllBudgetRows();
 }
 
 function getNextPayDay(fromDateIso){
@@ -682,26 +697,27 @@ function getNextPayDay(fromDateIso){
   return budgetData.find(r=>r.date>fromDateIso&&r.income>0)||null;
 }
 
-function renderBudgetMonth(){
+function renderAllBudgetRows(){
   if(!budgetData)return;
-  const[y,m]=activeBudgetMonth.split('-');
-  const rows=budgetData.filter(r=>r.date.startsWith(`${y}-${m}`));
+  const now=new Date();
+  const todayIso=now.toISOString().split('T')[0];
 
-  const todayIso=new Date().toISOString().split('T')[0];
-  const ti=rows.reduce((s,r)=>s+r.income,0),te=rows.reduce((s,r)=>s+r.totalExpenses,0),net=ti-te;
-  const last=rows.length?rows[rows.length-1]:null;
+  // Summary cards use today's month data
+  const[cy,cm]=activeBudgetMonth.split('-');
+  const monthRows=budgetData.filter(r=>r.date.startsWith(`${cy}-${cm}`));
+  const ti=monthRows.reduce((s,r)=>s+r.income,0);
+  const te=monthRows.reduce((s,r)=>s+r.totalExpenses,0);
+  const net=ti-te;
+  const last=monthRows.length?monthRows[monthRows.length-1]:null;
 
-  // Running total card value depends on toggle
   let rtVal,rtSub,rtClass;
   if(runningTotalMode==='eom'){
     rtVal=last?last.runningTotal:null;
     rtSub='end of month';
     rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
   }else{
-    // Find next pay day after today
     const nextPay=getNextPayDay(todayIso);
     if(nextPay){
-      // Get the running total for the day BEFORE the next pay day
       const allRows=budgetData;
       const idx=allRows.findIndex(r=>r.date===nextPay.date);
       const dayBefore=idx>0?allRows[idx-1]:null;
@@ -715,7 +731,6 @@ function renderBudgetMonth(){
       rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
     }
   }
-
   const rtDisplay=rtVal!=null?`$${rtVal.toLocaleString('en-AU',{maximumFractionDigits:0})}`:'—';
 
   document.getElementById('bsummary').innerHTML=`
@@ -735,17 +750,28 @@ function renderBudgetMonth(){
       </div>
     </div>`;
 
-  const active=rows.filter(r=>r.income||r.totalExpenses);
-  if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity this month</div>';return;}
+  // Render ALL active rows across all months
+  const active=budgetData.filter(r=>r.income||r.totalExpenses);
+  if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity</div>';return;}
 
   budgetRowMap.clear();
-  document.getElementById('budget-rows').innerHTML=`<div class="brow-header">
+  let lastMonth='';
+  let html=`<div class="brow-header">
     <span class="brow-date">Date</span>
     <span class="brow-day">Day</span>
     <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
     <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Daily</span>
     <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
-  </div>`+active.map(r=>{
+  </div>`;
+
+  active.forEach(r=>{
+    const[y,m]=r.date.split('-');
+    const monthKey=`${y}-${m}`;
+    // Insert a month separator row at each month boundary
+    if(monthKey!==lastMonth){
+      html+=`<div class="brow-month-sep" data-month="${monthKey}">${MONTHS[parseInt(m)-1]} ${y}</div>`;
+      lastMonth=monthKey;
+    }
     const p=[];
     if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.rent)p.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
@@ -761,15 +787,34 @@ function renderBudgetMonth(){
     const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
     budgetRowMap.set(r.date,r);
-    const dateKey=r.date;
-    return`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail('${dateKey}')">
+    html+=`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail('${r.date}')">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
       <div class="brow-cats">${p.join('')}</div>
       <span class="brow-total ${n>=0?'pos':'neg'}">${n>=0?'+':'-'}$${Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
       <span class="brow-running ${rt>=0?'pos':'neg'}">$${rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
     </div>`;
-  }).join('');
+  });
+
+  document.getElementById('budget-rows').innerHTML=html;
+
+  // Scroll to today's row
+  const scrollArea=document.getElementById('scroll-area');
+  setTimeout(()=>{
+    const todayRow=document.querySelector('.today-row');
+    if(todayRow)todayRow.scrollIntoView({block:'center'});
+  },80);
+
+  // IntersectionObserver: update month chip as user scrolls
+  if(budgetMonthObserver)budgetMonthObserver.disconnect();
+  budgetMonthObserver=new IntersectionObserver(entries=>{
+    entries.forEach(e=>{
+      if(e.isIntersecting){
+        setActiveBudgetMonth(e.target.dataset.month);
+      }
+    });
+  },{root:scrollArea,threshold:0.5,rootMargin:'-20% 0px -70% 0px'});
+  document.querySelectorAll('[data-month]').forEach(el=>budgetMonthObserver.observe(el));
 }
 
 async function loadRecurring(){
