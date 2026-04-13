@@ -109,6 +109,7 @@ textarea:focus{border-color:#378ADD}
 .brow-running{font-size:12px;font-weight:500;text-align:right;flex-shrink:0;min-width:60px;color:#888;border-left:1px solid #f0f0ee;padding-left:8px;margin-left:4px}
 .brow-running.pos{color:#2D7D3A}
 .brow-running.neg{color:#C0392B}
+.brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid #e5e5e3;background:white;gap:10px;position:sticky;top:0;z-index:5}
 .brow.today-row{background:#fffbf0}
 .rt-toggle{display:inline-flex;border:1px solid #e5e5e3;border-radius:8px;overflow:hidden;margin-top:6px}
 .rt-toggle button{padding:4px 9px;border:none;background:none;font-size:11px;color:#888;cursor:pointer;-webkit-tap-highlight-color:transparent}
@@ -625,7 +626,13 @@ function renderBudgetMonth(){
   const active=rows.filter(r=>r.income||r.totalExpenses);
   if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity this month</div>';return;}
 
-  document.getElementById('budget-rows').innerHTML=active.map(r=>{
+  document.getElementById('budget-rows').innerHTML=`<div class="brow-header">
+    <span class="brow-date">Date</span>
+    <span class="brow-day">Day</span>
+    <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
+    <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Net</span>
+    <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
+  </div>`+active.map(r=>{
     const p=[];
     if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.rent)p.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
@@ -654,13 +661,22 @@ async function loadRecurring(){
   recurringData=null;
   document.getElementById('rec-section').innerHTML='<div class="empty">Loading…</div>';
   try{
-    const rows=await sheetGet(REC_SHEET,'A:G');
+    // UNFORMATTED_VALUE so amounts come back as raw numbers, not "$6,192.00" strings
+    const rows=await sheetGet(REC_SHEET,'A:G',true);
     const skip=['HOW TO USE THIS SHEET','Category','Amount ($)','Start Date','Recurrence','Day of Week / Day of Month','Active?'];
     const data=[];
     for(let i=1;i<rows.length;i++){
-      const r=rows[i];if(!r||!r[0]||skip.includes(r[0]))continue;
-      data.push({sheetRow:i+1,cat:r[0]||'',desc:r[1]||'',amount:parseFloat(r[2])||0,
-        startDate:r[3]||'',recurrence:r[4]||'',dayInfo:String(r[5]??''),active:(r[6]||'').toLowerCase()==='yes'});
+      const r=rows[i];if(!r||!r[0]||skip.includes(String(r[0])))continue;
+      // Amount: raw number from unformatted fetch, fallback strip currency chars
+      const rawAmt=r[2];
+      const amount=typeof rawAmt==='number'?rawAmt:parseFloat(String(rawAmt||'').replace(/[^0-9.-]/g,''))||0;
+      // Day info: monthly comes back as integer, weekly/fortnightly as text
+      const rawDay=r[5]??'';
+      const dayInfo=typeof rawDay==='number'?String(Math.round(rawDay)):String(rawDay);
+      // Start date: may be serial number or formatted string
+      const startDate=r[3]!=null?cellToIso(r[3])||String(r[3]):'';
+      data.push({sheetRow:i+1,cat:String(r[0]||''),desc:String(r[1]||''),amount,
+        startDate,recurrence:String(r[4]||''),dayInfo,active:String(r[6]||'').toLowerCase()==='yes'});
     }
     recurringData=data;
     renderRecurring(data);
@@ -676,7 +692,10 @@ function freqBadge(f,active){
 function renderRecurring(data){
   const groups={Monthly:[],Fortnightly:[],Weekly:[],'One-Off':[]};
   data.forEach(r=>{const k=r.recurrence||'One-Off';(groups[k]||groups['One-Off']).push(r);});
-  let html='';
+  let html=`<button class="add-rec-trigger" onclick="openAddRec()">
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Add recurring expense
+  </button>`;
   Object.entries(groups).forEach(([freq,items])=>{
     if(!items.length)return;
     html+=`<div class="rec-card"><div class="rec-card-header"><div class="rec-card-title">${freq}</div></div>`;
@@ -712,10 +731,6 @@ function renderRecurring(data){
       <div class="sum-card"><div class="sum-label">Net</div><div class="sum-val" style="color:${inc-exp>=0?'#2D7D3A':'#C0392B'}">${inc-exp>=0?'+':'-'}$${Math.round(Math.abs(inc-exp)).toLocaleString('en-AU')}</div></div>
     </div>
   </div>`;
-  html+=`<button class="add-rec-trigger" onclick="openAddRec()">
-    <svg viewBox="0 0 24 24" width="16" height="16" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Add recurring expense
-  </button>`;
   document.getElementById('rec-section').innerHTML=html;
 }
 
