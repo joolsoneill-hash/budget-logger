@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Budget Logger">
+<title>Budget Logger</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
+.app{max-width:420px;margin:0 auto;padding:0 0 80px}
+.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:16px 20px 12px;position:sticky;top:0;z-index:10}
+.topbar h1{font-size:18px;font-weight:600;color:#1a1a1a}
+.topbar p{font-size:12px;color:#888;margin-top:2px}
+.section{padding:16px 20px;background:white;margin-bottom:8px}
+.field-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
+.amount-row{display:flex;gap:8px;align-items:center;margin-bottom:16px}
+.dollar{font-size:28px;font-weight:500;color:#888;line-height:1;padding-top:4px}
+#amount-input{font-size:36px;font-weight:600;border:none;border-bottom:2px solid #ddd;background:transparent;color:#1a1a1a;width:100%;outline:none;padding-bottom:4px}
+#amount-input:focus{border-bottom-color:#378ADD}
+#amount-input::placeholder{color:#ccc}
+.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+.cat-btn{padding:12px 6px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.cat-btn.selected{border:2px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
+.cat-icon{display:block;font-size:18px;margin-bottom:4px}
+textarea{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:15px;padding:10px 12px;resize:none;font-family:inherit;outline:none;min-height:64px}
+textarea:focus{border-color:#378ADD}
+.date-row{display:flex;gap:8px;margin-bottom:16px}
+.date-chip{flex:1;padding:9px 8px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.date-chip.selected{border:2px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
+#custom-date{flex:1.4;padding:8px 10px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;outline:none}
+.add-btn{width:100%;padding:16px;border:none;border-radius:12px;background:#378ADD;color:white;font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.add-btn:active{background:#185FA5;transform:scale(0.98)}
+.add-btn:disabled{background:#ccc;color:#fff}
+.auth-card{background:white;border-radius:12px;padding:24px 20px;margin:16px}
+.auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
+.auth-card p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
+.input-field{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;padding:12px;outline:none;margin-bottom:10px;font-family:inherit}
+.input-field:focus{border-color:#378ADD}
+.signin-btn{width:100%;padding:13px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
+.signin-btn:active{background:#f5f5f5}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:10px 20px;background:white;border-bottom:1px solid #e5e5e3}
+.status-dot{width:8px;height:8px;border-radius:50%;background:#639922;flex-shrink:0}
+.status-dot.red{background:#E24B4A}
+.status-dot.amber{background:#EF9F27}
+.status-text{font-size:12px;color:#666;flex:1;margin-left:8px}
+.signout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
+.history-header{display:flex;justify-content:space-between;align-items:center;padding:16px 20px 8px;background:white;margin-top:8px}
+.history-header span{font-size:14px;font-weight:600}
+.export-btn{font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
+.entry-list{padding:0 16px;background:white;margin:0 0 8px}
+.entry{display:flex;align-items:center;gap:12px;padding:13px 4px;border-bottom:1px solid #f0f0ee}
+.entry:last-child{border-bottom:none}
+.entry-icon{width:38px;height:38px;border-radius:10px;background:#f5f5f3;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.entry-icon.synced{background:#EAF3DE}
+.entry-body{flex:1;min-width:0}
+.entry-cat{font-size:14px;font-weight:600}
+.entry-note{font-size:12px;color:#888;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.entry-right{text-align:right;flex-shrink:0}
+.entry-amount{font-size:15px;font-weight:600}
+.entry-meta{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px}
+.sync-badge{font-size:10px;background:#EAF3DE;color:#3B6D11;padding:1px 5px;border-radius:4px;font-weight:600}
+.pending-badge{font-size:10px;background:#FAEEDA;color:#854F0B;padding:1px 5px;border-radius:4px;font-weight:600}
+.del-btn{background:none;border:none;color:#ccc;font-size:14px;cursor:pointer;padding:6px;border-radius:6px;-webkit-tap-highlight-color:transparent}
+.del-btn:active{color:#E24B4A;background:#FCEBEB}
+.empty{text-align:center;padding:32px 20px;color:#aaa;font-size:14px}
+.summary-bar{display:flex;gap:8px;padding:12px 16px;background:white}
+.sum-card{flex:1;background:#f5f5f3;border-radius:10px;padding:10px 12px}
+.sum-label{font-size:11px;color:#888}
+.sum-val{font-size:16px;font-weight:600;margin-top:2px}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(100px);background:#1a1a1a;color:white;padding:11px 20px;border-radius:12px;font-size:14px;transition:transform 0.2s;z-index:100;white-space:nowrap;max-width:90vw;text-align:center;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.spinner{display:inline-block;width:16px;height:16px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{font-size:12px;color:#E24B4A;margin-top:4px;display:none}
+</style>
+</head>
+<body>
+<div class="app">
+  <div class="topbar">
+    <h1>Budget logger</h1>
+    <p id="topbar-sub">Connect to Google Sheets to get started</p>
+  </div>
+
+  <div id="auth-section">
+    <div class="auth-card">
+      <h2>Connect Google Sheets</h2>
+      <p>Enter your OAuth client secret then tap sign in. Your credentials are stored only on this device.</p>
+      <input class="input-field" type="password" id="secret-input" placeholder="Client secret" autocomplete="off" />
+      <div id="auth-error" class="error-msg"></div>
+      <button class="signin-btn" id="signin-btn" onclick="startAuth()">
+        <svg width="18" height="18" viewBox="0 0 24 24"><path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/><path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/><path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" fill="#FBBC05"/><path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/></svg>
+        Sign in with Google
+      </button>
+    </div>
+  </div>
+
+  <div id="main-section" style="display:none">
+    <div class="status-bar">
+      <div class="status-dot" id="status-dot"></div>
+      <span class="status-text" id="status-text">Connected</span>
+      <button class="signout-btn" onclick="signOut()">Sign out</button>
+    </div>
+
+    <div class="section">
+      <div class="field-label">Amount</div>
+      <div class="amount-row">
+        <span class="dollar">$</span>
+        <input type="number" id="amount-input" placeholder="0.00" inputmode="decimal" step="0.01" min="0">
+      </div>
+
+      <div class="field-label" style="margin-bottom:10px">Category</div>
+      <div class="cat-grid" id="cat-grid">
+        <button class="cat-btn selected" data-cat="Other" data-col="D"><span class="cat-icon">🛍️</span>Other</button>
+        <button class="cat-btn" data-cat="Food" data-col="M"><span class="cat-icon">🛒</span>Food</button>
+        <button class="cat-btn" data-cat="Subscriptions" data-col="E"><span class="cat-icon">📱</span>Subscriptions</button>
+        <button class="cat-btn" data-cat="Utilities" data-col="F"><span class="cat-icon">💡</span>Utilities</button>
+        <button class="cat-btn" data-cat="Gym" data-col="L"><span class="cat-icon">🏋️</span>Gym</button>
+        <button class="cat-btn" data-cat="Daycare" data-col="K"><span class="cat-icon">👶</span>Daycare</button>
+      </div>
+
+      <div class="field-label">Note <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+      <textarea id="note-input" placeholder="What was this for?" rows="2"></textarea>
+
+      <div class="field-label" style="margin-top:14px;margin-bottom:8px">Date</div>
+      <div class="date-row">
+        <button class="date-chip selected" id="today-btn" onclick="setDate('today')">Today</button>
+        <button class="date-chip" id="yesterday-btn" onclick="setDate('yesterday')">Yesterday</button>
+        <input type="date" id="custom-date" onchange="setDate('custom')">
+      </div>
+
+      <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
+    </div>
+
+    <div class="history-header">
+      <span id="history-title">Recent entries</span>
+      <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+    <div class="summary-bar" id="summary-bar" style="display:none">
+      <div class="sum-card"><div class="sum-label">This week</div><div class="sum-val" id="sum-week">$0</div></div>
+      <div class="sum-card"><div class="sum-label">This month</div><div class="sum-val" id="sum-month">$0</div></div>
+      <div class="sum-card"><div class="sum-label">Total</div><div class="sum-val" id="sum-total">$0</div></div>
+    </div>
+    <div class="entry-list" id="entry-list">
+      <div class="empty" id="empty-msg">No expenses logged yet</div>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const CLIENT_ID = '493780737176-ajl3bc41qkn92ufe2qvqhs4d6aeks22d.apps.googleusercontent.com';
+const SHEET_ID = '1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
+const SHEET_NAME = 'Budget';
+const REDIRECT_URI = location.origin + location.pathname;
+const CAT_ICONS = {Other:'🛍️',Food:'🛒',Subscriptions:'📱',Utilities:'💡',Gym:'🏋️',Daycare:'👶'};
+const COL_MAP = {Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K'};
+
+let accessToken = null;
+let tokenExpiry = 0;
+let entries = [];
+let selectedCat = 'Other';
+let selectedDateMode = 'today';
+
+function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}}
+
+try{entries=JSON.parse(ls('budget_entries')||'[]')}catch(e){}
+try{const t=JSON.parse(ls('budget_token')||'null');if(t&&t.expiry>Date.now()){accessToken=t.token;tokenExpiry=t.expiry}}catch(e){}
+
+function saveEntries(){ls('budget_entries',JSON.stringify(entries))}
+function saveToken(t,exp){ls('budget_token',JSON.stringify({token:t,expiry:exp}))}
+function clearToken(){accessToken=null;tokenExpiry=0;ls('budget_token','')}
+
+function showToast(msg,dur=2500){
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),dur);
+}
+
+function setStatus(state,msg){
+  const dot=document.getElementById('status-dot');
+  dot.className='status-dot'+(state==='ok'?'':state==='warn'?' amber':' red');
+  document.getElementById('status-text').textContent=msg;
+}
+
+function getSelectedDate(){
+  if(selectedDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0]}
+  if(selectedDateMode==='custom'){const v=document.getElementById('custom-date').value;if(v)return v}
+  return new Date().toISOString().split('T')[0];
+}
+
+function fmtDate(iso){
+  const[y,m,d]=iso.split('-');
+  return`${parseInt(d)} ${['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][parseInt(m)-1]}`
+}
+
+function setDate(mode){
+  selectedDateMode=mode;
+  document.getElementById('today-btn').classList.toggle('selected',mode==='today');
+  document.getElementById('yesterday-btn').classList.toggle('selected',mode==='yesterday');
+  if(mode!=='custom')document.getElementById('custom-date').value='';
+}
+
+document.getElementById('cat-grid').addEventListener('click',e=>{
+  const btn=e.target.closest('.cat-btn');
+  if(!btn)return;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('selected'));
+  btn.classList.add('selected');
+  selectedCat=btn.dataset.cat;
+});
+
+// OAuth — redirect-based (works in standalone browser/PWA)
+function startAuth(){
+  const secret=document.getElementById('secret-input').value.trim();
+  const err=document.getElementById('auth-error');
+  err.style.display='none';
+  if(!secret){err.textContent='Enter your client secret';err.style.display='block';return}
+  ls('budget_secret',secret);
+  const state=Math.random().toString(36).slice(2);
+  ls('oauth_state',state);
+  const params=new URLSearchParams({
+    client_id:CLIENT_ID,
+    redirect_uri:REDIRECT_URI,
+    response_type:'code',
+    scope:'https://www.googleapis.com/auth/spreadsheets',
+    access_type:'offline',
+    prompt:'consent',
+    state
+  });
+  location.href='https://accounts.google.com/o/oauth2/v2/auth?'+params;
+}
+
+async function handleCallback(){
+  const params=new URLSearchParams(location.search);
+  const code=params.get('code');
+  const state=params.get('state');
+  if(!code)return false;
+  // Clean URL
+  history.replaceState({},'',location.pathname);
+  if(state!==ls('oauth_state')){showToast('Auth state mismatch',4000);return false}
+  const secret=ls('budget_secret');
+  if(!secret){showToast('Client secret missing — please sign in again');return false}
+  showToast('Completing sign in…',3000);
+  try{
+    const res=await fetch('https://oauth2.googleapis.com/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({code,client_id:CLIENT_ID,client_secret:secret,redirect_uri:REDIRECT_URI,grant_type:'authorization_code'})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error_description||data.error);
+    accessToken=data.access_token;
+    tokenExpiry=Date.now()+(data.expires_in*1000);
+    saveToken(accessToken,tokenExpiry);
+    if(data.refresh_token)ls('budget_refresh',data.refresh_token);
+    return true;
+  }catch(e){
+    showToast('Sign-in failed: '+e.message,5000);
+    return false;
+  }
+}
+
+async function maybeRefreshToken(){
+  if(accessToken&&tokenExpiry>Date.now()+60000)return true;
+  const refresh=ls('budget_refresh');
+  const secret=ls('budget_secret');
+  if(!refresh||!secret)return false;
+  try{
+    const res=await fetch('https://oauth2.googleapis.com/token',{
+      method:'POST',
+      headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({refresh_token:refresh,client_id:CLIENT_ID,client_secret:secret,grant_type:'refresh_token'})
+    });
+    const data=await res.json();
+    if(data.error)return false;
+    accessToken=data.access_token;
+    tokenExpiry=Date.now()+(data.expires_in*1000);
+    saveToken(accessToken,tokenExpiry);
+    return true;
+  }catch(e){return false}
+}
+
+function signOut(){
+  clearToken();ls('budget_refresh','');
+  accessToken=null;
+  document.getElementById('main-section').style.display='none';
+  document.getElementById('auth-section').style.display='block';
+  document.getElementById('topbar-sub').textContent='Connect to Google Sheets to get started';
+  document.getElementById('secret-input').value='';
+}
+
+function showMain(){
+  document.getElementById('auth-section').style.display='none';
+  document.getElementById('main-section').style.display='block';
+  document.getElementById('topbar-sub').textContent='Logging to your Google Sheet';
+  setStatus('ok','Connected to Google Sheets');
+  render();
+}
+
+function excelDateToIso(serial){
+  const d=new Date((serial-25569)*86400*1000);
+  return d.toISOString().split('T')[0];
+}
+
+async function findRowForDate(dateIso){
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(SHEET_NAME+'!A:A')}`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok)throw new Error('Could not read sheet ('+res.status+')');
+  const data=await res.json();
+  const rows=data.values||[];
+  for(let i=1;i<rows.length;i++){
+    const cell=rows[i][0];
+    if(!cell)continue;
+    let iso;
+    if(/^\d{4,5}$/.test(String(cell))){iso=excelDateToIso(parseInt(cell))}
+    else{const d=new Date(cell);if(!isNaN(d))iso=d.toISOString().split('T')[0]}
+    if(iso===dateIso)return i+1;
+  }
+  return null;
+}
+
+async function getCellValue(row,col){
+  const range=`${SHEET_NAME}!${col}${row}`;
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueRenderOption=UNFORMATTED_VALUE`;
+  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  if(!res.ok)return 0;
+  const data=await res.json();
+  return parseFloat((data.values||[[0]])[0][0])||0;
+}
+
+async function writeToSheet(row,col,newValue){
+  const range=`${SHEET_NAME}!${col}${row}`;
+  const existing=await getCellValue(row,col);
+  const total=parseFloat((existing+newValue).toFixed(2));
+  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`;
+  const res=await fetch(url,{
+    method:'PUT',
+    headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({range,majorDimension:'ROWS',values:[[total]]})
+  });
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Write failed')}
+  return total;
+}
+
+async function addExpense(){
+  const amt=parseFloat(document.getElementById('amount-input').value);
+  if(!amt||amt<=0){showToast('Enter a valid amount');return}
+  const note=document.getElementById('note-input').value.trim();
+  const dateIso=getSelectedDate();
+  const col=COL_MAP[selectedCat];
+  const btn=document.getElementById('add-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>';
+  setStatus('amber','Writing to sheet…');
+  try{
+    const ok=await maybeRefreshToken();
+    if(!ok)throw new Error('Session expired — please sign in again');
+    const row=await findRowForDate(dateIso);
+    if(!row)throw new Error(`No row found for ${fmtDate(dateIso)}. Is that date in your Budget tab?`);
+    const newTotal=await writeToSheet(row,col,amt);
+    entries.unshift({id:Date.now(),date:dateIso,cat:selectedCat,amount:amt,note,synced:true,col,row});
+    saveEntries();
+    setStatus('ok','Connected to Google Sheets');
+    document.getElementById('amount-input').value='';
+    document.getElementById('note-input').value='';
+    render();
+    showToast(`✓ $${amt.toFixed(2)} → ${col}${row} (total now $${newTotal.toFixed(2)})`);
+  }catch(e){
+    setStatus('red','Write failed');
+    showToast(e.message||'Failed to write to sheet',5000);
+  }
+  btn.disabled=false;
+  btn.textContent='Add to sheet';
+}
+
+function exportCSV(){
+  if(!entries.length){showToast('Nothing to export');return}
+  const rows=[['Date','Category','Amount','Note','Synced'],...entries.map(e=>[e.date,e.cat,e.amount.toFixed(2),e.note||'',e.synced?'yes':'no'])];
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);a.download='expenses.csv';a.click();
+  showToast('CSV downloaded');
+}
+
+function render(){
+  const list=document.getElementById('entry-list');
+  const empty=document.getElementById('empty-msg');
+  const bar=document.getElementById('summary-bar');
+  if(!entries.length){list.innerHTML='';list.appendChild(empty);empty.style.display='';bar.style.display='none';document.getElementById('history-title').textContent='Recent entries';return}
+  empty.style.display='none';bar.style.display='flex';
+  document.getElementById('history-title').textContent=`${entries.length} entr${entries.length===1?'y':'ies'}`;
+  const now=new Date();
+  const weekAgo=new Date(now);weekAgo.setDate(weekAgo.getDate()-7);
+  const monthStart=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}-01`;
+  let wk=0,mo=0,tot=0;
+  entries.forEach(e=>{tot+=e.amount;if(e.date>=weekAgo.toISOString().split('T')[0])wk+=e.amount;if(e.date>=monthStart)mo+=e.amount});
+  document.getElementById('sum-week').textContent='$'+wk.toFixed(2);
+  document.getElementById('sum-month').textContent='$'+mo.toFixed(2);
+  document.getElementById('sum-total').textContent='$'+tot.toFixed(2);
+  list.innerHTML=entries.slice(0,60).map(e=>`
+    <div class="entry">
+      <div class="entry-icon${e.synced?' synced':''}">${CAT_ICONS[e.cat]||'🛍️'}</div>
+      <div class="entry-body">
+        <div class="entry-cat">${e.cat}</div>
+        <div class="entry-note">${e.note||'No note'}</div>
+      </div>
+      <div class="entry-right">
+        <div class="entry-amount">$${e.amount.toFixed(2)}</div>
+        <div class="entry-meta">
+          <span>${fmtDate(e.date)}</span>
+          ${e.synced?'<span class="sync-badge">synced</span>':'<span class="pending-badge">local</span>'}
+        </div>
+      </div>
+      <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+    </div>`).join('');
+}
+
+function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveEntries();render();showToast('Entry removed')}
+
+// Init
+const todayIso=new Date().toISOString().split('T')[0];
+document.getElementById('custom-date').value=todayIso;
+document.getElementById('custom-date').max=todayIso;
+const savedSecret=ls('budget_secret');
+if(savedSecret)document.getElementById('secret-input').value=savedSecret;
+
+(async()=>{
+  const fromCallback=await handleCallback();
+  if(fromCallback||(accessToken&&tokenExpiry>Date.now())){
+    showMain();
+  } else {
+    const refreshed=await maybeRefreshToken();
+    if(refreshed)showMain();
+  }
+})();
+</script>
+</body>
+</html>
