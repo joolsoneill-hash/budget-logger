@@ -114,6 +114,7 @@ textarea:focus{border-color:#378ADD}
 .brow-pill{font-size:11px;padding:2px 7px;border-radius:10px;background:#f0f0ee;color:#555;white-space:nowrap}
 .brow-pill.income{background:#EAF3DE;color:#3B6D11}
 .brow-pill.expense{background:#FAEEDA;color:#854F0B}
+.brow-pill.balance{background:#EEEDFE;color:#3C3489;font-weight:600}
 .brow-total{font-size:12px;font-weight:600;text-align:right;flex-shrink:0;min-width:52px}
 .brow-total.pos{color:#2D7D3A}
 .brow-total.neg{color:#C0392B}
@@ -349,6 +350,10 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
     </div><!-- scroll-area -->
 
     <nav class="nav">
+      <button class="nav-btn" id="nav-set" onclick="switchPage('set')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+        Set
+      </button>
       <button class="nav-btn active" id="nav-add" onclick="switchPage('add')">
         <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
         Add
@@ -360,10 +365,6 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
         <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
         Known
-      </button>
-      <button class="nav-btn" id="nav-set" onclick="switchPage('set')">
-        <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
-        Set
       </button>
     </nav>
   </div><!-- main-section -->
@@ -737,6 +738,9 @@ function setActiveBudgetMonth(k){
   if(budgetData)updateSummaryCards();
 }
 
+// Balance corrections map: date -> {date, newBalance, delta}
+const balanceCorrections=new Map();
+try{const bc=JSON.parse(localStorage.getItem('balance_corrections')||'[]');bc.forEach(([k,v])=>balanceCorrections.set(k,v));}catch(e){}
 const budgetRowMap=new Map();
 let budgetDetailData=null;
 
@@ -888,6 +892,9 @@ function renderAllBudgetRows(){
       lastMonth=monthKey;
     }
     const p=[];
+    // Show purple balance-set pill if a correction was applied on this date
+    const corr=balanceCorrections.get(r.date);
+    if(corr)p.push(`<span class="brow-pill balance">⚖ Balance set $${corr.newBalance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.rent)p.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.savings)p.push(`<span class="brow-pill expense">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
@@ -1198,7 +1205,12 @@ async function setAndRecalcBalance(){
     // 7. Write back in one batch request
     await sheetWrite(BUDGET_SHEET,nRange,updatedValues);
 
-    // 8. Force budget reload
+    // 8. Store the balance correction locally for display in Budget tab
+    balanceCorrections.set(dateIso,{date:dateIso,newBalance:newBalance,delta:delta,ts:Date.now()});
+    // Persist
+    try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
+
+    // 9. Force budget reload
     budgetData=null;
     setStatus('ok','Connected to Google Sheets');
     showToast(`Balance set to $${newBalance.toFixed(2)} — ${updatedValues.length} rows updated ✓`);
