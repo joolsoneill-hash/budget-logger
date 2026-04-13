@@ -18,6 +18,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .nav{background:white;border-top:1px solid #e5e5e3;display:flex;flex-shrink:0}
 .nav-btn{flex:1;padding:10px 4px 14px;border:none;background:none;color:#aaa;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
 .nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#nav-budget svg{fill:currentColor;stroke:none}
 .nav-btn.active{color:#378ADD}
 .page{display:none}
 .page.active{display:block}
@@ -268,7 +269,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         Add
       </button>
       <button class="nav-btn" id="nav-budget" onclick="switchPage('budget')">
-        <svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><rect x="2" y="13" width="4" height="9" rx="1"/><rect x="9" y="8" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="19" rx="1"/></svg>
+        <svg viewBox="0 0 24 24"><rect x="2" y="13" width="4" height="9" rx="1"/><rect x="9" y="8" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="19" rx="1"/></svg>
         Budget
       </button>
       <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
@@ -358,7 +359,7 @@ function saveEntries(){ls('budget_entries',JSON.stringify(entries))}
 function saveToken(t,exp){ls('budget_token',JSON.stringify({token:t,expiry:exp}))}
 function clearToken(){accessToken=null;tokenExpiry=0;ls('budget_token','')}
 
-function showToast(msg,dur=2400){
+function showToast(msg,dur=3000){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
@@ -427,7 +428,7 @@ async function handleCallback(){
   const code=params.get('code'),state=params.get('state');
   if(!code)return false;
   history.replaceState({},'',location.pathname);
-  if(state!==ls('oauth_state')){showToast('Auth state mismatch',4000);return false}
+  if(state!==ls('oauth_state')){showToast('Auth state mismatch',3000);return false}
   const secret=ls('budget_secret');if(!secret)return false;
   try{
     const res=await fetch('https://oauth2.googleapis.com/token',{method:'POST',
@@ -439,7 +440,7 @@ async function handleCallback(){
     saveToken(accessToken,tokenExpiry);
     if(data.refresh_token)ls('budget_refresh',data.refresh_token);
     return true;
-  }catch(e){showToast('Sign-in failed: '+e.message,5000);return false}
+  }catch(e){showToast('Sign-in failed: '+e.message,3000);return false}
 }
 async function maybeRefreshToken(){
   if(accessToken&&tokenExpiry>Date.now()+60000)return true;
@@ -523,7 +524,7 @@ async function addExpense(){
     document.getElementById('note-input').value='';
     renderHistory();
     showToast(`✓ $${amt.toFixed(2)} added (total $${newTotal.toFixed(2)})`);
-  }catch(e){setStatus('red','Write failed');showToast(e.message||'Failed',5000)}
+  }catch(e){setStatus('red','Write failed');showToast(e.message||'Failed',3000)}
   btn.disabled=false;btn.textContent='Add to sheet';
 }
 
@@ -809,7 +810,7 @@ async function saveRecurring(){
     document.getElementById('rec-modal').classList.remove('open');
     recurringData=null;
     loadRecurring();
-  }catch(e){showToast(e.message||'Save failed',5000)}
+  }catch(e){showToast(e.message||'Save failed',3000)}
   btn.textContent='Save to sheet';btn.disabled=false;
 }
 
@@ -819,7 +820,7 @@ async function toggleRecActive(sheetRow,currentlyActive){
     await sheetWrite(REC_SHEET,`G${sheetRow}`,[[currentlyActive?'No':'Yes']]);
     showToast(currentlyActive?'Paused ⏸':'Activated ▶');
     recurringData=null;loadRecurring();
-  }catch(e){showToast(e.message||'Failed',4000)}
+  }catch(e){showToast(e.message||'Failed',3000)}
 }
 async function deleteRec(sheetRow){
   if(!confirm('Delete this recurring expense from the sheet?'))return;
@@ -840,7 +841,7 @@ async function deleteRec(sheetRow){
   }catch(e){
     // Restore row if write failed
     if(rowEl){rowEl.style.opacity='';rowEl.style.pointerEvents='';}
-    showToast(e.message||'Failed',4000);
+    showToast(e.message||'Failed',3000);
   }
 }
 
@@ -879,7 +880,7 @@ async function deleteEntry(id){
       await sheetWrite(BUDGET_SHEET,`${entry.col}${entry.row}`,[[newVal<0?0:newVal]]);
       budgetData=null; // force budget tab to reload next visit
     }catch(e){
-      showToast('Could not update sheet: '+e.message,4000);
+      showToast('Could not update sheet: '+e.message,3000);
       return;
     }
   }
