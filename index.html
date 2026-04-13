@@ -6,6 +6,9 @@
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Budget">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="theme-color" content="#5B89B8">
+<link rel="manifest" href="manifest.json">
 <title>Budget</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -220,8 +223,10 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .bpopup-save{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
 .bpopup-save:disabled{background:#ccc}
 .bpopup-note{font-size:11px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.4}
-.brow{cursor:pointer}
+.brow{cursor:pointer;position:relative}
 .brow:hover{background:var(--surface2)}
+.brow-add-btn{flex-shrink:0;width:26px;height:26px;border:1.5px solid var(--border);border-radius:8px;background:none;color:var(--text3);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1;padding:0;margin-left:4px;-webkit-tap-highlight-color:transparent;font-family:inherit}
+.brow-add-btn:active{background:var(--accent-bg);color:var(--accent);border-color:var(--accent)}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(200px);background:var(--text);color:var(--surface);padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.25s;z-index:200;max-width:320px;width:max-content;text-align:center;pointer-events:none;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
@@ -282,11 +287,11 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <div class="month-scroll" id="month-scroll"></div>
       <div class="bsummary" id="bsummary"></div>
       <div class="brow-header" id="budget-col-header" style="display:none">
-        <span class="brow-date">Date</span>
-        <span class="brow-day">Day</span>
-        <div class="brow-cats" style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0.04em">Activity</div>
-        <span class="brow-total" style="font-size:11px;color:var(--text3);font-weight:600">Daily</span>
-        <span class="brow-running" style="font-size:11px;color:var(--text3);font-weight:600">Balance</span>
+        <span class="brow-day" style="font-size:11px;color:#c8c8c8;font-weight:600">Day</span>
+        <span class="brow-date" style="font-size:11px;color:#c8c8c8;font-weight:600">Date</span>
+        <div class="brow-cats" style="font-size:11px;color:#c8c8c8;font-weight:600;letter-spacing:0.04em">Activity</div>
+        <span class="brow-total" style="font-size:11px;color:#c8c8c8;font-weight:600">Daily</span>
+        <span class="brow-running" style="font-size:11px;color:#c8c8c8;font-weight:600">Balance</span>
       </div>
     </div>
 
@@ -718,9 +723,7 @@ let budgetMonthObserver=null;
 
 function showBudgetSkeleton(){
   document.getElementById('bsummary').innerHTML=
-    '<div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:22px;width:70px;margin-top:4px"></div></div>'+
-    '<div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:22px;width:70px;margin-top:4px"></div></div>'+
-    '<div class="bcard" style="grid-column:1/-1"><div class="bcard-label">Running total</div><div class="skel" style="height:22px;width:100px;margin-top:4px"></div></div>';
+    '<div class="bcard" style="grid-column:1/-1"><div class="bcard-label">Projected balance</div><div class="skel" style="height:22px;width:100px;margin-top:4px"></div></div>';
   document.getElementById('month-scroll').innerHTML='';
   document.getElementById('budget-col-header').style.display='none';
 }
@@ -997,10 +1000,9 @@ function updateSummaryCards(){
   }
   const rtDisplay=rtVal!=null?'$'+rtVal.toLocaleString('en-AU',{maximumFractionDigits:0}):'—';
   document.getElementById('bsummary').innerHTML=
-    '<div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$'+ti.toLocaleString('en-AU',{maximumFractionDigits:0})+'</div></div>'+
-    '<div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$'+te.toLocaleString('en-AU',{maximumFractionDigits:0})+'</div></div>'+
+    '<div class="bcard" style="grid-column:1/-1;padding:10px 14px"><button onclick="openSetBalancePopup()" style="width:100%;padding:10px 14px;border:none;border-radius:10px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Set balance</button></div>'+
     '<div class="bcard" style="grid-column:1/-1"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
-      '<div><div class="bcard-label">Running total</div><div class="bcard-val '+rtClass+'">'+rtDisplay+'</div><div class="bcard-sub">'+rtSub+'</div></div>'+
+      '<div><div class="bcard-label">Projected balance</div><div class="bcard-val '+rtClass+'">'+rtDisplay+'</div><div class="bcard-sub">'+rtSub+'</div></div>'+
       '<div class="rt-toggle" style="flex-shrink:0;margin-top:2px;align-items:center">'+
         '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)">End of month</button>'+
         '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)">Next pay day</button>'+
@@ -1054,11 +1056,12 @@ function renderAllBudgetRows(){
     const rt=r.runningTotal;
     budgetRowMap.set(r.date,r);
     html+=`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail('${r.date}')">
-      <span class="brow-date">${fmtDateShort(r.date)}</span>
-      <span class="brow-day">${(r.day||'').slice(0,3)}</span>
+      <span class="brow-day" style="font-size:13px;color:#c8c8c8;font-weight:500">${(r.day||'').slice(0,3)}</span>
+      <span class="brow-date" style="font-size:13px;color:#c8c8c8;font-weight:500">${fmtDateShort(r.date)}</span>
       <div class="brow-cats">${p.join('')}</div>
       <span class="brow-total ${n===0?'':n>0?'pos':'neg'}">${n===0?'—':(n>0?'+':'-')+'$'+Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
       <span class="brow-running ${rt>=0?'pos':'neg'}">${rt===0?'—':'$'+rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+      <button class="brow-add-btn" onclick="event.stopPropagation();openQuickAdd('${r.date}')" title="Add expense">+</button>
     </div>`;
   });
 
@@ -1170,13 +1173,9 @@ function renderRecurring(data){
   const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;return 0;};
   const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
   const exp=data.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
-  html+=`<div style="background:var(--surface);border-radius:12px;padding:14px 16px;margin-bottom:8px">
-    <div style="font-size:11px;color:var(--text3);font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px">Estimated monthly</div>
-    <div style="display:flex;gap:8px">
-      <div class="sum-card"><div class="sum-label">Income</div><div class="sum-val" style="color:var(--green)">$${Math.round(inc).toLocaleString('en-AU')}</div></div>
-      <div class="sum-card"><div class="sum-label">Expenses</div><div class="sum-val" style="color:var(--red)">$${Math.round(exp).toLocaleString('en-AU')}</div></div>
-      <div class="sum-card"><div class="sum-label">Net</div><div class="sum-val" style="color:${inc-exp>=0?'#2D7D3A':'#C0392B'}">${inc-exp>=0?'+':'-'}$${Math.round(Math.abs(inc-exp)).toLocaleString('en-AU')}</div></div>
-    </div>
+  html+=`<div class="bsummary" style="margin-bottom:8px;border-radius:12px;overflow:hidden">
+    <div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$${Math.round(inc).toLocaleString('en-AU')}</div><div class="bcard-sub">estimated monthly</div></div>
+    <div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$${Math.round(exp).toLocaleString('en-AU')}</div><div class="bcard-sub">estimated monthly</div></div>
   </div>`;
   document.getElementById('rec-section').innerHTML=html;
 }
@@ -1291,6 +1290,91 @@ async function deleteRec(sheetRow){
 }
 
 // Balance correction
+function openSetBalancePopup(){
+  // Reuse the bpopup to show the set balance form inline
+  document.getElementById('bpopup-title').textContent='Set balance';
+  document.getElementById('bpopup-body').innerHTML=
+    '<div class="bpopup-edit-row"><span class="bpopup-label">Balance ($)</span>'+
+    '<input class="bpopup-input" type="number" id="sb-popup-amount" placeholder="Set balance" inputmode="decimal" step="0.01" style="-moz-appearance:textfield"></div>'+
+    '<div class="bpopup-edit-row"><span class="bpopup-label">As of date</span>'+
+    '<input class="bpopup-input" type="date" id="sb-popup-date"></div>'+
+    '<button class="bpopup-save" onclick="runSetBalanceFromPopup()">Set balance &amp; recalculate</button>'+
+    '<p class="bpopup-note">Adjusts all future projected balances — income and expense entries unchanged</p>';
+  // Pre-fill date with today
+  const today=new Date().toISOString().split('T')[0];
+  document.getElementById('sb-popup-date').value=today;
+  document.getElementById('bpopup-wrap').classList.add('open');
+}
+async function runSetBalanceFromPopup(){
+  const newBalance=parseFloat(document.getElementById('sb-popup-amount').value);
+  const dateIso=document.getElementById('sb-popup-date').value;
+  if(isNaN(newBalance)){showToast('Enter a valid balance');return;}
+  if(!dateIso){showToast('Pick a date');return;}
+  const btn=document.querySelector('#bpopup-body .bpopup-save');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Recalculating…';
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    const sheetRow=await findRowForDate(dateIso);
+    if(!sheetRow)throw new Error('No row found for '+fmtDate(dateIso));
+    const currentRT=await getCellValue(sheetRow,'N');
+    const delta=parseFloat((newBalance-currentRT).toFixed(2));
+    if(Math.abs(delta)<0.01){showToast('Balance already matches');closeBudgetDetail();return;}
+    const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
+    const lastRow=allDates.length;
+    const nRange=`N${sheetRow}:N${lastRow}`;
+    const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
+    const updatedValues=nRows.map(r=>[parseFloat((parseFloat(r[0]||0)+delta).toFixed(2))]);
+    await sheetWrite(BUDGET_SHEET,nRange,updatedValues);
+    balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
+    await saveCorrectionsToSheet();
+    budgetData=null;
+    closeBudgetDetail();
+    showToast(`Balance set to $${newBalance.toFixed(2)} ✓`);
+    loadBudget();
+  }catch(e){showToast(e.message||'Failed',3000);}
+  btn.disabled=false;btn.textContent='Set balance & recalculate';
+}
+function openQuickAdd(dateIso){
+  document.getElementById('bpopup-title').textContent='Add expense — '+fmtDate(dateIso);
+  const cats=[
+    {key:'Other',col:'D',icon:'🛍️'},{key:'Food',col:'M',icon:'🛒'},
+    {key:'Income',col:'C',icon:'💵'},{key:'Subscriptions',col:'E',icon:'📱'},
+    {key:'Utilities',col:'F',icon:'💡'},{key:'Gym',col:'L',icon:'🏋️'},
+    {key:'Daycare',col:'K',icon:'👶'},{key:'Savings',col:'G',icon:'💰'},
+    {key:'Rent',col:'H',icon:'🏠'},{key:'Insurance',col:'I',icon:'🛡️'},
+    {key:'Medibank',col:'J',icon:'🏥'},
+  ];
+  document.getElementById('bpopup-body').innerHTML=
+    '<div class="bpopup-edit-row"><span class="bpopup-label">Amount</span>'+
+    '<input class="bpopup-input" type="number" id="qa-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="-moz-appearance:textfield;-webkit-appearance:none"></div>'+
+    '<div class="bpopup-edit-row"><span class="bpopup-label">Category</span>'+
+    '<select class="bpopup-input" id="qa-cat">'+cats.map(c=>'<option value="'+c.col+'">'+c.icon+' '+c.key+'</option>').join('')+'</select></div>'+
+    '<div class="bpopup-edit-row"><span class="bpopup-label">Note</span>'+
+    '<input class="bpopup-input" type="text" id="qa-note" placeholder="Optional note"></div>'+
+    '<button class="bpopup-save" onclick="saveQuickAdd(\"'+dateIso+'\")">Add to sheet</button>';
+  document.getElementById('bpopup-wrap').classList.add('open');
+}
+async function saveQuickAdd(dateIso){
+  const amt=parseFloat(document.getElementById('qa-amount').value);
+  if(!amt||amt<=0){showToast('Enter an amount');return;}
+  const col=document.getElementById('qa-cat').value;
+  const note=document.getElementById('qa-note').value;
+  const btn=document.querySelector('#bpopup-body .bpopup-save');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving…';
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    const sheetRow=await findRowForDate(dateIso);
+    if(!sheetRow)throw new Error('No row for this date');
+    const existing=await getCellValue(sheetRow,col);
+    const newVal=parseFloat(((existing||0)+amt).toFixed(2));
+    await sheetWrite(BUDGET_SHEET,col+sheetRow,[[newVal]]);
+    budgetData=null;
+    closeBudgetDetail();
+    showToast('Added $'+amt.toFixed(2)+' ✓');
+    loadBudget();
+  }catch(e){showToast(e.message||'Failed',3000);}
+  btn.disabled=false;btn.textContent='Add to sheet';
+}
 let balanceDateMode='today';
 
 function setBalanceDate(mode){
@@ -1433,6 +1517,12 @@ if(savedSecret)document.getElementById('secret-input').value=savedSecret;
   if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain()}
   else{const r=await maybeRefreshToken();if(r)showMain()}
 })();
+// Register service worker for PWA offline support
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>{
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  });
+}
 // Init theme
 (function(){
   const saved=localStorage.getItem('theme');
