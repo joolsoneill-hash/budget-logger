@@ -2,16 +2,16 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Budget">
 <title>Budget</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;position:relative}
-.app{max-width:480px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+html{height:100%}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;position:relative;min-height:100%;min-height:100dvh}
+.app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 .topbar{background:white;border-bottom:1px solid #e5e5e3;padding:14px 20px 10px;flex-shrink:0}
 .topbar h1{font-size:17px;font-weight:600;color:#1a1a1a}
 .topbar p{font-size:12px;color:#888;margin-top:1px}
@@ -21,7 +21,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .nav-btn.active{color:#378ADD}
 .page{display:none}
 .page.active{display:block}
-.auth-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.auth-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .auth-card{background:white;border-radius:14px;padding:24px 20px;margin:20px 16px}
 .auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
 .auth-card p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
@@ -36,8 +36,9 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .status-dot.amber{background:#EF9F27}
 .status-text{font-size:12px;color:#666;flex:1;margin-left:8px}
 .signout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
-.main-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}
-.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.main-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+#main-section.visible{display:flex!important}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
 .section{padding:16px 20px;background:white;margin-bottom:8px}
 .field-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
 .amount-row{display:flex;gap:8px;align-items:center;margin-bottom:16px}
@@ -515,7 +516,12 @@ function signOut(){
 }
 function showMain(){
   document.getElementById('auth-section').style.display='none';
-  document.getElementById('main-section').style.display='flex';
+  const main=document.getElementById('main-section');
+  main.style.display='flex';
+  main.style.flex='1';
+  main.style.flexDirection='column';
+  main.style.overflow='hidden';
+  main.style.minHeight='0';
   document.getElementById('topbar-sub').textContent='Your Google Sheet';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
