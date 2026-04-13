@@ -361,7 +361,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 </div>
 
 <!-- BUDGET ROW DETAIL POPUP -->
-<div class="bpopup-wrap" id="bpopup-wrap" onclick="closeBudgetDetail(event)">
+<div class="bpopup-wrap" id="bpopup-wrap" onclick="closeBudgetDetail()">
   <div class="bpopup" onclick="event.stopPropagation()">
     <div class="bpopup-header">
       <h3 id="bpopup-title">13 Apr — Tuesday</h3>
@@ -652,8 +652,7 @@ function openBudgetDetail(date){
   }
   document.getElementById('bpopup-wrap').classList.add('open');
 }
-function closeBudgetDetail(e){
-  if(e&&e.target!==document.getElementById('bpopup-wrap'))return;
+function closeBudgetDetail(){
   document.getElementById('bpopup-wrap').classList.remove('open');
   budgetDetailData=null;
 }
@@ -757,7 +756,8 @@ const todayIso=new Date().toISOString().split('T')[0];
     const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
     budgetRowMap.set(r.date,r);
-    return`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail(this.dataset.date)" data-date="${r.date}">
+    const dateKey=r.date;
+    return`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail('${dateKey}')">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
       <div class="brow-cats">${p.join('')}</div>
