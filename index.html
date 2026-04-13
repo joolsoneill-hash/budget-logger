@@ -268,7 +268,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         Add
       </button>
       <button class="nav-btn" id="nav-budget" onclick="switchPage('budget')">
-        <svg viewBox="0 0 24 24"><rect x="2" y="13" width="4" height="9" rx="1"/><rect x="9" y="8" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="19" rx="1"/></svg>
+        <svg viewBox="0 0 24 24" style="fill:currentColor;stroke:none"><rect x="2" y="13" width="4" height="9" rx="1"/><rect x="9" y="8" width="4" height="14" rx="1"/><rect x="16" y="3" width="4" height="19" rx="1"/></svg>
         Budget
       </button>
       <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
@@ -633,7 +633,8 @@ function renderBudgetMonth(){
     <span class="brow-date">Date</span>
     <span class="brow-day">Day</span>
     <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
-    <span class="brow-running" style="font-size:11px;color:#888;font-weight:600;border-left:none;padding-left:0;margin-left:0">Balance</span>
+    <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Net</span>
+    <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
   </div>`+active.map(r=>{
     const p=[];
     if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
@@ -863,10 +864,30 @@ function renderHistory(){
         <div class="entry-amount">$${e.amount.toFixed(2)}</div>
         <div class="entry-meta"><span>${fmtDate(e.date)}</span>${e.synced?'<span class="sync-badge">synced</span>':''}</div>
       </div>
-      <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
+      <button class="del-btn" onclick="deleteEntry(${e.id})" style="color:#E24B4A;font-size:11px;font-weight:600;padding:5px 8px;border:1px solid #fcd4d4;border-radius:6px;background:#fff5f5">Delete</button>
     </div>`).join('');
 }
-function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveEntries();renderHistory();showToast('Entry removed')}
+async function deleteEntry(id){
+  const entry=entries.find(e=>e.id===id);
+  if(!entry)return;
+  // If it was synced to the sheet, subtract the amount from that cell
+  if(entry.synced&&entry.col&&entry.row){
+    try{
+      if(!await maybeRefreshToken())throw new Error('not authed');
+      const existing=await getCellValue(entry.row,entry.col);
+      const newVal=parseFloat((existing-entry.amount).toFixed(2));
+      await sheetWrite(BUDGET_SHEET,`${entry.col}${entry.row}`,[[newVal<0?0:newVal]]);
+      budgetData=null; // force budget tab to reload next visit
+    }catch(e){
+      showToast('Could not update sheet: '+e.message,4000);
+      return;
+    }
+  }
+  entries=entries.filter(e=>e.id!==id);
+  saveEntries();
+  renderHistory();
+  showToast('Entry deleted from sheet');
+}
 function exportCSV(){
   if(!entries.length){showToast('Nothing to export');return}
   const rows=[['Date','Category','Amount','Note','Synced'],...entries.map(e=>[e.date,e.cat,e.amount.toFixed(2),e.note||'',e.synced?'yes':'no'])];
