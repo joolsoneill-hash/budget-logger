@@ -482,6 +482,16 @@ const CAT_ICONS={Other:'🛍️',Food:'🛒',Income:'💵',Subscriptions:'📱',
 const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K',Income:'C'};
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
+// Always use the browser's local timezone for date calculations
+function localDateIso(d){
+  // Returns YYYY-MM-DD in local time
+  const dt=d||new Date();
+  const y=dt.getFullYear();
+  const m=String(dt.getMonth()+1).padStart(2,'0');
+  const day=String(dt.getDate()).padStart(2,'0');
+  return y+'-'+m+'-'+day;
+}
+
 let accessToken=null,tokenExpiry=0,entries=[],selectedCat='Other',selectedDateMode='today';
 let budgetData=null,recurringData=null,activeBudgetMonth=null;
 
@@ -562,9 +572,9 @@ function switchPage(page){
 }
 
 function getSelectedDate(){
-  if(selectedDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0]}
+  if(selectedDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return localDateIso(d)}
   if(selectedDateMode==='custom'){const v=document.getElementById('custom-date').value;if(v)return v}
-  return new Date().toISOString().split('T')[0];
+  return localDateIso();
 }
 function fmtDate(iso){const[y,m,d]=iso.split('-');return`${parseInt(d)} ${MONTHS[parseInt(m)-1]}`}
 function fmtDateShort(iso){const[y,m,d]=iso.split('-');return`${parseInt(d)} ${MONTHS[parseInt(m)-1].slice(0,3)}`}
@@ -583,7 +593,7 @@ function cellToIso(cell){
   const dmy=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
   if(dmy)return`${dmy[3]}-${dmy[2].padStart(2,'0')}-${dmy[1].padStart(2,'0')}`;
   if(/^\d{4}-\d{2}-\d{2}$/.test(s))return s;
-  const d=new Date(s);if(!isNaN(d))return d.toISOString().split('T')[0];
+  const d=new Date(s);if(!isNaN(d))return localDateIso(d);
   return null;
 }
 
@@ -752,8 +762,7 @@ async function loadBudget(){
     const months={};
     data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
     const keys=Object.keys(months).sort();
-    const now=new Date();
-    const cur=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    const cur=localDateIso().slice(0,7); // YYYY-MM in local timezone
     activeBudgetMonth=keys.includes(cur)?cur:keys[keys.length-1];
     const scroll=document.getElementById('month-scroll');
     scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" id="mchip-${k}" onclick="scrollToMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;}).join('');
@@ -967,8 +976,7 @@ function updateSummaryCards(){
   const monthRows=budgetData.filter(r=>r.date.startsWith(cy+'-'+cm));
   const ti=monthRows.reduce((s,r)=>s+r.income,0);
   const te=monthRows.reduce((s,r)=>s+r.totalExpenses,0);
-  const now=new Date();
-  const todayIso=now.toISOString().split('T')[0];
+  const todayIso=localDateIso();
   const last=monthRows.length?monthRows[monthRows.length-1]:null;
   let rtVal,rtSub,rtClass;
   if(runningTotalMode==='eom'){
@@ -1015,8 +1023,7 @@ function updateSummaryCards(){
 
 function renderAllBudgetRows(){
   if(!budgetData)return;
-  const now=new Date();
-  const todayIso=now.toISOString().split('T')[0];
+  const todayIso=localDateIso();
 
   // Render ALL active rows across all months
   const active=budgetData;
@@ -1195,7 +1202,7 @@ function openAddRec(){
   document.getElementById('rec-amount').value='';
   document.getElementById('rec-freq').value='Monthly';
   document.getElementById('rec-day').value='';
-  document.getElementById('rec-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('rec-start').value=localDateIso();
   document.getElementById('rec-active').value='Yes';
   updateDayLabel();
   document.getElementById('rec-modal').classList.add('open');
@@ -1209,7 +1216,7 @@ function openEditRec(sheetRow){
   document.getElementById('rec-amount').value=r.amount;
   document.getElementById('rec-freq').value=r.recurrence||'Monthly';
   document.getElementById('rec-day').value=r.dayInfo||'';
-  document.getElementById('rec-start').value=cellToIso(r.startDate)||new Date().toISOString().split('T')[0];
+  document.getElementById('rec-start').value=cellToIso(r.startDate)||localDateIso();
   document.getElementById('rec-active').value=r.active?'Yes':'No';
   updateDayLabel();
   document.getElementById('rec-modal').classList.add('open');
@@ -1301,7 +1308,7 @@ function openSetBalancePopup(){
     '<button class="bpopup-save" onclick="runSetBalanceFromPopup()">Set balance &amp; recalculate</button>'+
     '<p class="bpopup-note">Adjusts all future projected balances — income and expense entries unchanged</p>';
   // Pre-fill date with today
-  const today=new Date().toISOString().split('T')[0];
+  const today=localDateIso();
   document.getElementById('sb-popup-date').value=today;
   document.getElementById('bpopup-wrap').classList.add('open');
 }
@@ -1385,9 +1392,9 @@ function setBalanceDate(mode){
 }
 
 function getBalanceDate(){
-  if(balanceDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0];}
+  if(balanceDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return localDateIso(d);}
   if(balanceDateMode==='custom'){const v=document.getElementById('balance-custom-date').value;if(v)return v;}
-  return new Date().toISOString().split('T')[0];
+  return localDateIso();
 }
 
 async function setAndRecalcBalance(){
@@ -1505,7 +1512,7 @@ function exportCSV(){
   showToast('CSV downloaded');
 }
 
-const todayIso=new Date().toISOString().split('T')[0];
+const todayIso=localDateIso();
 document.getElementById('custom-date').value=todayIso;
 document.getElementById('custom-date').max=todayIso;
 document.getElementById('balance-custom-date').max=todayIso;
