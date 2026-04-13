@@ -9,21 +9,19 @@
 <title>Budget</title>
 <style>
 *{box-sizing:border-box;margin:0;padding:0}
-body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;min-height:100vh}
-.app{max-width:480px;margin:0 auto;padding:0 0 72px}
-/* topbar */
-.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:14px 20px 10px;position:sticky;top:0;z-index:20}
+html,body{height:100%}
+body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a}
+.app{max-width:480px;margin:0 auto;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:14px 20px 10px;flex-shrink:0}
 .topbar h1{font-size:17px;font-weight:600;color:#1a1a1a}
 .topbar p{font-size:12px;color:#888;margin-top:1px}
-/* bottom nav */
-.nav{position:fixed;bottom:0;left:0;right:0;background:white;border-top:1px solid #e5e5e3;display:flex;z-index:20;max-width:480px;margin:0 auto}
-.nav-btn{flex:1;padding:10px 4px 12px;border:none;background:none;color:#888;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
+.nav{background:white;border-top:1px solid #e5e5e3;display:flex;flex-shrink:0}
+.nav-btn{flex:1;padding:10px 4px 14px;border:none;background:none;color:#aaa;font-size:10px;font-weight:500;cursor:pointer;display:flex;flex-direction:column;align-items:center;gap:3px;-webkit-tap-highlight-color:transparent}
 .nav-btn svg{width:22px;height:22px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nav-btn.active{color:#378ADD}
-/* pages */
 .page{display:none}
 .page.active{display:block}
-/* auth */
+.auth-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .auth-card{background:white;border-radius:14px;padding:24px 20px;margin:20px 16px}
 .auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
 .auth-card p{font-size:13px;color:#666;margin-bottom:16px;line-height:1.6}
@@ -32,14 +30,14 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .signin-btn{width:100%;padding:13px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
 .signin-btn:active{background:#f5f5f5}
 .error-msg{font-size:12px;color:#E24B4A;margin-top:4px;display:none}
-/* status bar */
-.status-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:white;border-bottom:1px solid #e5e5e3}
+.status-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:white;border-bottom:1px solid #e5e5e3;flex-shrink:0}
 .status-dot{width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0}
 .status-dot.red{background:#E24B4A}
 .status-dot.amber{background:#EF9F27}
 .status-text{font-size:12px;color:#666;flex:1;margin-left:8px}
 .signout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
-/* add page */
+.main-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column}
+.scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .section{padding:16px 20px;background:white;margin-bottom:8px}
 .field-label{font-size:11px;color:#888;margin-bottom:6px;font-weight:600;letter-spacing:0.05em;text-transform:uppercase}
 .amount-row{display:flex;gap:8px;align-items:center;margin-bottom:16px}
@@ -47,10 +45,10 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 #amount-input{font-size:36px;font-weight:600;border:none;border-bottom:2px solid #ddd;background:transparent;color:#1a1a1a;width:100%;outline:none;padding-bottom:4px}
 #amount-input:focus{border-bottom-color:#378ADD}
 #amount-input::placeholder{color:#ccc}
-.cat-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
-.cat-btn{padding:12px 6px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
+.cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px}
+.cat-btn{padding:14px 6px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .cat-btn.selected{border:2px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
-.cat-icon{display:block;font-size:18px;margin-bottom:4px}
+.cat-icon{display:block;font-size:22px;margin-bottom:5px}
 textarea{width:100%;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:15px;padding:10px 12px;resize:none;font-family:inherit;outline:none;min-height:60px}
 textarea:focus{border-color:#378ADD}
 .date-row{display:flex;gap:8px;margin-bottom:16px}
@@ -60,10 +58,9 @@ textarea:focus{border-color:#378ADD}
 .add-btn{width:100%;padding:15px;border:none;border-radius:12px;background:#378ADD;color:white;font-size:16px;font-weight:600;cursor:pointer;-webkit-tap-highlight-color:transparent}
 .add-btn:active{background:#185FA5;transform:scale(0.98)}
 .add-btn:disabled{background:#ccc}
-/* history */
 .history-header{display:flex;justify-content:space-between;align-items:center;padding:14px 20px 8px;background:white;margin-top:8px}
 .history-header span{font-size:14px;font-weight:600}
-.export-btn{font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:8px}
+.export-btn{font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;padding:4px 8px}
 .entry-list{padding:0 16px;background:white}
 .entry{display:flex;align-items:center;gap:12px;padding:12px 4px;border-bottom:1px solid #f0f0ee}
 .entry:last-child{border-bottom:none}
@@ -83,17 +80,13 @@ textarea:focus{border-color:#378ADD}
 .sum-label{font-size:11px;color:#888}
 .sum-val{font-size:15px;font-weight:600;margin-top:2px}
 .empty{text-align:center;padding:40px 20px;color:#aaa;font-size:14px}
-/* budget view page */
-.page-header{padding:16px 20px 8px;background:white;border-bottom:1px solid #e5e5e3;display:flex;align-items:center;justify-content:space-between}
+.page-header{padding:14px 20px 10px;background:white;border-bottom:1px solid #e5e5e3;display:flex;align-items:center;justify-content:space-between}
 .page-header h2{font-size:15px;font-weight:600}
 .refresh-btn{font-size:12px;color:#378ADD;background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:4px}
-.refresh-btn:active{background:#E6F1FB}
-/* month filter */
 .month-scroll{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;background:white;border-bottom:1px solid #f0f0ee;-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .month-scroll::-webkit-scrollbar{display:none}
 .month-chip{padding:6px 14px;border:1px solid #e5e5e3;border-radius:20px;background:white;color:#666;font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .month-chip.active{background:#378ADD;color:white;border-color:#378ADD;font-weight:600}
-/* budget summary cards */
 .bsummary{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:12px 16px;background:#f5f5f3}
 .bcard{background:white;border-radius:12px;padding:12px 14px}
 .bcard-label{font-size:11px;color:#888;font-weight:500}
@@ -101,7 +94,6 @@ textarea:focus{border-color:#378ADD}
 .bcard-val.pos{color:#2D7D3A}
 .bcard-val.neg{color:#C0392B}
 .bcard-sub{font-size:11px;color:#aaa;margin-top:2px}
-/* budget rows */
 .budget-rows{background:white;margin-top:8px}
 .brow{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid #f5f5f3;gap:10px}
 .brow:last-child{border-bottom:none}
@@ -115,34 +107,48 @@ textarea:focus{border-color:#378ADD}
 .brow-total.pos{color:#2D7D3A}
 .brow-total.neg{color:#C0392B}
 .brow.today-row{background:#fffbf0}
-/* loading skeleton */
 .skel{background:#f0f0ee;border-radius:6px;animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
-/* recurring page */
-.rec-section{padding:12px 16px;background:#f5f5f3}
+.rec-section{padding:12px 16px 16px;background:#f5f5f3}
 .rec-card{background:white;border-radius:12px;margin-bottom:8px;overflow:hidden}
-.rec-card-header{padding:12px 14px 8px;border-bottom:1px solid #f5f5f3}
-.rec-card-title{font-size:13px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:0.04em}
-.rec-row{display:flex;align-items:center;padding:10px 14px;border-bottom:1px solid #f8f8f6;gap:10px}
+.rec-card-header{padding:10px 14px 8px;border-bottom:1px solid #f5f5f3}
+.rec-card-title{font-size:11px;font-weight:600;color:#888;text-transform:uppercase;letter-spacing:0.05em}
+.rec-row{display:flex;align-items:center;padding:11px 14px;border-bottom:1px solid #f8f8f6;gap:8px}
 .rec-row:last-child{border-bottom:none}
-.rec-icon{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.rec-icon{width:34px;height:34px;border-radius:8px;background:#f5f5f3;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
 .rec-body{flex:1;min-width:0}
-.rec-name{font-size:14px;font-weight:500}
+.rec-name{font-size:14px;font-weight:500;color:#1a1a1a}
 .rec-detail{font-size:12px;color:#888;margin-top:1px}
-.rec-right{text-align:right;flex-shrink:0}
+.rec-right{text-align:right;flex-shrink:0;display:flex;flex-direction:column;align-items:flex-end;gap:3px}
 .rec-amount{font-size:14px;font-weight:600}
-.rec-freq{font-size:11px;color:#aaa;margin-top:1px}
-.rec-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600;margin-top:2px}
+.rec-badge{display:inline-block;font-size:10px;padding:2px 7px;border-radius:10px;font-weight:600}
 .badge-weekly{background:#E6F1FB;color:#185FA5}
 .badge-fortnightly{background:#EAF3DE;color:#3B6D11}
 .badge-monthly{background:#FAEEDA;color:#854F0B}
 .badge-oneoff{background:#f0f0ee;color:#666}
 .badge-inactive{background:#f0f0ee;color:#aaa}
-.rec-total-row{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;background:white;border-top:1px solid #e5e5e3;margin-top:8px}
-.rec-total-label{font-size:13px;color:#888}
-.rec-total-val{font-size:16px;font-weight:700}
-/* toast */
-.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a1a1a;color:white;padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.2s;z-index:100;white-space:nowrap;max-width:90vw;text-align:center;pointer-events:none}
+.rec-actions{display:flex;gap:0;flex-shrink:0}
+.rab{background:none;border:none;cursor:pointer;padding:7px 5px;border-radius:6px;font-size:14px;color:#bbb;-webkit-tap-highlight-color:transparent}
+.rab:active{background:#f5f5f3}
+.add-rec-trigger{width:100%;padding:13px;border:1.5px dashed #d0d0ce;border-radius:12px;background:white;color:#378ADD;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:8px;-webkit-tap-highlight-color:transparent}
+.modal-wrap{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:100;align-items:flex-end;justify-content:center}
+.modal-wrap.open{display:flex}
+.modal{background:white;border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.modal-header{padding:16px 20px 12px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;background:white;z-index:2}
+.modal-header h3{font-size:16px;font-weight:600}
+.modal-close{background:none;border:none;font-size:22px;color:#aaa;cursor:pointer;line-height:1;padding:0 2px}
+.modal-body{padding:16px 20px 32px}
+.form-row{margin-bottom:14px}
+.form-label{font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:5px}
+.form-input{width:100%;border:1px solid #e5e5e3;border-radius:10px;padding:11px 12px;font-size:15px;color:#1a1a1a;background:white;outline:none;font-family:inherit}
+.form-input:focus{border-color:#378ADD}
+select.form-input{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='10' height='6' viewBox='0 0 10 6' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L5 5L9 1' stroke='%23888' stroke-width='1.5' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:32px}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px}
+.save-rec-btn{width:100%;padding:14px;border:none;border-radius:12px;background:#378ADD;color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:4px}
+.save-rec-btn:active{background:#185FA5}
+.save-rec-btn:disabled{background:#ccc}
+.cancel-rec-btn{width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:12px;background:white;color:#666;font-size:14px;cursor:pointer;margin-top:8px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a1a1a;color:white;padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.2s;z-index:200;max-width:90vw;text-align:center;pointer-events:none}
 .toast.show{transform:translateX(-50%) translateY(0)}
 .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
@@ -156,7 +162,7 @@ textarea:focus{border-color:#378ADD}
   </div>
 
   <!-- AUTH -->
-  <div id="auth-section">
+  <div class="auth-wrap" id="auth-section">
     <div class="auth-card">
       <h2>Connect Google Sheets</h2>
       <p>Enter your OAuth client secret then tap sign in. Your credentials are stored only on this device.</p>
@@ -169,108 +175,159 @@ textarea:focus{border-color:#378ADD}
     </div>
   </div>
 
-  <!-- MAIN (3 pages) -->
-  <div id="main-section" style="display:none">
+  <!-- MAIN -->
+  <div class="main-wrap" id="main-section" style="display:none">
     <div class="status-bar">
       <div class="status-dot" id="status-dot"></div>
       <span class="status-text" id="status-text">Connected</span>
       <button class="signout-btn" onclick="signOut()">Sign out</button>
     </div>
 
-    <!-- PAGE: ADD -->
-    <div class="page active" id="page-add">
-      <div class="section">
-        <div class="field-label">Amount</div>
-        <div class="amount-row">
-          <span class="dollar">$</span>
-          <input type="number" id="amount-input" placeholder="0.00" inputmode="decimal" step="0.01" min="0">
+    <div class="scroll-area" id="scroll-area">
+
+      <!-- PAGE ADD -->
+      <div class="page active" id="page-add">
+        <div class="section">
+          <div class="field-label">Amount</div>
+          <div class="amount-row">
+            <span class="dollar">$</span>
+            <input type="number" id="amount-input" placeholder="0.00" inputmode="decimal" step="0.01" min="0">
+          </div>
+          <div class="field-label" style="margin-bottom:10px">Category</div>
+          <div class="cat-grid">
+            <button class="cat-btn selected" data-cat="Other"><span class="cat-icon">🛍️</span>Other</button>
+            <button class="cat-btn" data-cat="Food"><span class="cat-icon">🛒</span>Food</button>
+          </div>
+          <div class="field-label">Note <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
+          <textarea id="note-input" placeholder="What was this for?" rows="2"></textarea>
+          <div class="field-label" style="margin-top:14px;margin-bottom:8px">Date</div>
+          <div class="date-row">
+            <button class="date-chip selected" id="today-btn" onclick="setDate('today')">Today</button>
+            <button class="date-chip" id="yesterday-btn" onclick="setDate('yesterday')">Yesterday</button>
+            <input type="date" id="custom-date" onchange="setDate('custom')">
+          </div>
+          <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
         </div>
-        <div class="field-label" style="margin-bottom:10px">Category</div>
-        <div class="cat-grid">
-          <button class="cat-btn selected" data-cat="Other"><span class="cat-icon">🛍️</span>Other</button>
-          <button class="cat-btn" data-cat="Food"><span class="cat-icon">🛒</span>Food</button>
-          <button class="cat-btn" data-cat="Subscriptions"><span class="cat-icon">📱</span>Subscriptions</button>
-          <button class="cat-btn" data-cat="Utilities"><span class="cat-icon">💡</span>Utilities</button>
-          <button class="cat-btn" data-cat="Gym"><span class="cat-icon">🏋️</span>Gym</button>
-          <button class="cat-btn" data-cat="Daycare"><span class="cat-icon">👶</span>Daycare</button>
+        <div class="history-header">
+          <span id="history-title">Recent entries</span>
+          <button class="export-btn" onclick="exportCSV()">Export CSV</button>
         </div>
-        <div class="field-label">Note <span style="font-weight:400;text-transform:none;letter-spacing:0">(optional)</span></div>
-        <textarea id="note-input" placeholder="What was this for?" rows="2"></textarea>
-        <div class="field-label" style="margin-top:14px;margin-bottom:8px">Date</div>
-        <div class="date-row">
-          <button class="date-chip selected" id="today-btn" onclick="setDate('today')">Today</button>
-          <button class="date-chip" id="yesterday-btn" onclick="setDate('yesterday')">Yesterday</button>
-          <input type="date" id="custom-date" onchange="setDate('custom')">
+        <div class="summary-bar" id="summary-bar" style="display:none">
+          <div class="sum-card"><div class="sum-label">This week</div><div class="sum-val" id="sum-week">$0</div></div>
+          <div class="sum-card"><div class="sum-label">This month</div><div class="sum-val" id="sum-month">$0</div></div>
+          <div class="sum-card"><div class="sum-label">Total</div><div class="sum-val" id="sum-total">$0</div></div>
         </div>
-        <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
+        <div class="entry-list" id="entry-list">
+          <div class="empty" id="empty-msg">No expenses logged yet</div>
+        </div>
       </div>
 
-      <div class="history-header">
-        <span id="history-title">Recent entries</span>
-        <button class="export-btn" onclick="exportCSV()">Export CSV</button>
+      <!-- PAGE BUDGET -->
+      <div class="page" id="page-budget">
+        <div class="page-header">
+          <h2>Budget</h2>
+          <button class="refresh-btn" onclick="loadBudget()">
+            <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div class="month-scroll" id="month-scroll"></div>
+        <div class="bsummary" id="bsummary">
+          <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+          <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+          <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+          <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        </div>
+        <div class="budget-rows" id="budget-rows"><div class="empty">Loading…</div></div>
       </div>
-      <div class="summary-bar" id="summary-bar" style="display:none">
-        <div class="sum-card"><div class="sum-label">This week</div><div class="sum-val" id="sum-week">$0</div></div>
-        <div class="sum-card"><div class="sum-label">This month</div><div class="sum-val" id="sum-month">$0</div></div>
-        <div class="sum-card"><div class="sum-label">Total</div><div class="sum-val" id="sum-total">$0</div></div>
+
+      <!-- PAGE RECURRING -->
+      <div class="page" id="page-recurring">
+        <div class="page-header">
+          <h2>Recurring expenses</h2>
+          <button class="refresh-btn" onclick="loadRecurring()">
+            <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+            Refresh
+          </button>
+        </div>
+        <div class="rec-section" id="rec-section"><div class="empty">Loading…</div></div>
       </div>
-      <div class="entry-list" id="entry-list">
-        <div class="empty" id="empty-msg">No expenses logged yet</div>
-      </div>
+
+    </div><!-- scroll-area -->
+
+    <nav class="nav">
+      <button class="nav-btn active" id="nav-add" onclick="switchPage('add')">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+        Add
+      </button>
+      <button class="nav-btn" id="nav-budget" onclick="switchPage('budget')">
+        <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
+        Budget
+      </button>
+      <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
+        <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+        Recurring
+      </button>
+    </nav>
+  </div><!-- main-section -->
+</div><!-- app -->
+
+<!-- EDIT / ADD RECURRING MODAL (bottom sheet) -->
+<div class="modal-wrap" id="rec-modal" onclick="closeRecModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <h3 id="modal-title">Add recurring expense</h3>
+      <button class="modal-close" onclick="closeRecModal()">&#x2715;</button>
     </div>
-
-    <!-- PAGE: BUDGET -->
-    <div class="page" id="page-budget">
-      <div class="page-header">
-        <h2>Budget</h2>
-        <button class="refresh-btn" onclick="loadBudget()">
-          <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Refresh
-        </button>
+    <div class="modal-body">
+      <input type="hidden" id="edit-rec-row">
+      <div class="form-row">
+        <div class="form-label">Description</div>
+        <input class="form-input" type="text" id="rec-desc" placeholder="e.g. Netflix, Rent payment">
       </div>
-      <div class="month-scroll" id="month-scroll"></div>
-      <div class="bsummary" id="bsummary">
-        <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-        <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-        <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-        <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+      <div class="form-row-2">
+        <div>
+          <div class="form-label">Category</div>
+          <select class="form-input" id="rec-cat">
+            <option>Other</option><option>Food</option><option>Subscriptions</option>
+            <option>Utilities</option><option>Savings</option><option>Rent</option>
+            <option>Insurance</option><option>MediBank</option><option>Daycare</option>
+            <option>Gym</option><option>IN</option>
+          </select>
+        </div>
+        <div>
+          <div class="form-label">Amount ($)</div>
+          <input class="form-input" type="number" id="rec-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+        </div>
       </div>
-      <div class="budget-rows" id="budget-rows">
-        <div class="empty">Loading…</div>
+      <div class="form-row-2">
+        <div>
+          <div class="form-label">Recurrence</div>
+          <select class="form-input" id="rec-freq" onchange="updateDayLabel()">
+            <option>Monthly</option><option>Fortnightly</option><option>Weekly</option><option>One-Off</option>
+          </select>
+        </div>
+        <div>
+          <div class="form-label" id="day-label">Day of month</div>
+          <input class="form-input" type="text" id="rec-day" placeholder="e.g. 28">
+        </div>
       </div>
-    </div>
-
-    <!-- PAGE: RECURRING -->
-    <div class="page" id="page-recurring">
-      <div class="page-header">
-        <h2>Recurring expenses</h2>
-        <button class="refresh-btn" onclick="loadRecurring()">
-          <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Refresh
-        </button>
+      <div class="form-row">
+        <div class="form-label">Start date</div>
+        <input class="form-input" type="date" id="rec-start">
       </div>
-      <div class="rec-section" id="rec-section">
-        <div class="empty">Loading…</div>
+      <div class="form-row">
+        <div class="form-label">Active</div>
+        <select class="form-input" id="rec-active">
+          <option value="Yes">Yes — active</option>
+          <option value="No">No — paused</option>
+        </select>
       </div>
+      <button class="save-rec-btn" id="save-rec-btn" onclick="saveRecurring()">Save to sheet</button>
+      <button class="cancel-rec-btn" onclick="closeRecModal()">Cancel</button>
     </div>
   </div>
 </div>
-
-<!-- BOTTOM NAV -->
-<nav class="nav" id="bottom-nav" style="display:none">
-  <button class="nav-btn active" id="nav-add" onclick="switchPage('add')">
-    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Add
-  </button>
-  <button class="nav-btn" id="nav-budget" onclick="switchPage('budget')">
-    <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="9" x2="9" y2="21"/></svg>
-    Budget
-  </button>
-  <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
-    <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-    Recurring
-  </button>
-</nav>
 
 <div class="toast" id="toast"></div>
 
@@ -290,7 +347,6 @@ let budgetData=null,recurringData=null,activeBudgetMonth=null;
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){}}
 try{entries=JSON.parse(ls('budget_entries')||'[]')}catch(e){}
 try{const t=JSON.parse(ls('budget_token')||'null');if(t&&t.expiry>Date.now()){accessToken=t.token;tokenExpiry=t.expiry}}catch(e){}
-
 function saveEntries(){ls('budget_entries',JSON.stringify(entries))}
 function saveToken(t,exp){ls('budget_token',JSON.stringify({token:t,expiry:exp}))}
 function clearToken(){accessToken=null;tokenExpiry=0;ls('budget_token','')}
@@ -305,7 +361,6 @@ function setStatus(state,msg){
   document.getElementById('status-text').textContent=msg;
 }
 
-// Navigation
 function switchPage(page){
   document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
@@ -313,23 +368,18 @@ function switchPage(page){
   document.getElementById('nav-'+page).classList.add('active');
   const titles={add:'Budget logger',budget:'Budget',recurring:'Recurring expenses'};
   document.getElementById('page-title').textContent=titles[page];
+  document.getElementById('scroll-area').scrollTop=0;
   if(page==='budget'&&!budgetData)loadBudget();
   if(page==='recurring'&&!recurringData)loadRecurring();
 }
 
-// Date helpers
 function getSelectedDate(){
   if(selectedDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0]}
   if(selectedDateMode==='custom'){const v=document.getElementById('custom-date').value;if(v)return v}
   return new Date().toISOString().split('T')[0];
 }
-function fmtDate(iso){
-  const[y,m,d]=iso.split('-');
-  return`${parseInt(d)} ${MONTHS[parseInt(m)-1]}`;
-}
-function fmtDateShort(iso){
-  const[y,m,d]=iso.split('-');return`${parseInt(d)} ${MONTHS[parseInt(m)-1].slice(0,3)}`;
-}
+function fmtDate(iso){const[y,m,d]=iso.split('-');return`${parseInt(d)} ${MONTHS[parseInt(m)-1]}`}
+function fmtDateShort(iso){const[y,m,d]=iso.split('-');return`${parseInt(d)} ${MONTHS[parseInt(m)-1].slice(0,3)}`}
 function setDate(mode){
   selectedDateMode=mode;
   document.getElementById('today-btn').classList.toggle('selected',mode==='today');
@@ -337,8 +387,7 @@ function setDate(mode){
   if(mode!=='custom')document.getElementById('custom-date').value='';
 }
 function excelDateToIso(serial){
-  const d=new Date(Date.UTC(1899,11,30)+(serial*86400000));
-  return d.toISOString().split('T')[0];
+  return new Date(Date.UTC(1899,11,30)+(serial*86400000)).toISOString().split('T')[0];
 }
 function cellToIso(cell){
   const s=String(cell).trim();
@@ -350,14 +399,12 @@ function cellToIso(cell){
   return null;
 }
 
-// Category selector
 document.querySelector('.cat-grid').addEventListener('click',e=>{
   const btn=e.target.closest('.cat-btn');if(!btn)return;
   document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('selected'));
   btn.classList.add('selected');selectedCat=btn.dataset.cat;
 });
 
-// Auth
 function startAuth(){
   const secret=document.getElementById('secret-input').value.trim();
   const err=document.getElementById('auth-error');err.style.display='none';
@@ -374,7 +421,7 @@ async function handleCallback(){
   if(!code)return false;
   history.replaceState({},'',location.pathname);
   if(state!==ls('oauth_state')){showToast('Auth state mismatch',4000);return false}
-  const secret=ls('budget_secret');if(!secret){showToast('Client secret missing');return false}
+  const secret=ls('budget_secret');if(!secret)return false;
   try{
     const res=await fetch('https://oauth2.googleapis.com/token',{method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
@@ -403,28 +450,32 @@ async function maybeRefreshToken(){
 function signOut(){
   clearToken();ls('budget_refresh','');accessToken=null;
   document.getElementById('main-section').style.display='none';
-  document.getElementById('bottom-nav').style.display='none';
   document.getElementById('auth-section').style.display='block';
   document.getElementById('topbar-sub').textContent='Connect to Google Sheets to get started';
   document.getElementById('secret-input').value='';
 }
 function showMain(){
   document.getElementById('auth-section').style.display='none';
-  document.getElementById('main-section').style.display='block';
-  document.getElementById('bottom-nav').style.display='flex';
+  document.getElementById('main-section').style.display='flex';
   document.getElementById('topbar-sub').textContent='Your Google Sheet';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
 }
 
-// Sheets API helpers
-async function sheetGet(sheetName,range,unformatted=false){
+async function sheetGet(sheet,range,unformatted=false){
   await maybeRefreshToken();
-  const extra=unformatted?'?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER':'';
-  const url=`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheetName+'!'+range)}${extra}`;
-  const res=await fetch(url,{headers:{Authorization:'Bearer '+accessToken}});
+  const qs=unformatted?'?valueRenderOption=UNFORMATTED_VALUE&dateTimeRenderOption=SERIAL_NUMBER':'';
+  const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheet+'!'+range)}${qs}`,
+    {headers:{Authorization:'Bearer '+accessToken}});
   if(!res.ok)throw new Error('Sheet read failed ('+res.status+')');
   return(await res.json()).values||[];
+}
+async function sheetWrite(sheet,range,values){
+  await maybeRefreshToken();
+  const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(sheet+'!'+range)}?valueInputOption=USER_ENTERED`,
+    {method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+     body:JSON.stringify({range:sheet+'!'+range,majorDimension:'ROWS',values})});
+  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Write failed')}
 }
 async function findRowForDate(dateIso){
   const rows=await sheetGet(BUDGET_SHEET,'A:A',true);
@@ -438,18 +489,13 @@ async function getCellValue(row,col){
   const rows=await sheetGet(BUDGET_SHEET,`${col}${row}`,true);
   return parseFloat((rows[0]||[0])[0])||0;
 }
-async function writeToSheet(row,col,newValue){
+async function writeToSheet(row,col,val){
   const existing=await getCellValue(row,col);
-  const total=parseFloat((existing+newValue).toFixed(2));
-  const range=`${BUDGET_SHEET}!${col}${row}`;
-  const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?valueInputOption=USER_ENTERED`,{
-    method:'PUT',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
-    body:JSON.stringify({range,majorDimension:'ROWS',values:[[total]]})});
-  if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Write failed')}
+  const total=parseFloat((existing+val).toFixed(2));
+  await sheetWrite(BUDGET_SHEET,`${col}${row}`,[[total]]);
   return total;
 }
 
-// Add expense
 async function addExpense(){
   const amt=parseFloat(document.getElementById('amount-input').value);
   if(!amt||amt<=0){showToast('Enter a valid amount');return}
@@ -459,7 +505,7 @@ async function addExpense(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
   setStatus('amber','Writing to sheet…');
   try{
-    const ok=await maybeRefreshToken();if(!ok)throw new Error('Session expired — please sign in again');
+    if(!await maybeRefreshToken())throw new Error('Session expired — please sign in again');
     const row=await findRowForDate(dateIso);
     if(!row)throw new Error(`No row found for ${fmtDate(dateIso)} in Budget tab`);
     const newTotal=await writeToSheet(row,col,amt);
@@ -469,18 +515,15 @@ async function addExpense(){
     document.getElementById('amount-input').value='';
     document.getElementById('note-input').value='';
     renderHistory();
-    showToast(`✓ $${amt.toFixed(2)} → ${col}${row} (total $${newTotal.toFixed(2)})`);
+    showToast(`✓ $${amt.toFixed(2)} added (total $${newTotal.toFixed(2)})`);
   }catch(e){setStatus('red','Write failed');showToast(e.message||'Failed',5000)}
   btn.disabled=false;btn.textContent='Add to sheet';
 }
 
-// Budget page
 async function loadBudget(){
   document.getElementById('budget-rows').innerHTML='<div class="empty">Loading…</div>';
   try{
     const rows=await sheetGet(BUDGET_SHEET,'A:N',true);
-    // headers: Date, Day, IN, Other, Subscriptions, Utilities, Savings, Rent, Insurance, Medibank, Daycare, Gym, Food, Running Total
-    const headers=rows[0]||[];
     const data=[];
     for(let i=1;i<rows.length;i++){
       const r=rows[i];if(!r||!r[0])continue;
@@ -494,172 +537,225 @@ async function loadBudget(){
       data.push(row);
     }
     budgetData=data;
-    // Build month list
     const months={};
-    data.forEach(r=>{const[y,m]=r.date.split('-');const key=`${y}-${m}`;months[key]=(months[key]||[]); months[key].push(r);});
-    const monthKeys=Object.keys(months).sort();
-    // Default to current month
+    data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
+    const keys=Object.keys(months).sort();
     const now=new Date();
-    const curKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-    activeBudgetMonth=monthKeys.includes(curKey)?curKey:monthKeys[monthKeys.length-1];
-    renderMonthTabs(monthKeys);
+    const cur=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+    activeBudgetMonth=keys.includes(cur)?cur:keys[keys.length-1];
+    const scroll=document.getElementById('month-scroll');
+    scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" onclick="selectMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;}).join('');
+    setTimeout(()=>{const a=scroll.querySelector('.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},100);
     renderBudgetMonth();
   }catch(e){document.getElementById('budget-rows').innerHTML=`<div class="empty">${e.message}</div>`;}
 }
-
-function renderMonthTabs(keys){
-  const scroll=document.getElementById('month-scroll');
-  scroll.innerHTML=keys.map(k=>{
-    const[y,m]=k.split('-');
-    return`<button class="month-chip${k===activeBudgetMonth?' active':''}" onclick="selectMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;
-  }).join('');
-  // Scroll active into view
-  setTimeout(()=>{const a=scroll.querySelector('.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},100);
-}
-
-function selectMonth(key){
-  activeBudgetMonth=key;
-  document.querySelectorAll('.month-chip').forEach(c=>{
-    c.classList.toggle('active',c.textContent.trim()===`${MONTHS[parseInt(key.split('-')[1])-1]} ${key.split('-')[0]}`);
-  });
+function selectMonth(k){
+  activeBudgetMonth=k;
+  document.querySelectorAll('.month-chip').forEach(c=>{const[y,m]=k.split('-');c.classList.toggle('active',c.textContent.trim()===`${MONTHS[parseInt(m)-1]} ${y}`);});
   renderBudgetMonth();
 }
-
 function renderBudgetMonth(){
   if(!budgetData)return;
   const[y,m]=activeBudgetMonth.split('-');
   const rows=budgetData.filter(r=>r.date.startsWith(`${y}-${m}`));
   const todayIso=new Date().toISOString().split('T')[0];
-
-  // Summary
-  const totalIncome=rows.reduce((s,r)=>s+r.income,0);
-  const totalExp=rows.reduce((s,r)=>s+r.totalExpenses,0);
-  const net=totalIncome-totalExp;
-  const lastRow=rows.length?rows[rows.length-1]:null;
+  const ti=rows.reduce((s,r)=>s+r.income,0),te=rows.reduce((s,r)=>s+r.totalExpenses,0),net=ti-te;
+  const last=rows.length?rows[rows.length-1]:null;
   document.getElementById('bsummary').innerHTML=`
-    <div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$${totalIncome.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
-    <div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$${totalExp.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
-    <div class="bcard"><div class="bcard-label">Net</div><div class="bcard-val ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}$${Math.abs(net).toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0})}</div></div>
-    <div class="bcard"><div class="bcard-label">Running total</div><div class="bcard-val ${lastRow&&lastRow.runningTotal>=0?'pos':'neg'}">$${lastRow?lastRow.runningTotal.toLocaleString('en-AU',{minimumFractionDigits:0,maximumFractionDigits:0}):'—'}</div><div class="bcard-sub">end of month</div></div>`;
-
-  // Rows — only show days with activity
+    <div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$${ti.toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
+    <div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$${te.toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
+    <div class="bcard"><div class="bcard-label">Net</div><div class="bcard-val ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}$${Math.abs(net).toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
+    <div class="bcard"><div class="bcard-label">Running total</div><div class="bcard-val ${last&&last.runningTotal>=0?'pos':'neg'}">$${last?last.runningTotal.toLocaleString('en-AU',{maximumFractionDigits:0}):'—'}</div><div class="bcard-sub">end of month</div></div>`;
   const active=rows.filter(r=>r.income||r.totalExpenses);
   if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity this month</div>';return;}
-
   document.getElementById('budget-rows').innerHTML=active.map(r=>{
-    const pills=[];
-    if(r.income)pills.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.rent)pills.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.savings)pills.push(`<span class="brow-pill expense">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.medibank)pills.push(`<span class="brow-pill expense">Medibank $${r.medibank.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.daycare)pills.push(`<span class="brow-pill expense">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.insurance)pills.push(`<span class="brow-pill expense">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.food)pills.push(`<span class="brow-pill expense">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.gym)pills.push(`<span class="brow-pill expense">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.subs)pills.push(`<span class="brow-pill expense">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.utils)pills.push(`<span class="brow-pill expense">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.other)pills.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    const net=r.income-r.totalExpenses;
-    const isToday=r.date===todayIso;
-    return`<div class="brow${isToday?' today-row':''}">
+    const p=[];
+    if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.rent)p.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.savings)p.push(`<span class="brow-pill expense">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.medibank)p.push(`<span class="brow-pill expense">Medibank $${r.medibank.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.daycare)p.push(`<span class="brow-pill expense">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.insurance)p.push(`<span class="brow-pill expense">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.food)p.push(`<span class="brow-pill expense">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.gym)p.push(`<span class="brow-pill expense">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.subs)p.push(`<span class="brow-pill expense">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.utils)p.push(`<span class="brow-pill expense">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.other)p.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    const n=r.income-r.totalExpenses;
+    return`<div class="brow${r.date===todayIso?' today-row':''}">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
-      <div class="brow-cats">${pills.join('')}</div>
-      <span class="brow-total ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}$${Math.abs(net).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+      <div class="brow-cats">${p.join('')}</div>
+      <span class="brow-total ${n>=0?'pos':'neg'}">${n>=0?'+':'-'}$${Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
     </div>`;
   }).join('');
 }
 
-// Recurring page
 async function loadRecurring(){
+  recurringData=null;
   document.getElementById('rec-section').innerHTML='<div class="empty">Loading…</div>';
   try{
     const rows=await sheetGet(REC_SHEET,'A:G');
-    // Find data rows (skip header row 1 and legend section)
+    const skip=['HOW TO USE THIS SHEET','Category','Amount ($)','Start Date','Recurrence','Day of Week / Day of Month','Active?'];
     const data=[];
     for(let i=1;i<rows.length;i++){
-      const r=rows[i];
-      if(!r||!r[0])continue;
-      if(['HOW TO USE THIS SHEET','Category','Amount ($)','Start Date','Recurrence','Day of Week / Day of Month','Active?'].includes(r[0]))continue;
-      data.push({cat:r[0]||'',desc:r[1]||'',amount:parseFloat(r[2])||0,startDate:r[3]||'',recurrence:r[4]||'',dayInfo:r[5]||'',active:(r[6]||'').toLowerCase()==='yes'});
+      const r=rows[i];if(!r||!r[0]||skip.includes(r[0]))continue;
+      data.push({sheetRow:i+1,cat:r[0]||'',desc:r[1]||'',amount:parseFloat(r[2])||0,
+        startDate:r[3]||'',recurrence:r[4]||'',dayInfo:String(r[5]??''),active:(r[6]||'').toLowerCase()==='yes'});
     }
     recurringData=data;
     renderRecurring(data);
   }catch(e){document.getElementById('rec-section').innerHTML=`<div class="empty">${e.message}</div>`;}
 }
 
+function freqBadge(f,active){
+  if(!active)return'<span class="rec-badge badge-inactive">Paused</span>';
+  const cls={Monthly:'monthly',Fortnightly:'fortnightly',Weekly:'weekly','One-Off':'oneoff'}[f]||'oneoff';
+  return`<span class="rec-badge badge-${cls}">${f}</span>`;
+}
+
 function renderRecurring(data){
-  // Group by recurrence type
   const groups={Monthly:[],Fortnightly:[],Weekly:[],'One-Off':[]};
-  data.forEach(r=>{
-    const key=r.recurrence||'One-Off';
-    if(groups[key])groups[key].push(r);else groups['One-Off'].push(r);
-  });
-
-  const freqBadge=f=>{
-    const cls={Monthly:'monthly',Fortnightly:'fortnightly',Weekly:'weekly','One-Off':'oneoff'}[f]||'oneoff';
-    return`<span class="rec-badge badge-${cls}">${f}</span>`;
-  };
-
+  data.forEach(r=>{const k=r.recurrence||'One-Off';(groups[k]||groups['One-Off']).push(r);});
   let html='';
-  let monthlyTotal=0;
   Object.entries(groups).forEach(([freq,items])=>{
     if(!items.length)return;
     html+=`<div class="rec-card"><div class="rec-card-header"><div class="rec-card-title">${freq}</div></div>`;
     items.forEach(r=>{
       const icon=CAT_ICONS[r.cat]||'💸';
-      const iconBg=r.active?'background:#f0f0ee':'background:#f8f8f8';
       html+=`<div class="rec-row">
-        <div class="rec-icon" style="${iconBg};opacity:${r.active?1:0.5}">${icon}</div>
+        <div class="rec-icon" style="opacity:${r.active?1:0.4}">${icon}</div>
         <div class="rec-body">
           <div class="rec-name" style="color:${r.active?'#1a1a1a':'#aaa'}">${r.desc||r.cat}</div>
           <div class="rec-detail">${r.cat}${r.dayInfo?' · '+r.dayInfo:''}</div>
         </div>
         <div class="rec-right">
           <div class="rec-amount" style="color:${r.active?'#1a1a1a':'#aaa'}">$${r.amount.toFixed(2)}</div>
-          ${r.active?freqBadge(freq):'<span class="rec-badge badge-inactive">Paused</span>'}
+          ${freqBadge(r.recurrence,r.active)}
+        </div>
+        <div class="rec-actions">
+          <button class="rab" onclick="openEditRec(${r.sheetRow})" title="Edit">✏️</button>
+          <button class="rab" onclick="toggleRecActive(${r.sheetRow},${r.active})" title="${r.active?'Pause':'Resume'}">${r.active?'⏸':'▶'}</button>
+          <button class="rab" onclick="deleteRec(${r.sheetRow})" title="Delete">🗑️</button>
         </div>
       </div>`;
-      // Estimate monthly cost
-      if(r.active){
-        if(freq==='Monthly')monthlyTotal+=r.amount;
-        else if(freq==='Fortnightly')monthlyTotal+=r.amount*2.17;
-        else if(freq==='Weekly')monthlyTotal+=r.amount*4.33;
-      }
     });
     html+='</div>';
   });
-
-  const activeIncome=data.filter(r=>r.active&&r.cat==='IN');
-  const activeExp=data.filter(r=>r.active&&r.cat!=='IN');
-  const estIncomeMonthly=activeIncome.reduce((s,r)=>{
-    const f=r.recurrence;
-    if(f==='Monthly')return s+r.amount;
-    if(f==='Fortnightly')return s+r.amount*2.17;
-    if(f==='Weekly')return s+r.amount*4.33;
-    return s;
-  },0);
-  const estExpMonthly=activeExp.reduce((s,r)=>{
-    const f=r.recurrence;
-    if(f==='Monthly')return s+r.amount;
-    if(f==='Fortnightly')return s+r.amount*2.17;
-    if(f==='Weekly')return s+r.amount*4.33;
-    return s;
-  },0);
-
+  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='Weekly')return r.amount*4.33;return 0;};
+  const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
+  const exp=data.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
   html+=`<div style="background:white;border-radius:12px;padding:14px 16px;margin-bottom:8px">
-    <div style="font-size:12px;color:#888;margin-bottom:10px;font-weight:600;letter-spacing:0.04em;text-transform:uppercase">Estimated monthly</div>
+    <div style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em;text-transform:uppercase;margin-bottom:10px">Estimated monthly</div>
     <div style="display:flex;gap:8px">
-      <div class="sum-card" style="flex:1"><div class="sum-label">Income</div><div class="sum-val" style="color:#2D7D3A">$${Math.round(estIncomeMonthly).toLocaleString('en-AU')}</div></div>
-      <div class="sum-card" style="flex:1"><div class="sum-label">Expenses</div><div class="sum-val" style="color:#C0392B">$${Math.round(estExpMonthly).toLocaleString('en-AU')}</div></div>
-      <div class="sum-card" style="flex:1"><div class="sum-label">Net</div><div class="sum-val" style="color:${estIncomeMonthly-estExpMonthly>=0?'#2D7D3A':'#C0392B'}">${estIncomeMonthly-estExpMonthly>=0?'+':'-'}$${Math.round(Math.abs(estIncomeMonthly-estExpMonthly)).toLocaleString('en-AU')}</div></div>
+      <div class="sum-card"><div class="sum-label">Income</div><div class="sum-val" style="color:#2D7D3A">$${Math.round(inc).toLocaleString('en-AU')}</div></div>
+      <div class="sum-card"><div class="sum-label">Expenses</div><div class="sum-val" style="color:#C0392B">$${Math.round(exp).toLocaleString('en-AU')}</div></div>
+      <div class="sum-card"><div class="sum-label">Net</div><div class="sum-val" style="color:${inc-exp>=0?'#2D7D3A':'#C0392B'}">${inc-exp>=0?'+':'-'}$${Math.round(Math.abs(inc-exp)).toLocaleString('en-AU')}</div></div>
     </div>
   </div>`;
-
+  html+=`<button class="add-rec-trigger" onclick="openAddRec()">
+    <svg viewBox="0 0 24 24" width="16" height="16" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Add recurring expense
+  </button>`;
   document.getElementById('rec-section').innerHTML=html;
 }
 
-// History render
+function updateDayLabel(){
+  const f=document.getElementById('rec-freq').value;
+  const l=document.getElementById('day-label'),i=document.getElementById('rec-day');
+  if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
+  else if(f==='Weekly'||f==='Fortnightly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
+  else{l.textContent='Day';i.placeholder='Leave blank'}
+}
+function openAddRec(){
+  document.getElementById('modal-title').textContent='Add recurring expense';
+  document.getElementById('edit-rec-row').value='';
+  document.getElementById('rec-desc').value='';
+  document.getElementById('rec-cat').value='Other';
+  document.getElementById('rec-amount').value='';
+  document.getElementById('rec-freq').value='Monthly';
+  document.getElementById('rec-day').value='';
+  document.getElementById('rec-start').value=new Date().toISOString().split('T')[0];
+  document.getElementById('rec-active').value='Yes';
+  updateDayLabel();
+  document.getElementById('rec-modal').classList.add('open');
+}
+function openEditRec(sheetRow){
+  const r=recurringData&&recurringData.find(x=>x.sheetRow===sheetRow);if(!r)return;
+  document.getElementById('modal-title').textContent='Edit recurring expense';
+  document.getElementById('edit-rec-row').value=sheetRow;
+  document.getElementById('rec-desc').value=r.desc;
+  document.getElementById('rec-cat').value=r.cat;
+  document.getElementById('rec-amount').value=r.amount;
+  document.getElementById('rec-freq').value=r.recurrence||'Monthly';
+  document.getElementById('rec-day').value=r.dayInfo||'';
+  document.getElementById('rec-start').value=cellToIso(r.startDate)||new Date().toISOString().split('T')[0];
+  document.getElementById('rec-active').value=r.active?'Yes':'No';
+  updateDayLabel();
+  document.getElementById('rec-modal').classList.add('open');
+}
+function closeRecModal(e){
+  if(e&&e.target!==document.getElementById('rec-modal'))return;
+  document.getElementById('rec-modal').classList.remove('open');
+}
+
+async function saveRecurring(){
+  const desc=document.getElementById('rec-desc').value.trim();
+  const cat=document.getElementById('rec-cat').value;
+  const amt=parseFloat(document.getElementById('rec-amount').value);
+  const freq=document.getElementById('rec-freq').value;
+  const day=document.getElementById('rec-day').value.trim();
+  const startIso=document.getElementById('rec-start').value;
+  const active=document.getElementById('rec-active').value;
+  const editRow=document.getElementById('edit-rec-row').value;
+  if(!desc){showToast('Enter a description');return}
+  if(!amt||amt<=0){showToast('Enter a valid amount');return}
+  if(!startIso){showToast('Enter a start date');return}
+  const btn=document.getElementById('save-rec-btn');
+  btn.textContent='Saving…';btn.disabled=true;
+  const dayVal=(freq==='Monthly'&&day)?parseInt(day)||day:day;
+  const[sy,sm,sd]=startIso.split('-');
+  const dateForSheet=`${sd}/${sm}/${sy}`;
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    if(editRow){
+      await sheetWrite(REC_SHEET,`A${editRow}:G${editRow}`,[[cat,desc,amt,dateForSheet,freq,dayVal,active]]);
+      showToast('Updated ✓');
+    }else{
+      const rows=await sheetGet(REC_SHEET,'A:A');
+      let insertRow=5;
+      for(let i=4;i<rows.length;i++){
+        if(!rows[i]||!rows[i][0])break;
+        insertRow=i+2;
+      }
+      await sheetWrite(REC_SHEET,`A${insertRow}:G${insertRow}`,[[cat,desc,amt,dateForSheet,freq,dayVal,active]]);
+      showToast('Added ✓');
+    }
+    document.getElementById('rec-modal').classList.remove('open');
+    recurringData=null;
+    loadRecurring();
+  }catch(e){showToast(e.message||'Save failed',5000)}
+  btn.textContent='Save to sheet';btn.disabled=false;
+}
+
+async function toggleRecActive(sheetRow,currentlyActive){
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    await sheetWrite(REC_SHEET,`G${sheetRow}`,[[currentlyActive?'No':'Yes']]);
+    showToast(currentlyActive?'Paused ⏸':'Activated ▶');
+    recurringData=null;loadRecurring();
+  }catch(e){showToast(e.message||'Failed',4000)}
+}
+async function deleteRec(sheetRow){
+  if(!confirm('Delete this recurring expense from the sheet?'))return;
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    await sheetWrite(REC_SHEET,`A${sheetRow}:G${sheetRow}`,[['','','','','','','']]);
+    showToast('Deleted');
+    recurringData=null;loadRecurring();
+  }catch(e){showToast(e.message||'Failed',4000)}
+}
+
 function renderHistory(){
   const list=document.getElementById('entry-list'),empty=document.getElementById('empty-msg'),bar=document.getElementById('summary-bar');
   if(!entries.length){list.innerHTML='';list.appendChild(empty);empty.style.display='';bar.style.display='none';document.getElementById('history-title').textContent='Recent entries';return}
@@ -683,9 +779,7 @@ function renderHistory(){
       <button class="del-btn" onclick="deleteEntry(${e.id})">✕</button>
     </div>`).join('');
 }
-
 function deleteEntry(id){entries=entries.filter(e=>e.id!==id);saveEntries();renderHistory();showToast('Entry removed')}
-
 function exportCSV(){
   if(!entries.length){showToast('Nothing to export');return}
   const rows=[['Date','Category','Amount','Note','Synced'],...entries.map(e=>[e.date,e.cat,e.amount.toFixed(2),e.note||'',e.synced?'yes':'no'])];
@@ -694,13 +788,11 @@ function exportCSV(){
   showToast('CSV downloaded');
 }
 
-// Init
 const todayIso=new Date().toISOString().split('T')[0];
 document.getElementById('custom-date').value=todayIso;
 document.getElementById('custom-date').max=todayIso;
 const savedSecret=ls('budget_secret');
 if(savedSecret)document.getElementById('secret-input').value=savedSecret;
-
 (async()=>{
   const fromCallback=await handleCallback();
   if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain()}
