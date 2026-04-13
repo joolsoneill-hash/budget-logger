@@ -471,6 +471,7 @@ const CLIENT_ID='493780737176-ajl3bc41qkn92ufe2qvqhs4d6aeks22d.apps.googleuserco
 const SHEET_ID='1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
 const BUDGET_SHEET='Budget';
 const REC_SHEET='Recurring Expenses';
+const CORR_SHEET='Corrections';
 const REDIRECT_URI=location.origin+location.pathname.replace(/\/$/,'');
 const CAT_ICONS={Other:'🛍️',Food:'🛒',Income:'💵',Subscriptions:'📱',Utilities:'💡',Gym:'🏋️',Daycare:'👶',Savings:'💰',Rent:'🏠',Insurance:'🛡️',Medibank:'🏥',MediBank:'🏥',IN:'💵'};
 const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K',Income:'C'};
@@ -742,6 +743,8 @@ async function loadBudget(){
       data.push(row);
     }
     budgetData=data;
+    // Load corrections from sheet (cross-device sync)
+    await loadCorrectionsFromSheet();
     // Build month tabs
     const months={};
     data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
@@ -783,7 +786,60 @@ function setActiveBudgetMonth(k){
 
 // Balance corrections map: date -> {date, newBalance, delta}
 const balanceCorrections=new Map();
+// Also keep localStorage as cache so pills show without waiting for sheet
 try{const bc=JSON.parse(localStorage.getItem('balance_corrections')||'[]');bc.forEach(([k,v])=>balanceCorrections.set(k,v));}catch(e){}
+
+async function loadCorrectionsFromSheet(){
+  try{
+    const rows=await sheetGet(CORR_SHEET,'A:D',true);
+    if(!rows||rows.length<=1)return;
+    for(let i=1;i<rows.length;i++){
+      const r=rows[i];
+      if(!r||!r[0])continue;
+      const date=String(r[0]).trim();
+      const newBalance=parseFloat(r[1])||0;
+      const delta=parseFloat(r[2])||0;
+      const ts=parseFloat(r[3])||0;
+      if(date)balanceCorrections.set(date,{date,newBalance,delta,ts});
+    }
+    // Sync to localStorage cache
+    try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
+  }catch(e){
+    // Corrections sheet may not exist yet — that's fine
+  }
+}
+
+async function saveCorrectionsToSheet(){
+  try{
+    // Build rows: header + one row per correction
+    const header=[['Date','Balance','Delta','Timestamp']];
+    const rows=[...balanceCorrections.values()].map(c=>[c.date,c.newBalance,c.delta,c.ts||Date.now()]);
+    const allRows=header.concat(rows);
+    // Write to Corrections sheet (clear then write)
+    await sheetWrite(CORR_SHEET,`A1:D${allRows.length}`,allRows);
+    // Also sync to localStorage
+    try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
+  }catch(e){
+    // If sheet doesn't exist, try to create it then retry
+    try{
+      await createSheet(CORR_SHEET);
+      await saveCorrectionsToSheet();
+    }catch(e2){
+      // Fall back to localStorage only
+      try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e3){}
+    }
+  }
+}
+
+async function createSheet(name){
+  await maybeRefreshToken();
+  const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}:batchUpdate`,{
+    method:'POST',
+    headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},
+    body:JSON.stringify({requests:[{addSheet:{properties:{title:name}}}]})
+  });
+  if(!res.ok)throw new Error('Could not create sheet '+name);
+}
 const budgetRowMap=new Map();
 let budgetDetailData=null;
 
@@ -840,9 +896,9 @@ function openBalancePopup(date){
   document.getElementById('bpopup-wrap').classList.add('open');
 }
 
-function removeBalanceCorrection(date){
+async function removeBalanceCorrection(date){
   balanceCorrections.delete(date);
-  try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
+  await saveCorrectionsToSheet();
   closeBudgetDetail();
   budgetData=null;
   renderAllBudgetRows();
@@ -1276,10 +1332,9 @@ async function setAndRecalcBalance(){
     // 7. Write back in one batch request
     await sheetWrite(BUDGET_SHEET,nRange,updatedValues);
 
-    // 8. Store the balance correction locally for display in Budget tab
+    // 8. Store correction and save to Corrections sheet (cross-device)
     balanceCorrections.set(dateIso,{date:dateIso,newBalance:newBalance,delta:delta,ts:Date.now()});
-    // Persist
-    try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
+    await saveCorrectionsToSheet();
 
     // 9. Force budget reload
     budgetData=null;
