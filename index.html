@@ -242,12 +242,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         </button>
       </div>
       <div class="month-scroll" id="month-scroll"></div>
-      <div class="bsummary" id="bsummary">
-        <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-        <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-        <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-        <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-      </div>
+      <div class="bsummary" id="bsummary"></div>
       <div class="brow-header" id="budget-col-header" style="display:none">
         <span class="brow-date">Date</span>
         <span class="brow-day">Day</span>
@@ -459,7 +454,14 @@ function switchPage(page){
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
   document.getElementById('scroll-area').scrollTop=0;
-  if(page==='budget'&&!budgetData)loadBudget();
+  if(page==='budget'){
+    if(!budgetData){
+      showBudgetSkeleton();
+      loadBudget();
+    } else {
+      updateSummaryCards();
+    }
+  }
   if(page==='recurring'&&!recurringData)loadRecurring();
 }
 
@@ -617,7 +619,17 @@ async function addExpense(){
 
 let budgetMonthObserver=null;
 
+function showBudgetSkeleton(){
+  document.getElementById('bsummary').innerHTML=
+    '<div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:22px;width:70px;margin-top:4px"></div></div>'+
+    '<div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:22px;width:70px;margin-top:4px"></div></div>'+
+    '<div class="bcard" style="grid-column:1/-1"><div class="bcard-label">Running total</div><div class="skel" style="height:22px;width:100px;margin-top:4px"></div></div>';
+  document.getElementById('month-scroll').innerHTML='';
+  document.getElementById('budget-col-header').style.display='none';
+}
+
 async function loadBudget(){
+  showBudgetSkeleton();
   document.getElementById('budget-rows').innerHTML='<div class="empty">Loading…</div>';
   try{
     const rows=await sheetGet(BUDGET_SHEET,'A:N',true);
@@ -634,7 +646,7 @@ async function loadBudget(){
       data.push(row);
     }
     budgetData=data;
-    // Build month tabs from all data
+    // Build month tabs
     const months={};
     data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
     const keys=Object.keys(months).sort();
@@ -644,8 +656,14 @@ async function loadBudget(){
     const scroll=document.getElementById('month-scroll');
     scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" id="mchip-${k}" onclick="scrollToMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;}).join('');
     setTimeout(()=>{const a=scroll.querySelector('.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},100);
-    renderAllBudgetRows();
-  }catch(e){document.getElementById('budget-rows').innerHTML=`<div class="empty">${e.message}</div>`;}
+    // Update summary cards immediately — don't wait for rows to render
+    updateSummaryCards();
+    // Render rows asynchronously so summary shows first
+    setTimeout(()=>renderAllBudgetRows(),0);
+  }catch(e){
+    document.getElementById('budget-rows').innerHTML=`<div class="empty">${e.message}</div>`;
+    document.getElementById('bsummary').innerHTML='<div class="bcard" style="grid-column:1/-1"><div class="bcard-label" style="color:#E24B4A">Failed to load</div></div>';
+  }
 }
 
 function scrollToMonth(k){
