@@ -103,10 +103,16 @@ textarea:focus{border-color:#378ADD}
 .brow-pill{font-size:11px;padding:2px 7px;border-radius:10px;background:#f0f0ee;color:#555;white-space:nowrap}
 .brow-pill.income{background:#EAF3DE;color:#3B6D11}
 .brow-pill.expense{background:#FAEEDA;color:#854F0B}
-.brow-total{font-size:13px;font-weight:600;text-align:right;flex-shrink:0;min-width:68px}
+.brow-total{font-size:12px;font-weight:600;text-align:right;flex-shrink:0;min-width:52px}
 .brow-total.pos{color:#2D7D3A}
 .brow-total.neg{color:#C0392B}
+.brow-running{font-size:12px;font-weight:500;text-align:right;flex-shrink:0;min-width:60px;color:#888;border-left:1px solid #f0f0ee;padding-left:8px;margin-left:4px}
+.brow-running.pos{color:#2D7D3A}
+.brow-running.neg{color:#C0392B}
 .brow.today-row{background:#fffbf0}
+.rt-toggle{display:inline-flex;border:1px solid #e5e5e3;border-radius:8px;overflow:hidden;margin-top:6px}
+.rt-toggle button{padding:4px 9px;border:none;background:none;font-size:11px;color:#888;cursor:pointer;-webkit-tap-highlight-color:transparent}
+.rt-toggle button.active{background:#378ADD;color:white;font-weight:600}
 .skel{background:#f0f0ee;border-radius:6px;animation:pulse 1.2s ease-in-out infinite}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.5}}
 .rec-section{padding:12px 16px 16px;background:#f5f5f3}
@@ -554,6 +560,19 @@ function selectMonth(k){
   document.querySelectorAll('.month-chip').forEach(c=>{const[y,m]=k.split('-');c.classList.toggle('active',c.textContent.trim()===`${MONTHS[parseInt(m)-1]} ${y}`);});
   renderBudgetMonth();
 }
+let runningTotalMode='eom'; // 'eom' = end of month, 'payday' = next pay day
+
+function setRunningTotalMode(mode){
+  runningTotalMode=mode;
+  renderBudgetMonth();
+}
+
+function getNextPayDay(fromDateIso){
+  // Find the next date in budgetData where income > 0, after fromDateIso
+  if(!budgetData)return null;
+  return budgetData.find(r=>r.date>fromDateIso&&r.income>0)||null;
+}
+
 function renderBudgetMonth(){
   if(!budgetData)return;
   const[y,m]=activeBudgetMonth.split('-');
@@ -561,13 +580,51 @@ function renderBudgetMonth(){
   const todayIso=new Date().toISOString().split('T')[0];
   const ti=rows.reduce((s,r)=>s+r.income,0),te=rows.reduce((s,r)=>s+r.totalExpenses,0),net=ti-te;
   const last=rows.length?rows[rows.length-1]:null;
+
+  // Running total card value depends on toggle
+  let rtVal,rtSub,rtClass;
+  if(runningTotalMode==='eom'){
+    rtVal=last?last.runningTotal:null;
+    rtSub='end of month';
+    rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
+  }else{
+    // Find next pay day after today
+    const nextPay=getNextPayDay(todayIso);
+    if(nextPay){
+      // Get the running total for the day BEFORE the next pay day
+      const allRows=budgetData;
+      const idx=allRows.findIndex(r=>r.date===nextPay.date);
+      const dayBefore=idx>0?allRows[idx-1]:null;
+      rtVal=dayBefore?dayBefore.runningTotal:null;
+      const[py,pm,pd]=nextPay.date.split('-');
+      rtSub=`before ${parseInt(pd)} ${MONTHS[parseInt(pm)-1]}`;
+      rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
+    }else{
+      rtVal=last?last.runningTotal:null;
+      rtSub='no pay day found';
+      rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
+    }
+  }
+
+  const rtDisplay=rtVal!=null?`$${rtVal.toLocaleString('en-AU',{maximumFractionDigits:0})}`:'—';
+
   document.getElementById('bsummary').innerHTML=`
     <div class="bcard"><div class="bcard-label">Income</div><div class="bcard-val pos">$${ti.toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
     <div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$${te.toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
     <div class="bcard"><div class="bcard-label">Net</div><div class="bcard-val ${net>=0?'pos':'neg'}">${net>=0?'+':'-'}$${Math.abs(net).toLocaleString('en-AU',{maximumFractionDigits:0})}</div></div>
-    <div class="bcard"><div class="bcard-label">Running total</div><div class="bcard-val ${last&&last.runningTotal>=0?'pos':'neg'}">$${last?last.runningTotal.toLocaleString('en-AU',{maximumFractionDigits:0}):'—'}</div><div class="bcard-sub">end of month</div></div>`;
+    <div class="bcard">
+      <div class="bcard-label">Running total</div>
+      <div class="bcard-val ${rtClass}">${rtDisplay}</div>
+      <div class="bcard-sub">${rtSub}</div>
+      <div class="rt-toggle">
+        <button class="${runningTotalMode==='eom'?'active':''}" onclick="setRunningTotalMode('eom')">End of month</button>
+        <button class="${runningTotalMode==='payday'?'active':''}" onclick="setRunningTotalMode('payday')">Next pay day</button>
+      </div>
+    </div>`;
+
   const active=rows.filter(r=>r.income||r.totalExpenses);
   if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity this month</div>';return;}
+
   document.getElementById('budget-rows').innerHTML=active.map(r=>{
     const p=[];
     if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
@@ -582,11 +639,13 @@ function renderBudgetMonth(){
     if(r.utils)p.push(`<span class="brow-pill expense">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.other)p.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     const n=r.income-r.totalExpenses;
+    const rt=r.runningTotal;
     return`<div class="brow${r.date===todayIso?' today-row':''}">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
       <div class="brow-cats">${p.join('')}</div>
       <span class="brow-total ${n>=0?'pos':'neg'}">${n>=0?'+':'-'}$${Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+      <span class="brow-running ${rt>=0?'pos':'neg'}">$${rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
     </div>`;
   }).join('');
 }
