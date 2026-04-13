@@ -124,7 +124,7 @@ textarea:focus{border-color:var(--accent)}
 .ph-title{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px;flex:1}
 .page-header h2{font-size:15px;font-weight:600}
 .refresh-btn{font-size:12px;color:var(--accent);background:none;border:none;cursor:pointer;padding:6px 10px;border-radius:8px;display:flex;align-items:center;gap:4px}
-.month-scroll{display:flex;gap:8px;padding:12px 16px;overflow-x:auto;background:var(--surface);border-bottom:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none}
+.month-scroll{display:flex;gap:8px;padding:8px 12px;overflow-x:auto;background:var(--surface);border-top:1px solid var(--border);-webkit-overflow-scrolling:touch;scrollbar-width:none}
 .month-scroll::-webkit-scrollbar{display:none}
 .month-chip{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .month-chip.active{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
@@ -157,7 +157,7 @@ textarea:focus{border-color:var(--accent)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
 .budget-rows{background:var(--surface)}
 .brow.today-row{background:var(--accent-bg)}
-.brow-month-sep{padding:8px 16px 4px;font-size:11px;font-weight:700;color:var(--text3);letter-spacing:0.06em;text-transform:uppercase;background:var(--bg);border-bottom:1px solid #ececea;scroll-margin-top:80px}
+.brow-month-sep{padding:8px 16px 4px;font-size:12px;font-weight:700;color:#c8c8c8;letter-spacing:0.06em;text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--border);scroll-margin-top:80px}
 .rt-toggle{display:inline-flex;flex-direction:row;gap:4px;margin-top:6px;align-items:stretch}
 .rt-toggle-btns{display:flex;flex-direction:column;gap:4px}
 .rt-toggle button{padding:5px 12px;border:1px solid var(--border);border-radius:10px;background:var(--surface);font-size:12px;color:var(--text);cursor:pointer;-webkit-tap-highlight-color:transparent;white-space:nowrap;font-family:inherit;flex:1}
@@ -286,14 +286,13 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
     <!-- BUDGET FIXED HEADER (pinned, shown only on budget tab) -->
     <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:var(--surface)">
-      <div class="month-scroll" id="month-scroll"></div>
       <div class="bsummary" id="bsummary"></div>
       <div class="brow-header" id="budget-col-header" style="display:none">
-        <span class="brow-day" style="font-size:10px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Day</span>
-        <span class="brow-date" style="font-size:10px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Date</span>
-        <div class="brow-cats" style="font-size:10px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Activity</div>
-        <span class="brow-total" style="font-size:10px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right">Daily</span>
-        <span class="brow-running" style="font-size:10px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Balance</span>
+        <span class="brow-day" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Day</span>
+        <span class="brow-date" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Date</span>
+        <div class="brow-cats" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Activity</div>
+        <span class="brow-total" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right">Daily</span>
+        <span class="brow-running" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Balance</span>
         <span style="flex-shrink:0;width:26px;margin-left:4px"></span>
       </div>
     </div>
@@ -383,6 +382,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
     </div><!-- scroll-area -->
 
+    <div class="month-scroll" id="month-scroll" style="display:none;border-top:1px solid var(--border);border-bottom:none"></div>
     <nav class="nav">
       <button class="nav-btn active" id="nav-budget" onclick="switchPage('budget')">
         <svg viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
@@ -557,6 +557,7 @@ function switchPage(page){
   document.getElementById('page-title').textContent=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
+  document.getElementById('month-scroll').style.display=page==='budget'?'flex':'none';
   // Swap topbar logo to match active tab
   const svgMap={budget:'<line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/>',set:'<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>',add:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',recurring:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>'};
   const logoSvg=document.getElementById('topbar-logo-svg');
@@ -768,7 +769,7 @@ async function loadBudget(){
     const cur=localDateIso().slice(0,7); // YYYY-MM in local timezone
     activeBudgetMonth=keys.includes(cur)?cur:keys[keys.length-1];
     const scroll=document.getElementById('month-scroll');
-    scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" id="mchip-${k}" onclick="scrollToMonth('${k}')">${MONTHS[parseInt(m)-1]} ${y}</button>`;}).join('');
+    scroll.innerHTML=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" id="mchip-${k}" onclick="scrollToMonth('${k}')">${MONTHS[parseInt(m)-1]} '${y.slice(2)}</button>`;}).join('');
     setTimeout(()=>{const a=scroll.querySelector('.active');if(a)a.scrollIntoView({inline:'center',behavior:'smooth'});},100);
     // Update summary cards immediately — don't wait for rows to render
     updateSummaryCards();
