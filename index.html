@@ -76,6 +76,20 @@ textarea:focus{border-color:#378ADD}
 .entry-meta{font-size:11px;color:#aaa;display:flex;align-items:center;gap:4px;justify-content:flex-end;margin-top:2px}
 .sync-badge{font-size:10px;background:#EAF3DE;color:#3B6D11;padding:1px 5px;border-radius:4px;font-weight:600}
 .del-btn{background:none;border:none;color:#ccc;font-size:13px;cursor:pointer;padding:6px;border-radius:6px}
+.balance-section{padding:16px 20px;background:white;margin-bottom:8px;border-top:2px solid #f0f0ee}
+.balance-section h3{font-size:13px;font-weight:600;color:#1a1a1a;margin-bottom:4px}
+.balance-section p{font-size:12px;color:#888;margin-bottom:12px;line-height:1.5}
+.balance-input-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.balance-dollar{font-size:22px;font-weight:500;color:#888}
+.balance-input{font-size:24px;font-weight:600;border:none;border-bottom:2px solid #ddd;background:transparent;color:#1a1a1a;flex:1;outline:none;padding-bottom:4px}
+.balance-input:focus{border-bottom-color:#378ADD}
+.balance-date-row{display:flex;gap:8px;margin-bottom:12px}
+.balance-date-chip{flex:1;padding:8px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:12px;cursor:pointer;text-align:center}
+.balance-date-chip.selected{border:1.5px solid #378ADD;background:#E6F1FB;color:#185FA5;font-weight:600}
+.balance-custom-date{flex:1.4;padding:8px 10px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:12px;outline:none}
+.recalc-btn{width:100%;padding:13px;border:none;border-radius:12px;background:#1a1a1a;color:white;font-size:14px;font-weight:600;cursor:pointer}
+.recalc-btn:disabled{background:#ccc}
+.recalc-btn:active{background:#333;transform:scale(0.98)}
 .del-btn:active{color:#E24B4A}
 .summary-bar{display:flex;gap:8px;padding:12px 16px;background:white}
 .sum-card{flex:1;background:#f5f5f3;border-radius:10px;padding:10px 12px}
@@ -269,6 +283,22 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           </div>
           <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
         </div>
+        <!-- BALANCE CORRECTION -->
+        <div class="balance-section">
+          <h3>Set balance</h3>
+          <p>Enter your actual bank balance for a date and all future running totals will be recalculated.</p>
+          <div class="balance-input-row">
+            <span class="balance-dollar">$</span>
+            <input type="number" id="balance-input" class="balance-input" placeholder="0.00" inputmode="decimal" step="0.01">
+          </div>
+          <div class="balance-date-row">
+            <button class="balance-date-chip selected" id="balance-today-btn" onclick="setBalanceDate('today')">Today</button>
+            <button class="balance-date-chip" id="balance-yesterday-btn" onclick="setBalanceDate('yesterday')">Yesterday</button>
+            <input type="date" id="balance-custom-date" class="balance-custom-date" onchange="setBalanceDate('custom')">
+          </div>
+          <button class="recalc-btn" id="recalc-btn" onclick="setAndRecalcBalance()">Set balance &amp; recalculate</button>
+        </div>
+
         <div class="history-header">
           <span id="history-title">Recent entries</span>
           <button class="export-btn" onclick="exportCSV()">Export CSV</button>
@@ -1036,6 +1066,81 @@ async function deleteRec(sheetRow){
   }
 }
 
+// Balance correction
+let balanceDateMode='today';
+
+function setBalanceDate(mode){
+  balanceDateMode=mode;
+  document.getElementById('balance-today-btn').classList.toggle('selected',mode==='today');
+  document.getElementById('balance-yesterday-btn').classList.toggle('selected',mode==='yesterday');
+  if(mode!=='custom')document.getElementById('balance-custom-date').value='';
+}
+
+function getBalanceDate(){
+  if(balanceDateMode==='yesterday'){const d=new Date();d.setDate(d.getDate()-1);return d.toISOString().split('T')[0];}
+  if(balanceDateMode==='custom'){const v=document.getElementById('balance-custom-date').value;if(v)return v;}
+  return new Date().toISOString().split('T')[0];
+}
+
+async function setAndRecalcBalance(){
+  const newBalance=parseFloat(document.getElementById('balance-input').value);
+  if(isNaN(newBalance)){showToast('Enter a valid balance');return;}
+  const dateIso=getBalanceDate();
+  const btn=document.getElementById('recalc-btn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Recalculating…';
+  setStatus('amber','Updating sheet…');
+
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+
+    // 1. Find the row for this date in the Budget sheet
+    const sheetRow=await findRowForDate(dateIso);
+    if(!sheetRow)throw new Error('No row found for '+fmtDate(dateIso)+' in Budget tab');
+
+    // 2. Read the current running total for that row from column N
+    const currentRT=await getCellValue(sheetRow,'N');
+
+    // 3. The correction delta = newBalance - currentRunningTotal
+    const delta=parseFloat((newBalance-currentRT).toFixed(2));
+    if(Math.abs(delta)<0.01){
+      showToast('Balance already matches — no changes needed');
+      btn.disabled=false;btn.textContent='Set balance & recalculate';
+      setStatus('ok','Connected to Google Sheets');
+      return;
+    }
+
+    // 4. Read all running total values from sheetRow onwards (column N)
+    // Find the last row in the sheet
+    const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
+    const lastRow=allDates.length; // includes header
+
+    // 5. Read all N values from sheetRow to lastRow in one batch
+    const nRange=`N${sheetRow}:N${lastRow}`;
+    const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
+
+    // 6. Build updated values — add delta to every running total from this row forward
+    const updatedValues=nRows.map(r=>{
+      const val=parseFloat(r[0])||0;
+      return[parseFloat((val+delta).toFixed(2))];
+    });
+
+    // 7. Write back in one batch request
+    await sheetWrite(BUDGET_SHEET,nRange,updatedValues);
+
+    // 8. Force budget reload
+    budgetData=null;
+    setStatus('ok','Connected to Google Sheets');
+    showToast(`Balance set to $${newBalance.toFixed(2)} — ${updatedValues.length} rows updated ✓`);
+    document.getElementById('balance-input').value='';
+  }catch(e){
+    setStatus('red','Recalc failed');
+    showToast(e.message||'Failed',3000);
+  }
+  btn.disabled=false;
+  btn.textContent='Set balance & recalculate';
+}
+
 function renderHistory(){
   const list=document.getElementById('entry-list'),empty=document.getElementById('empty-msg'),bar=document.getElementById('summary-bar');
   if(!entries.length){list.innerHTML='';list.appendChild(empty);empty.style.display='';bar.style.display='none';document.getElementById('history-title').textContent='Recent entries';return}
@@ -1091,6 +1196,8 @@ function exportCSV(){
 const todayIso=new Date().toISOString().split('T')[0];
 document.getElementById('custom-date').value=todayIso;
 document.getElementById('custom-date').max=todayIso;
+document.getElementById('balance-custom-date').max=todayIso;
+document.getElementById('balance-custom-date').value=todayIso;
 const savedSecret=ls('budget_secret');
 if(savedSecret)document.getElementById('secret-input').value=savedSecret;
 (async()=>{
