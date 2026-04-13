@@ -12,7 +12,7 @@
 html{height:100%}
 body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a1a1a;position:relative;min-height:100%;min-height:100dvh}
 .app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
-.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:14px 20px 10px;flex-shrink:0}
+.topbar{background:white;border-bottom:1px solid #e5e5e3;padding:12px 16px 10px;flex-shrink:0;display:flex;align-items:center;gap:8px}
 .topbar h1{font-size:17px;font-weight:600;color:#1a1a1a}
 .topbar p{font-size:12px;color:#888;margin-top:1px}
 .nav{background:white;border-top:1px solid #e5e5e3;display:flex;flex-shrink:0}
@@ -30,12 +30,7 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .signin-btn{width:100%;padding:13px;border:1px solid #e5e5e3;border-radius:10px;background:white;color:#1a1a1a;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px;-webkit-tap-highlight-color:transparent}
 .signin-btn:active{background:#f5f5f5}
 .error-msg{font-size:12px;color:#E24B4A;margin-top:4px;display:none}
-.status-bar{display:flex;align-items:center;justify-content:space-between;padding:9px 20px;background:white;border-bottom:1px solid #e5e5e3;flex-shrink:0}
-.status-dot{width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0}
-.status-dot.red{background:#E24B4A}
-.status-dot.amber{background:#EF9F27}
-.status-text{font-size:12px;color:#666;flex:1;margin-left:8px}
-.signout-btn{font-size:12px;color:#888;background:none;border:none;cursor:pointer;padding:4px 8px}
+
 .main-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0}
 #main-section.visible{display:flex!important}
 .scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
@@ -206,8 +201,24 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 <body>
 <div class="app">
   <div class="topbar">
-    <h1 id="page-title">Budget logger</h1>
-    <p id="topbar-sub">Connect to Google Sheets to get started</p>
+    <div style="flex:1;min-width:0">
+      <h1 id="page-title">Budget logger</h1>
+      <p id="topbar-sub">Connect to Google Sheets to get started</p>
+    </div>
+    <div style="position:relative;flex-shrink:0" id="menu-container">
+      <button id="menu-btn" onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:6px 4px;color:#888;display:flex;flex-direction:column;gap:4px;align-items:center;-webkit-tap-highlight-color:transparent">
+        <span style="display:block;width:4px;height:4px;border-radius:50%;background:currentColor"></span>
+        <span style="display:block;width:4px;height:4px;border-radius:50%;background:currentColor"></span>
+        <span style="display:block;width:4px;height:4px;border-radius:50%;background:currentColor"></span>
+      </button>
+      <div id="topbar-menu" style="display:none;position:absolute;top:100%;right:0;background:white;border:0.5px solid #e5e5e3;border-radius:10px;min-width:200px;box-shadow:0 4px 16px rgba(0,0,0,0.1);z-index:50;overflow:hidden">
+        <div style="padding:10px 14px;border-bottom:1px solid #f0f0ee;display:flex;align-items:center;gap:8px">
+          <div id="menu-status-dot" style="width:7px;height:7px;border-radius:50%;background:#639922;flex-shrink:0"></div>
+          <span id="menu-status-text" style="font-size:13px;color:#666">Not connected</span>
+        </div>
+        <button onclick="signOut();closeMenu()" style="width:100%;padding:12px 14px;border:none;background:none;text-align:left;font-size:14px;color:#E24B4A;cursor:pointer;display:block;font-family:inherit">Sign out</button>
+      </div>
+    </div>
   </div>
 
   <!-- AUTH -->
@@ -226,11 +237,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
   <!-- MAIN -->
   <div class="main-wrap" id="main-section" style="display:none">
-    <div class="status-bar">
-      <div class="status-dot" id="status-dot"></div>
-      <span class="status-text" id="status-text">Connected</span>
-      <button class="signout-btn" onclick="signOut()">Sign out</button>
-    </div>
+
 
     <!-- BUDGET FIXED HEADER (pinned, shown only on budget tab) -->
     <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:white">
@@ -278,22 +285,6 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           </div>
           <button class="add-btn" id="add-btn" onclick="addExpense()">Add to sheet</button>
         </div>
-        <!-- BALANCE CORRECTION -->
-        <div class="balance-section">
-          <h3>Set balance</h3>
-          <p>Enter your actual bank balance for a date and all future running totals will be recalculated.</p>
-          <div class="balance-input-row">
-            <span class="balance-dollar">$</span>
-            <input type="number" id="balance-input" class="balance-input" placeholder="0.00" inputmode="decimal" step="0.01">
-          </div>
-          <div class="balance-date-row">
-            <button class="balance-date-chip selected" id="balance-today-btn" onclick="setBalanceDate('today')">Today</button>
-            <button class="balance-date-chip" id="balance-yesterday-btn" onclick="setBalanceDate('yesterday')">Yesterday</button>
-            <input type="date" id="balance-custom-date" class="balance-custom-date" onchange="setBalanceDate('custom')">
-          </div>
-          <button class="recalc-btn" id="recalc-btn" onclick="setAndRecalcBalance()">Set balance &amp; recalculate</button>
-        </div>
-
         <div class="history-header">
           <span id="history-title">Recent entries</span>
           <button class="export-btn" onclick="exportCSV()">Export CSV</button>
@@ -325,6 +316,36 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <div class="rec-section" id="rec-section"><div class="empty">Loading…</div></div>
       </div>
 
+      <!-- PAGE SET -->
+      <div class="page" id="page-set">
+        <div class="page-header">
+          <h2>Set balance</h2>
+        </div>
+        <div style="padding:16px 20px;background:white;margin-bottom:8px">
+          <div class="field-label">Your actual bank balance</div>
+          <div class="balance-input-row" style="margin-bottom:14px">
+            <span class="balance-dollar">$</span>
+            <input type="number" id="balance-input" class="balance-input" placeholder="0.00" inputmode="decimal" step="0.01">
+          </div>
+          <div class="field-label" style="margin-bottom:8px">As of date</div>
+          <div class="balance-date-row">
+            <button class="balance-date-chip selected" id="balance-today-btn" onclick="setBalanceDate('today')">Today</button>
+            <button class="balance-date-chip" id="balance-yesterday-btn" onclick="setBalanceDate('yesterday')">Yesterday</button>
+            <input type="date" id="balance-custom-date" class="balance-custom-date" onchange="setBalanceDate('custom')">
+          </div>
+          <button class="recalc-btn" id="recalc-btn" onclick="setAndRecalcBalance()">Set balance &amp; recalculate</button>
+          <p style="font-size:12px;color:#aaa;margin-top:12px;line-height:1.6">All running totals from this date forward will be adjusted to match your actual balance. Your income and expense entries are unchanged.</p>
+        </div>
+        <div style="background:white;margin-top:8px;border-radius:0;padding:14px 20px">
+          <div class="field-label" style="margin-bottom:6px">How it works</div>
+          <div style="font-size:13px;color:#666;line-height:1.7">
+            <div style="display:flex;gap:10px;margin-bottom:8px"><span style="color:#378ADD;font-weight:600;flex-shrink:0">1.</span><span>Enter the balance shown in your bank app right now</span></div>
+            <div style="display:flex;gap:10px;margin-bottom:8px"><span style="color:#378ADD;font-weight:600;flex-shrink:0">2.</span><span>Choose the date it applies to</span></div>
+            <div style="display:flex;gap:10px"><span style="color:#378ADD;font-weight:600;flex-shrink:0">3.</span><span>All future projected balances shift by the difference — useful if you forgot to log something</span></div>
+          </div>
+        </div>
+      </div>
+
     </div><!-- scroll-area -->
 
     <nav class="nav">
@@ -338,7 +359,11 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       </button>
       <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
         <svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
-        Recurring
+        Known
+      </button>
+      <button class="nav-btn" id="nav-set" onclick="switchPage('set')">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg>
+        Set
       </button>
     </nav>
   </div><!-- main-section -->
@@ -438,10 +463,35 @@ function showToast(msg,dur=3000){
   const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');
   setTimeout(()=>t.classList.remove('show'),dur);
 }
+function toggleMenu(){
+  const menu=document.getElementById('topbar-menu');
+  const isOpen=menu.style.display!=='none';
+  menu.style.display=isOpen?'none':'block';
+  if(!isOpen){
+    // Close on outside click
+    setTimeout(()=>document.addEventListener('click',closeMenuOutside,{once:true}),0);
+  }
+}
+function closeMenu(){
+  document.getElementById('topbar-menu').style.display='none';
+}
+function closeMenuOutside(e){
+  if(!document.getElementById('menu-container').contains(e.target))closeMenu();
+}
 function setStatus(state,msg){
-  const dot=document.getElementById('status-dot');
-  dot.className='status-dot'+(state==='ok'?'':state==='warn'?' amber':' red');
-  document.getElementById('status-text').textContent=msg;
+  const dot=document.getElementById('menu-status-dot');
+  if(dot){
+    const col=state==='ok'?'#639922':state==='warn'?'#EF9F27':'#E24B4A';
+    dot.style.background=col;
+  }
+  const txt=document.getElementById('menu-status-text');
+  if(txt)txt.textContent=msg;
+  // Also update menu btn dot colour as a subtle indicator
+  const btn=document.getElementById('menu-btn');
+  if(btn){
+    const col=state==='ok'?'#639922':state==='warn'?'#EF9F27':'#E24B4A';
+    btn.style.color=col;
+  }
 }
 
 function switchPage(page){
@@ -449,7 +499,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Budget logger',budget:'Budget',recurring:'Known expenses'};
+  const titles={add:'Budget logger',budget:'Budget',recurring:'Known expenses',set:'Set balance'};
   document.getElementById('page-title').textContent=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -544,6 +594,7 @@ function signOut(){
   document.getElementById('main-section').style.display='none';
   document.getElementById('auth-section').style.display='block';
   document.getElementById('topbar-sub').textContent='Connect to Google Sheets to get started';
+  document.getElementById('menu-btn').style.display='none';
   document.getElementById('secret-input').value='';
 }
 function showMain(){
@@ -555,6 +606,7 @@ function showMain(){
   main.style.overflow='hidden';
   main.style.minHeight='0';
   document.getElementById('topbar-sub').textContent='Your Google Sheet';
+  document.getElementById('menu-btn').style.display='flex';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
 }
