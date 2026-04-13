@@ -106,7 +106,7 @@ textarea:focus{border-color:var(--accent)}
 .balance-date-chip{flex:1;padding:10px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .balance-date-chip.selected{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
 .balance-custom-date{flex:1.4;padding:10px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;outline:none}
-.recalc-btn{width:100%;padding:14px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:15px;font-weight:600;cursor:pointer}
+.recalc-btn{width:100%;padding:14px;border:none;border-radius:12px;background:color-mix(in srgb,var(--accent) 75%,transparent);color:white;font-size:15px;font-weight:600;cursor:pointer}
 .recalc-btn:disabled{background:#ccc}
 .recalc-btn:active{background:var(--accent-text);transform:scale(0.98)}
 .del-btn:active{color:var(--red)}
@@ -937,11 +937,19 @@ async function saveBudgetDetail(){
 }
 
 
-let runningTotalMode='payday'; // 'eom' = end of month, 'payday' = next pay day
+let runningTotalMode='payday'; // 'eom' = specific date, 'payday' = next pay day
+let eomDate=''; // the date selected for the 'eom' mode
 
 function setRunningTotalMode(mode){
   runningTotalMode=mode;
   updateSummaryCards();
+}
+function setEomDate(val){
+  eomDate=val;
+  if(val){
+    runningTotalMode='eom';
+    updateSummaryCards();
+  }
 }
 
 function getNextPayDay(fromDateIso){
@@ -961,8 +969,16 @@ function updateSummaryCards(){
   const last=monthRows.length?monthRows[monthRows.length-1]:null;
   let rtVal,rtSub,rtClass;
   if(runningTotalMode==='eom'){
-    rtVal=last?last.runningTotal:null;
-    rtSub='end of month';
+    // Find the row for the selected date
+    const targetDate=eomDate||(last?last.date:'');
+    const targetRow=budgetData.find(r=>r.date===targetDate);
+    rtVal=targetRow?targetRow.runningTotal:(last?last.runningTotal:null);
+    if(targetDate){
+      const[ty,tm,td]=targetDate.split('-');
+      rtSub=parseInt(td)+' '+MONTHS[parseInt(tm)-1];
+    }else{
+      rtSub='select a date';
+    }
     rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
   }else{
     const nextPay=getNextPayDay(todayIso);
@@ -985,8 +1001,8 @@ function updateSummaryCards(){
     '<div class="bcard"><div class="bcard-label">Expenses</div><div class="bcard-val neg">$'+te.toLocaleString('en-AU',{maximumFractionDigits:0})+'</div></div>'+
     '<div class="bcard" style="grid-column:1/-1"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
       '<div><div class="bcard-label">Running total</div><div class="bcard-val '+rtClass+'">'+rtDisplay+'</div><div class="bcard-sub">'+rtSub+'</div></div>'+
-      '<div class="rt-toggle" style="flex-shrink:0;margin-top:2px">'+
-        '<button class="'+(runningTotalMode==='eom'?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;)">End of month</button>'+
+      '<div class="rt-toggle" style="flex-shrink:0;margin-top:2px;align-items:center">'+
+        '<input type="date" id="eom-date-input" value="'+eomDate+'" onchange="setEomDate(this.value)" style="padding:7px 10px;border:'+( runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:var(--surface);color:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-text)':'var(--text)')+';font-size:12px;font-family:inherit;outline:none;cursor:pointer;-webkit-tap-highlight-color:transparent;max-width:130px">'+
         '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)">Next pay day</button>'+
       '</div></div></div>';
 }
