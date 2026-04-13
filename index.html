@@ -145,6 +145,8 @@ textarea:focus{border-color:var(--accent)}
 .brow-running{font-size:17px;font-weight:600;text-align:right;flex-shrink:0;min-width:88px;color:var(--text3);border-left:1px solid var(--border);padding-left:8px;margin-left:4px}
 .brow-running.pos{color:var(--green)}
 .brow-running.neg{color:var(--red)}
+[data-theme="dark"] .brow-running.pos{color:#ffffff}
+[data-theme="dark"] .brow-running.neg{color:var(--red)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
 .budget-rows{background:var(--surface)}
 .brow.today-row{background:var(--accent-bg)}
@@ -289,10 +291,6 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
       <!-- PAGE ADD -->
       <div class="page" id="page-add">
-        <div class="page-header">
-          <div class="ph-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg></div>
-          <span class="ph-title">Add expense</span>
-        </div>
         <div class="section">
           <div class="field-label">Amount</div>
           <div class="amount-row">
@@ -336,9 +334,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
       <!-- PAGE RECURRING -->
       <div class="page" id="page-recurring">
-        <div class="page-header">
-          <div class="ph-icon"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg></div>
-          <span class="ph-title">Known expenses</span>
+        <div style="display:flex;justify-content:flex-end;padding:6px 12px;background:var(--surface);border-bottom:1px solid var(--border)">
           <button class="refresh-btn" onclick="loadRecurring()">
             <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
             Refresh
@@ -349,10 +345,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
       <!-- PAGE SET -->
       <div class="page" id="page-set">
-        <div class="page-header">
-          <div class="ph-icon"><svg viewBox="0 0 24 24"><line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/></svg></div>
-          <span class="ph-title">Set balance</span>
-        </div>
+
         <div style="padding:16px 20px;background:var(--surface);margin-bottom:8px">
           <div class="field-label">Your actual bank balance</div>
           <div class="balance-input-row" style="margin-bottom:14px">
@@ -539,7 +532,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Budget logger',budget:'Budget',recurring:'Known expenses',set:'Set balance'};
+  const titles={add:'Add',budget:'Budget',recurring:'Known',set:'Set'};
   document.getElementById('page-title').textContent=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
