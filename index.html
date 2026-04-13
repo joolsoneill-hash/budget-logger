@@ -13,7 +13,7 @@
 :root{
   --bg:#f2f2f0;--surface:#ffffff;--surface2:#f2f2f0;--border:#e8e8e5;--border2:#d8d8d5;
   --text:#111111;--text2:#555555;--text3:#999999;
-  --accent:#4A86C8;--accent-bg:#EAF1FA;--accent-text:#2D5F96;
+  --accent:#5B89B8;--accent-bg:#EBF2FA;--accent-text:#3A6990;
   --green:#2D7D3A;--green-bg:#EAF3DE;--green-text:#1a5226;
   --red:#C0392B;--red-bg:#FCEBEB;--amber:#d4770a;
   --purple-bg:#EEEDFE;--purple-text:#3C3489;
@@ -99,6 +99,9 @@ textarea:focus{border-color:var(--accent)}
 .balance-dollar{font-size:22px;font-weight:500;color:var(--text3)}
 .balance-input{font-size:24px;font-weight:600;border:none;border-bottom:2px solid #ddd;background:transparent;color:var(--text);flex:1;outline:none;padding-bottom:4px}
 .balance-input:focus{border-bottom-color:var(--accent)}
+.balance-input::-webkit-inner-spin-button,.balance-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#amount-input::-webkit-inner-spin-button,#amount-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+#amount-input{-moz-appearance:textfield}
 .balance-date-row{display:flex;gap:8px;margin-bottom:12px}
 .balance-date-chip{flex:1;padding:10px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;text-align:center;-webkit-tap-highlight-color:transparent}
 .balance-date-chip.selected{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
@@ -228,8 +231,8 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 <body>
 <div class="app">
   <div class="topbar">
-    <div class="topbar-logo">
-      <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    <div class="topbar-logo" id="topbar-logo-wrap">
+      <svg id="topbar-logo-svg" viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
     </div>
     <div style="flex:1;min-width:0">
       <h1 id="page-title" style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Budget</h1>
@@ -347,10 +350,9 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <div class="page" id="page-set">
 
         <div style="padding:16px 20px;background:var(--surface);margin-bottom:8px">
-          <div class="field-label">Your actual bank balance</div>
           <div class="balance-input-row" style="margin-bottom:14px">
             <span class="balance-dollar">$</span>
-            <input type="number" id="balance-input" class="balance-input" placeholder="0.00" inputmode="decimal" step="0.01">
+            <input type="number" id="balance-input" class="balance-input" placeholder="Set balance" inputmode="decimal" step="0.01" style="-moz-appearance:textfield">
           </div>
           <div class="field-label" style="margin-bottom:8px">As of date</div>
           <div class="balance-date-row">
@@ -536,6 +538,10 @@ function switchPage(page){
   document.getElementById('page-title').textContent=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
+  // Swap topbar logo to match active tab
+  const svgMap={budget:'<line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/>',set:'<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>',add:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',recurring:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>'};
+  const logoSvg=document.getElementById('topbar-logo-svg');
+  if(logoSvg&&svgMap[page])logoSvg.innerHTML=svgMap[page];
   document.getElementById('budget-refresh-btn').style.display=page==='budget'?'block':'none';
   document.getElementById('scroll-area').scrollTop=0;
   if(page==='budget'){
