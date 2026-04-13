@@ -139,7 +139,7 @@ textarea:focus{border-color:var(--accent)}
 .brow-total{font-size:11px;font-weight:600;text-align:right;flex-shrink:0;min-width:52px}
 .brow-total.pos{color:var(--green-text)}
 .brow-total.neg{color:var(--amber)}
-.brow-running{font-size:17px;font-weight:600;text-align:right;flex-shrink:0;min-width:60px;color:var(--text3);border-left:1px solid var(--border);padding-left:8px;margin-left:4px}
+.brow-running{font-size:17px;font-weight:600;text-align:right;flex-shrink:0;min-width:88px;color:var(--text3);border-left:1px solid var(--border);padding-left:8px;margin-left:4px}
 .brow-running.pos{color:var(--green)}
 .brow-running.neg{color:var(--red)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
@@ -227,9 +227,11 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
     </div>
     <div style="flex:1;min-width:0">
-      <h1 id="page-title">Budget</h1>
-      <p id="topbar-sub">Connect to Google Sheets</p>
+      <h1 id="page-title" style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Budget</h1>
     </div>
+    <button id="budget-refresh-btn" onclick="loadBudget()" style="display:none;background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);-webkit-tap-highlight-color:transparent" title="Refresh budget">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
     <div style="position:relative;flex-shrink:0" id="menu-container">
       <button id="menu-btn" onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);display:flex;flex-direction:column;gap:3.5px;align-items:center;-webkit-tap-highlight-color:transparent">
         <span style="display:block;width:3.5px;height:3.5px;border-radius:50%;background:currentColor"></span>
@@ -269,13 +271,6 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
     <!-- BUDGET FIXED HEADER (pinned, shown only on budget tab) -->
     <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:var(--surface)">
-      <div class="page-header">
-        <h2>Budget</h2>
-        <button class="refresh-btn" onclick="loadBudget()">
-          <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          Refresh
-        </button>
-      </div>
       <div class="month-scroll" id="month-scroll"></div>
       <div class="bsummary" id="bsummary"></div>
       <div class="brow-header" id="budget-col-header" style="display:none">
@@ -541,6 +536,7 @@ function switchPage(page){
   document.getElementById('page-title').textContent=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
+  document.getElementById('budget-refresh-btn').style.display=page==='budget'?'block':'none';
   document.getElementById('scroll-area').scrollTop=0;
   if(page==='budget'){
     if(!budgetData){
@@ -631,7 +627,7 @@ function signOut(){
   clearToken();ls('budget_refresh','');accessToken=null;
   document.getElementById('main-section').style.display='none';
   document.getElementById('auth-section').style.display='block';
-  document.getElementById('topbar-sub').textContent='Connect to Google Sheets to get started';
+
   document.getElementById('menu-btn').style.display='none';
   document.getElementById('secret-input').value='';
 }
@@ -643,7 +639,7 @@ function showMain(){
   main.style.flexDirection='column';
   main.style.overflow='hidden';
   main.style.minHeight='0';
-  document.getElementById('topbar-sub').textContent='Your Google Sheet';
+
   document.getElementById('menu-btn').style.display='flex';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
