@@ -21,7 +21,6 @@ body{font-family:system-ui,-apple-system,sans-serif;background:#f5f5f3;color:#1a
 .nav-btn.active{color:#378ADD}
 .page{display:none}
 .page.active{display:block}
-#page-budget.active{display:flex}
 .auth-wrap{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .auth-card{background:white;border-radius:14px;padding:24px 20px;margin:20px 16px}
 .auth-card h2{font-size:16px;font-weight:600;margin-bottom:6px}
@@ -112,8 +111,6 @@ textarea:focus{border-color:#378ADD}
 .brow-running.pos{color:#2D7D3A}
 .brow-running.neg{color:#C0392B}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid #e5e5e3;background:white;gap:10px}
-.budget-fixed{flex-shrink:0;background:white}
-.budget-scroll{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
 .budget-rows{background:white}
 .brow.today-row{background:#fffbf0}
 .brow-month-sep{padding:8px 16px 4px;font-size:11px;font-weight:700;color:#888;letter-spacing:0.06em;text-transform:uppercase;background:#f5f5f3;border-bottom:1px solid #ececea;scroll-margin-top:80px}
@@ -220,6 +217,31 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <button class="signout-btn" onclick="signOut()">Sign out</button>
     </div>
 
+    <!-- BUDGET FIXED HEADER (pinned, shown only on budget tab) -->
+    <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:white">
+      <div class="page-header">
+        <h2>Budget</h2>
+        <button class="refresh-btn" onclick="loadBudget()">
+          <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          Refresh
+        </button>
+      </div>
+      <div class="month-scroll" id="month-scroll"></div>
+      <div class="bsummary" id="bsummary">
+        <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+        <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
+      </div>
+      <div class="brow-header" id="budget-col-header" style="display:none">
+        <span class="brow-date">Date</span>
+        <span class="brow-day">Day</span>
+        <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
+        <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Daily</span>
+        <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
+      </div>
+    </div>
+
     <div class="scroll-area" id="scroll-area">
 
       <!-- PAGE ADD -->
@@ -260,34 +282,9 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         </div>
       </div>
 
-      <!-- PAGE BUDGET -->
-      <div class="page" id="page-budget" style="display:flex;flex-direction:column;height:100%">
-        <div class="budget-fixed">
-          <div class="page-header">
-            <h2>Budget</h2>
-            <button class="refresh-btn" onclick="loadBudget()">
-              <svg width="14" height="14" viewBox="0 0 24 24" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Refresh
-            </button>
-          </div>
-          <div class="month-scroll" id="month-scroll"></div>
-          <div class="bsummary" id="bsummary">
-            <div class="bcard"><div class="bcard-label">Income</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-            <div class="bcard"><div class="bcard-label">Expenses</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-            <div class="bcard"><div class="bcard-label">Net</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-            <div class="bcard"><div class="bcard-label">Running total</div><div class="skel" style="height:24px;width:80px;margin-top:4px"></div></div>
-          </div>
-          <div class="brow-header" id="budget-col-header" style="display:none">
-            <span class="brow-date">Date</span>
-            <span class="brow-day">Day</span>
-            <div class="brow-cats" style="font-size:11px;color:#888;font-weight:600;letter-spacing:0.04em">Activity</div>
-            <span class="brow-total" style="font-size:11px;color:#888;font-weight:600">Daily</span>
-            <span class="brow-running" style="font-size:11px;color:#888;font-weight:600">Balance</span>
-          </div>
-        </div>
-        <div class="budget-scroll" id="budget-scroll">
-          <div class="budget-rows" id="budget-rows"><div class="empty">Loading…</div></div>
-        </div>
+      <!-- PAGE BUDGET (only rows here, header is pinned above) -->
+      <div class="page" id="page-budget">
+        <div class="budget-rows" id="budget-rows"><div class="empty">Loading…</div></div>
       </div>
 
       <!-- PAGE RECURRING -->
@@ -428,10 +425,9 @@ function switchPage(page){
   document.getElementById('nav-'+page).classList.add('active');
   const titles={add:'Budget logger',budget:'Budget',recurring:'Known expenses'};
   document.getElementById('page-title').textContent=titles[page];
-  // Budget has its own scroll container; others use scroll-area
-  const scrollArea=document.getElementById('scroll-area');
-  scrollArea.style.overflowY=page==='budget'?'hidden':'auto';
-  if(page!=='budget')scrollArea.scrollTop=0;
+  // Show/hide the budget fixed header
+  document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
+  document.getElementById('scroll-area').scrollTop=0;
   if(page==='budget'&&!budgetData)loadBudget();
   if(page==='recurring'&&!recurringData)loadRecurring();
 }
@@ -618,9 +614,9 @@ async function loadBudget(){
 
 function scrollToMonth(k){
   const el=document.querySelector('[data-month="'+k+'"]');
-  const budgetScroll=document.getElementById('budget-scroll');
-  if(el&&budgetScroll){
-    budgetScroll.scrollTo({top:el.offsetTop-4,behavior:'smooth'});
+  const scrollArea=document.getElementById('scroll-area');
+  if(el&&scrollArea){
+    scrollArea.scrollTo({top:el.offsetTop-4,behavior:'smooth'});
   }
   setActiveBudgetMonth(k);
 }
@@ -756,8 +752,8 @@ function updateSummaryCards(){
     '<div class="bcard" style="grid-column:1/-1"><div style="display:flex;align-items:flex-start;justify-content:space-between;gap:8px">'+
       '<div><div class="bcard-label">Running total</div><div class="bcard-val '+rtClass+'">'+rtDisplay+'</div><div class="bcard-sub">'+rtSub+'</div></div>'+
       '<div class="rt-toggle" style="flex-shrink:0;margin-top:2px">'+
-        '<button class="'+(runningTotalMode==='eom'?'active':'')+'" onclick="setRunningTotalMode('eom')">End of month</button>'+
-        '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode('payday')">Next pay day</button>'+
+        '<button class="'+(runningTotalMode==='eom'?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;)">End of month</button>'+
+        '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)">Next pay day</button>'+
       '</div></div></div>';
 }
 
@@ -811,21 +807,20 @@ function renderAllBudgetRows(){
 
   document.getElementById('budget-rows').innerHTML=html;
 
-  // Scroll to today's row using the budget-specific scroll container
-  const budgetScroll=document.getElementById('budget-scroll');
+  // Scroll to today's row
+  const scrollArea=document.getElementById('scroll-area');
   setTimeout(()=>{
     const todayRow=document.querySelector('.today-row');
-    if(todayRow&&budgetScroll){
+    if(todayRow&&scrollArea){
       const rowTop=todayRow.offsetTop;
-      const scrollH=budgetScroll.clientHeight;
-      budgetScroll.scrollTop=rowTop-scrollH/3;
+      const scrollH=scrollArea.clientHeight;
+      scrollArea.scrollTop=rowTop-scrollH/3;
     }
   },80);
 
   // IntersectionObserver: update month chip as user scrolls (no re-render)
   if(budgetMonthObserver)budgetMonthObserver.disconnect();
   budgetMonthObserver=new IntersectionObserver(entries=>{
-    // Find the topmost visible separator
     let topEntry=null;
     entries.forEach(e=>{
       if(e.isIntersecting){
@@ -833,7 +828,7 @@ function renderAllBudgetRows(){
       }
     });
     if(topEntry)setActiveBudgetMonth(topEntry.target.dataset.month);
-  },{root:budgetScroll,threshold:0,rootMargin:'0px 0px -80% 0px'});
+  },{root:scrollArea,threshold:0,rootMargin:'0px 0px -80% 0px'});
   document.querySelectorAll('[data-month]').forEach(el=>budgetMonthObserver.observe(el));
 }
 
