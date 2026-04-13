@@ -155,8 +155,8 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .save-rec-btn:active{background:#185FA5}
 .save-rec-btn:disabled{background:#ccc}
 .cancel-rec-btn{width:100%;padding:12px;border:1px solid #e5e5e3;border-radius:12px;background:white;color:#666;font-size:14px;cursor:pointer;margin-top:8px}
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(60px);background:#1a1a1a;color:white;padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.2s;z-index:200;max-width:90vw;text-align:center;pointer-events:none}
-.toast.show{transform:translateX(-50%) translateY(0)}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(200px);background:#1a1a1a;color:white;padding:10px 20px;border-radius:12px;font-size:14px;transition:transform 0.25s;z-index:200;max-width:320px;width:max-content;text-align:center;pointer-events:none;opacity:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:white;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
 </style>
@@ -268,7 +268,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         Add
       </button>
       <button class="nav-btn" id="nav-budget" onclick="switchPage('budget')">
-        <svg viewBox="0 0 24 24"><polyline points="3 17 7 11 11 14 15 7 21 10"/><line x1="3" y1="21" x2="21" y2="21"/></svg>
+        <svg viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
         Budget
       </button>
       <button class="nav-btn" id="nav-recurring" onclick="switchPage('recurring')">
@@ -311,7 +311,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <div>
           <div class="form-label">Recurrence</div>
           <select class="form-input" id="rec-freq" onchange="updateDayLabel()">
-            <option>Monthly</option><option>Fortnightly</option><option>Weekly</option><option>One-Off</option>
+            <option>Monthly</option><option>Fortnightly</option><option>4-Weekly</option><option>Weekly</option><option>One-Off</option>
           </select>
         </div>
         <div>
@@ -648,12 +648,14 @@ function renderBudgetMonth(){
     if(r.subs)p.push(`<span class="brow-pill expense">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.utils)p.push(`<span class="brow-pill expense">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.other)p.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
     return`<div class="brow${r.date===todayIso?' today-row':''}">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
       <div class="brow-cats">${p.join('')}</div>
-      <span class="brow-running ${rt>=0?'pos':'neg'}" style="border-left:none;padding-left:0;margin-left:0">$${rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+      <span class="brow-total ${n>=0?'pos':'neg'}">${n>=0?'+':'-'}$${Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
+      <span class="brow-running ${rt>=0?'pos':'neg'}">$${rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
     </div>`;
   }).join('');
 }
@@ -686,12 +688,12 @@ async function loadRecurring(){
 
 function freqBadge(f,active){
   if(!active)return'<span class="rec-badge badge-inactive">Paused</span>';
-  const cls={Monthly:'monthly',Fortnightly:'fortnightly',Weekly:'weekly','One-Off':'oneoff'}[f]||'oneoff';
+  const cls={Monthly:'monthly',Fortnightly:'fortnightly','4-Weekly':'fortnightly',Weekly:'weekly','One-Off':'oneoff'}[f]||'oneoff';
   return`<span class="rec-badge badge-${cls}">${f}</span>`;
 }
 
 function renderRecurring(data){
-  const groups={Monthly:[],Fortnightly:[],Weekly:[],'One-Off':[]};
+  const groups={Monthly:[],Fortnightly:[],'4-Weekly':[],Weekly:[],'One-Off':[]};
   data.forEach(r=>{const k=r.recurrence||'One-Off';(groups[k]||groups['One-Off']).push(r);});
   let html=`<button class="add-rec-trigger" onclick="openAddRec()">
     <svg viewBox="0 0 24 24" width="16" height="16" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
@@ -721,7 +723,7 @@ function renderRecurring(data){
     });
     html+='</div>';
   });
-  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='Weekly')return r.amount*4.33;return 0;};
+  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;return 0;};
   const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
   const exp=data.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
   html+=`<div style="background:white;border-radius:12px;padding:14px 16px;margin-bottom:8px">
@@ -739,7 +741,7 @@ function updateDayLabel(){
   const f=document.getElementById('rec-freq').value;
   const l=document.getElementById('day-label'),i=document.getElementById('rec-day');
   if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
-  else if(f==='Weekly'||f==='Fortnightly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
+  else if(f==='Weekly'||f==='Fortnightly'||f==='4-Weekly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
   else{l.textContent='Day';i.placeholder='Leave blank'}
 }
 function openAddRec(){
