@@ -615,10 +615,12 @@ function renderBudgetMonth(){
   const rows=budgetData.filter(r=>r.date.startsWith(`${y}-${m}`));
   // Budget row detail popup
 const COL_NAMES={income:'IN (income)',other:'Other',subs:'Subscriptions',utils:'Utilities',savings:'Savings',rent:'Rent',insurance:'Insurance',medibank:'Medibank',daycare:'Daycare',gym:'Gym',food:'Food'};
+const budgetRowMap=new Map();
 let budgetDetailData=null;
 
-function openBudgetDetail(encodedData){
-  budgetDetailData=JSON.parse(decodeURIComponent(encodedData));
+function openBudgetDetail(date){
+  budgetDetailData=budgetRowMap.get(date);
+  if(!budgetDetailData)return;
   const r=budgetDetailData;
   const[y,m,d]=r.date.split('-');
   document.getElementById('bpopup-title').textContent=`${parseInt(d)} ${MONTHS[parseInt(m)-1]} — ${r.day||''}`;
@@ -732,6 +734,7 @@ const todayIso=new Date().toISOString().split('T')[0];
   const active=rows.filter(r=>r.income||r.totalExpenses);
   if(!active.length){document.getElementById('budget-rows').innerHTML='<div class="empty">No activity this month</div>';return;}
 
+  budgetRowMap.clear();
   document.getElementById('budget-rows').innerHTML=`<div class="brow-header">
     <span class="brow-date">Date</span>
     <span class="brow-day">Day</span>
@@ -753,8 +756,8 @@ const todayIso=new Date().toISOString().split('T')[0];
     if(r.other)p.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
-    const rowData=encodeURIComponent(JSON.stringify({date:r.date,day:r.day,income:r.income,other:r.other,subs:r.subs,utils:r.utils,savings:r.savings,rent:r.rent,insurance:r.insurance,medibank:r.medibank,daycare:r.daycare,gym:r.gym,food:r.food,runningTotal:r.runningTotal}));
-    return`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail('${rowData}')">
+    budgetRowMap.set(r.date,r);
+    return`<div class="brow${r.date===todayIso?' today-row':''}" onclick="openBudgetDetail(this.dataset.date)" data-date="${r.date}">
       <span class="brow-date">${fmtDateShort(r.date)}</span>
       <span class="brow-day">${(r.day||'').slice(0,3)}</span>
       <div class="brow-cats">${p.join('')}</div>
