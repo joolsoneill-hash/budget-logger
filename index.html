@@ -213,19 +213,21 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .bpopup-wrap{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.45);z-index:9999;align-items:center;justify-content:center;padding:20px}
 .bpopup-wrap.open{display:flex}
 .bpopup{background:var(--surface);border-radius:16px;width:100%;max-width:460px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch}
-.bpopup-header{padding:16px 20px 12px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
-.bpopup-header h3{font-size:16px;font-weight:600}
+.bpopup-header{padding:10px 16px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.bpopup-header h3{font-size:13px;font-weight:600;color:var(--text3);letter-spacing:0.02em}
 .bpopup-close{background:none;border:none;font-size:22px;color:var(--text3);cursor:pointer}
 .bpopup-body{padding:16px 20px}
 .bpopup-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
 .bpopup-row:last-child{border-bottom:none}
-.bpopup-label{font-size:13px;color:var(--text3)}
+.bpopup-label{font-size:12px;color:#c8c8c8;font-weight:500;min-width:90px}
 .bpopup-val{font-size:13px;font-weight:500;color:var(--text)}
-.bpopup-edit-row{display:flex;align-items:center;gap:8px;padding:10px 0;border-bottom:1px solid var(--border)}
+.bpopup-edit-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--border)}
 .bpopup-edit-label{font-size:13px;color:var(--text3);min-width:80px;flex-shrink:0}
-.bpopup-input{flex:1;border:1px solid var(--border);border-radius:8px;padding:8px 10px;font-size:14px;color:var(--text);background:var(--surface);outline:none;font-family:inherit}
-.bpopup-input:focus{border-color:var(--accent)}
-.bpopup-save{width:100%;padding:13px;border:none;border-radius:12px;background:var(--accent);color:#c8c8c8;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+.bpopup-input{flex:1;border:none;border-bottom:1.5px solid var(--border);border-radius:0;padding:4px 0;font-size:15px;font-weight:600;color:var(--text);background:transparent;outline:none;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield}
+.bpopup-input::-webkit-inner-spin-button,.bpopup-input::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+.bpopup-input:focus{border-bottom-color:var(--accent)}
+
+.bpopup-save{width:100%;padding:12px;border:none;border-radius:12px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;font-size:15px;font-weight:600;cursor:pointer;margin-top:12px;display:flex;align-items:center;justify-content:center}
 .bpopup-save:disabled{background:#ccc}
 .bpopup-note{font-size:11px;color:var(--text3);margin-top:8px;text-align:center;line-height:1.4}
 .brow{cursor:pointer;position:relative}
@@ -884,7 +886,7 @@ function openBudgetDetail(date){
   if(!r){return;}
   budgetDetailData=r;
   const[y,m,d]=r.date.split('-');
-  document.getElementById('bpopup-title').textContent=parseInt(d)+' '+MONTHS[parseInt(m)-1]+' — '+(r.day||'');
+  document.getElementById('bpopup-title').textContent=(r.day||'').slice(0,3)+' '+parseInt(d)+' '+MONTHS_FULL[parseInt(m)-1];
   const fields=[
     {label:'Income',val:r.income,col:'C'},
     {label:'Other',val:r.other,col:'D'},
@@ -905,12 +907,13 @@ function openBudgetDetail(date){
     body.innerHTML=fields.map(function(f){
       return '<div class="bpopup-edit-row">'+
         '<span class="bpopup-label">'+f.label+'</span>'+
+        '<span style="font-size:15px;font-weight:500;color:var(--text3);padding-right:2px">$</span>'+
         '<input class="bpopup-input" type="number" step="0.01" min="0"'+
         ' id="bpinput-'+f.col+'" value="'+f.val.toFixed(2)+'"'+
         ' data-col="'+f.col+'" data-orig="'+f.val.toFixed(2)+'">'+
         '</div>';
     }).join('')+
-    '<button class="bpopup-save" id="bpopup-save-btn" onclick="saveBudgetDetail()">Save changes to sheet</button>'+
+    '<button class="bpopup-save" id="bpopup-save-btn" onclick="saveBudgetDetail()"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>'+
     '<p class="bpopup-note">Editing this day only — future recurring amounts are unchanged</p>';
   }
   document.getElementById('bpopup-wrap').classList.add('open');
@@ -940,11 +943,7 @@ async function removeBalanceCorrection(date){
     // Reverse the delta: subtract it from all running totals from that date forward
     const sheetRow=await findRowForDate(date);
     if(!sheetRow)throw new Error('Row not found for '+date);
-    const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
-    const nRange='N'+sheetRow+':N'+allDates.length;
-    const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
-    const reversed=nRows.map(r=>[parseFloat(((parseFloat(r[0])||0)-corr.delta).toFixed(2))]);
-    await sheetWrite(BUDGET_SHEET,nRange,reversed);
+    await applyDeltaToSheet(sheetRow,-corr.delta);
     balanceCorrections.delete(date);
     await saveCorrectionsToSheet();
     closeBudgetDetail();
@@ -963,7 +962,7 @@ function closeBudgetDetail(){
 async function saveBudgetDetail(){
   if(!budgetDetailData)return;
   var btn=document.getElementById('bpopup-save-btn');
-  btn.textContent='Saving…';btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>';btn.disabled=true;
   var r=budgetDetailData;
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
@@ -976,7 +975,7 @@ async function saveBudgetDetail(){
       var origVal=parseFloat(inp.dataset.orig)||0;
       if(Math.abs(newVal-origVal)>0.001)writes.push({col:inp.dataset.col,val:newVal});
     });
-    if(!writes.length){showToast('No changes to save');btn.textContent='Save changes to sheet';btn.disabled=false;return;}
+    if(!writes.length){showToast('No changes to save');btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';btn.disabled=false;return;}
     for(var i=0;i<writes.length;i++)await sheetWrite(BUDGET_SHEET,writes[i].col+sheetRow,[[writes[i].val]]);
     budgetData=null;
     closeBudgetDetail();
@@ -1376,6 +1375,24 @@ function openSetBalancePopup(){
   document.getElementById('sb-popup-date').value=today;
   document.getElementById('bpopup-wrap').classList.add('open');
 }
+async function applyDeltaToSheet(sheetRow,delta){
+  // Read the current formula/value in that single N cell
+  const resp=await fetch(
+    `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(BUDGET_SHEET+'!N'+sheetRow)}?valueRenderOption=FORMULA`,
+    {headers:{Authorization:'Bearer '+accessToken}}
+  );
+  const data=await resp.json();
+  const existing=(data.values&&data.values[0]&&data.values[0][0])||0;
+  // If it's already a formula, wrap it; if it's a number, adjust it
+  let newFormula;
+  const deltaStr=delta>=0?'+'+delta:String(delta);
+  if(typeof existing==='string'&&existing.startsWith('=')){
+    newFormula=existing+deltaStr;
+  }else{
+    newFormula='='+(parseFloat(existing)||0)+deltaStr;
+  }
+  await sheetWrite(BUDGET_SHEET,'N'+sheetRow,[[newFormula]]);
+}
 async function runInlineSetBalance(){
   const newBalance=parseFloat(document.getElementById('sb-inline-amount').value);
   const dateIso=document.getElementById('sb-inline-date').value;
@@ -1390,11 +1407,7 @@ async function runInlineSetBalance(){
     const currentRT=await getCellValue(sheetRow,'N');
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';return;}
-    const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
-    const nRange='N'+sheetRow+':N'+allDates.length;
-    const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
-    const updatedValues=nRows.map(r=>[parseFloat(((parseFloat(r[0])||0)+delta).toFixed(2))]);
-    await sheetWrite(BUDGET_SHEET,nRange,updatedValues);
+    await applyDeltaToSheet(sheetRow,delta);
     balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     budgetData=null;
@@ -1418,12 +1431,7 @@ async function runSetBalanceFromPopup(){
     const currentRT=await getCellValue(sheetRow,'N');
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');closeBudgetDetail();return;}
-    const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
-    const lastRow=allDates.length;
-    const nRange=`N${sheetRow}:N${lastRow}`;
-    const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
-    const updatedValues=nRows.map(r=>[parseFloat((parseFloat(r[0]||0)+delta).toFixed(2))]);
-    await sheetWrite(BUDGET_SHEET,nRange,updatedValues);
+    await applyDeltaToSheet(sheetRow,delta);
     balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     budgetData=null;
