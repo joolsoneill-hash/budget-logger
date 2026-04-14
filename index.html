@@ -131,7 +131,7 @@ textarea:focus{border-color:var(--accent)}
 .month-scroll::-webkit-scrollbar{display:none}
 .month-chip{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .month-chip.active{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
-.bsummary{display:flex;flex-direction:column;padding:6px 12px;background:var(--bg)}
+.bsummary{display:flex;flex-direction:column;padding:6px 0;background:var(--bg)}
 .bcard{background:var(--surface);border-radius:12px;padding:10px 12px}
 .bcard-label{font-size:11px;color:var(--text3);font-weight:500}
 .bcard-val{font-size:18px;font-weight:700;margin-top:2px}
@@ -290,7 +290,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
 
     <!-- BUDGET FIXED HEADER (pinned, shown only on budget tab) -->
-    <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:var(--surface);overflow:hidden">
+    <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:var(--surface)">
       <div class="bsummary" id="bsummary"></div>
       <div class="brow-header" id="budget-col-header" style="display:none">
         <span class="brow-day" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Day</span>
@@ -1047,39 +1047,36 @@ function updateSummaryCards(){
   const todaySb=localDateIso();
   const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
   document.getElementById('bsummary').innerHTML=
-    '<div style="display:flex;gap:6px;align-items:stretch;width:100%">'+
-      // Left half: projected + chips (exactly 50%)
-      '<div style="flex:0 0 calc(45% - 3px);min-width:0;display:flex;gap:4px;align-items:stretch">'+
-      // LEFT: projected balance value
-      '<div class="bcard" style="flex:1;padding:8px 10px;display:flex;flex-direction:column;gap:4px">'+
+    '<div style="display:flex;gap:0;align-items:stretch;width:100%;padding:6px 12px;box-sizing:border-box">'+
+      // LEFT HALF: projected balance + mode chips
+      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;margin-right:6px;display:flex;flex-direction:column;gap:4px">'+
         '<div class="bcard-label" style="font-size:10px">Projected balance</div>'+
         (()=>{const digits=(rtDisplay||'').replace(/[^0-9]/g,'').length;const fs=digits<=4?28:digits<=5?24:digits<=6?20:16;return'<div class="bcard-val '+rtClass+'" style="font-size:'+fs+'px;margin-top:2px;line-height:1.1">'+rtDisplay+'</div>';})()+
         '<div class="bcard-sub" style="font-size:10px">'+rtSub+'</div>'+
+        '<div style="display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap">'+
+          '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='payday'?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Next Pay</button>'+
+          '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='eom'&&!eomDate?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Month End</button>'+
+          '<label style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:'+(runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-bg)':'var(--surface)')+';cursor:pointer;flex-shrink:0;z-index:1">'+
+            '<svg width="13" height="13" viewBox="0 0 24 24" stroke="'+(runningTotalMode==='eom'&&eomDate?'var(--accent)':'var(--text2)')+'" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
+            '<input type="date" id="eom-date-input" value="'+eomDate+'" onchange="setEomDate(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2">'+
+          '</label>'+
+        '</div>'+
       '</div>'+
-      // MIDDLE: chips stacked vertically
-      '<div style="display:flex;flex-direction:column;gap:5px;justify-content:center;padding:4px 0">'+
-        '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;'+(runningTotalMode==='payday'?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Next Pay</button>'+
-        '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;font-family:inherit;white-space:nowrap;'+(runningTotalMode==='eom'&&!eomDate?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Month End</button>'+
-        '<label title="Pick a date" style="position:relative;display:flex;align-items:center;justify-content:center;padding:5px 8px;border:'+(runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-bg)':'var(--surface)')+';cursor:pointer;font-size:11px;color:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-text)':'var(--text2)')+'">'+
-          '<svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
-          '<input type="date" id="eom-date-input" value="'+eomDate+'" onchange="setEomDate(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">'+
-        '</label>'+
-      '</div>'+
-      '</div>'+
-      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px">'+
-        '<div class="bcard-label" style="font-size:10px;margin-bottom:6px">Set balance</div>'+
-        '<div style="display:flex;gap:6px;align-items:stretch;flex:1">'+
-          '<div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">'+
-            '<div style="display:flex;align-items:stretch;gap:3px;border-bottom:1.5px solid var(--border);padding-bottom:3px">'+
-              '<span style="font-size:16px;font-weight:500;color:var(--text3);align-self:flex-end;padding-bottom:1px">$</span>'+
-              '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:16px;font-weight:600;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield">'+
+      // RIGHT HALF: set balance
+      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:6px">'+
+        '<div style="display:flex;align-items:stretch;gap:4px">'+
+          '<div style="flex:1;position:relative">'+
+            '<span style="position:absolute;top:6px;left:8px;font-size:11px;font-weight:500;color:var(--text3);pointer-events:none;z-index:1">Set balance</span>'+
+            '<div style="display:flex;align-items:flex-end;border-bottom:1.5px solid var(--border);padding:22px 0 3px 0">'+
+              '<span style="font-size:18px;font-weight:500;color:var(--text3);line-height:1;padding-bottom:1px">$</span>'+
+              '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1">'+
             '</div>'+
-            '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%">'+
           '</div>'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="flex-shrink:0;width:42px;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="flex-shrink:0;width:46px;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
             calcIcon+
           '</button>'+
         '</div>'+
+        '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box">'+
       '</div>'+
     '</div>';
 }
