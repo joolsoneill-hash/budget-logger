@@ -933,11 +933,26 @@ function openBalancePopup(date){
 }
 
 async function removeBalanceCorrection(date){
-  balanceCorrections.delete(date);
-  await saveCorrectionsToSheet();
-  closeBudgetDetail();
-  showToast('Correction removed');
-  loadBudget();
+  const corr=balanceCorrections.get(date);
+  if(!corr){showToast('Correction not found');return;}
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    // Reverse the delta: subtract it from all running totals from that date forward
+    const sheetRow=await findRowForDate(date);
+    if(!sheetRow)throw new Error('Row not found for '+date);
+    const allDates=await sheetGet(BUDGET_SHEET,'A:A',true);
+    const nRange='N'+sheetRow+':N'+allDates.length;
+    const nRows=await sheetGet(BUDGET_SHEET,nRange,true);
+    const reversed=nRows.map(r=>[parseFloat(((parseFloat(r[0])||0)-corr.delta).toFixed(2))]);
+    await sheetWrite(BUDGET_SHEET,nRange,reversed);
+    balanceCorrections.delete(date);
+    await saveCorrectionsToSheet();
+    closeBudgetDetail();
+    showToast('Correction reversed ✓');
+    loadBudget();
+  }catch(e){
+    showToast(e.message||'Failed to remove',3000);
+  }
 }
 
 function closeBudgetDetail(){
