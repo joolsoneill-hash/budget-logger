@@ -1373,21 +1373,29 @@ function openSetBalancePopup(){
   document.getElementById('bpopup-wrap').classList.add('open');
 }
 async function applyDeltaToSheet(sheetRow,delta){
-  // Read the current formula/value in that single N cell
+  // Fetch the cell with FORMULA render so we can see if it has a chain formula
   const resp=await fetch(
     `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(BUDGET_SHEET+'!N'+sheetRow)}?valueRenderOption=FORMULA`,
     {headers:{Authorization:'Bearer '+accessToken}}
   );
   const data=await resp.json();
-  const existing=(data.values&&data.values[0]&&data.values[0][0])||0;
-  // If it's already a formula, wrap it; if it's a number, adjust it
-  let newFormula;
+  const existing=(data.values&&data.values[0]&&data.values[0][0]);
   const deltaStr=delta>=0?'+'+delta:String(delta);
+  let newFormula;
   if(typeof existing==='string'&&existing.startsWith('=')){
+    // Cell already has a chain formula — append delta to preserve it
+    // e.g. =N9+C10-SUM(D10:M10)  →  =N9+C10-SUM(D10:M10)+500
     newFormula=existing+deltaStr;
   }else{
-    newFormula='='+(parseFloat(existing)||0)+deltaStr;
+    // Cell is a bare number (old hardcoded sheet) — rebuild the chain formula
+    // so all subsequent rows stay formula-driven, then add the delta offset
+    if(sheetRow<=2){
+      newFormula='=C'+sheetRow+'-SUM(D'+sheetRow+':M'+sheetRow+')'+deltaStr;
+    }else{
+      newFormula='=N'+(sheetRow-1)+'+C'+sheetRow+'-SUM(D'+sheetRow+':M'+sheetRow+')'+deltaStr;
+    }
   }
+  // USER_ENTERED so the '=' prefix is treated as a formula by Google Sheets
   await sheetWrite(BUDGET_SHEET,'N'+sheetRow,[[newFormula]]);
 }
 async function runInlineSetBalance(){
