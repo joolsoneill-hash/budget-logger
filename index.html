@@ -238,6 +238,9 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .spinner{display:inline-block;width:15px;height:15px;border:2px solid rgba(255,255,255,0.4);border-top-color:#c8c8c8;border-radius:50%;animation:spin 0.7s linear infinite;vertical-align:middle}
 @keyframes spin{to{transform:rotate(360deg)}}
+
+#debug-overlay{display:none;position:fixed;bottom:80px;left:0;right:0;max-height:40vh;overflow-y:auto;background:rgba(0,0,0,0.85);color:#0f0;font-size:10px;font-family:monospace;padding:8px;z-index:99999;white-space:pre-wrap;word-break:break-all}
+#debug-toggle{display:none;position:fixed;bottom:130px;right:8px;z-index:99999;background:#333;color:#0f0;border:1px solid #0f0;border-radius:6px;padding:4px 8px;font-size:10px;cursor:pointer}
 </style>
 </head>
 <body>
@@ -1754,6 +1757,29 @@ if('serviceWorker' in navigator){
   const label=document.getElementById('dark-mode-label');
   if(icon)icon.textContent=theme==='dark'?'☀️':'🌙';
   if(label)label.textContent=theme==='dark'?'Light mode':'Dark mode';
+})();
+</script>
+
+<div id="debug-overlay"></div>
+<button id="debug-toggle" onclick="document.getElementById('debug-overlay').style.display=document.getElementById('debug-overlay').style.display==='none'?'block':'none'">DBG</button>
+<script>
+(function(){
+  const overlay=document.getElementById('debug-overlay');
+  const toggle=document.getElementById('debug-toggle');
+  // Show debug button after 2 seconds
+  setTimeout(()=>{toggle.style.display='block';},2000);
+  const orig=console.log.bind(console);
+  console.log=function(){
+    orig(...arguments);
+    const msg=Array.from(arguments).map(a=>typeof a==='object'?JSON.stringify(a):String(a)).join(' ');
+    overlay.textContent+=msg+'\n';
+    overlay.scrollTop=overlay.scrollHeight;
+  };
+  console.error=function(){
+    orig(...arguments);
+    const msg='ERROR: '+Array.from(arguments).map(a=>typeof a==='object'?JSON.stringify(a):String(a)).join(' ');
+    overlay.textContent+=msg+'\n';
+  };
 })();
 </script>
 </body>
