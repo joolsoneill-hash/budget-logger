@@ -131,14 +131,14 @@ textarea:focus{border-color:var(--accent)}
 .month-scroll::-webkit-scrollbar{display:none}
 .month-chip{padding:10px 14px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap;flex-shrink:0;-webkit-tap-highlight-color:transparent}
 .month-chip.active{border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600}
-.bsummary{display:block;padding:6px 8px;background:var(--bg);overflow:hidden}
+.bsummary{display:flex;flex-direction:column;padding:6px 12px;background:var(--bg)}
 .bcard{background:var(--surface);border-radius:12px;padding:10px 12px}
 .bcard-label{font-size:11px;color:var(--text3);font-weight:500}
 .bcard-val{font-size:18px;font-weight:700;margin-top:2px}
 .bcard-val.pos{color:var(--green)}
 .bcard-val.neg{color:var(--red)}
 .bcard-sub{font-size:11px;color:var(--text3);margin-top:2px}
-.budget-rows{background:var(--surface);margin-top:8px}
+.budget-rows{background:var(--surface);margin-top:12px}
 .brow{display:flex;align-items:center;padding:11px 16px;border-bottom:1px solid var(--border);gap:10px}
 .brow:last-child{border-bottom:none}
 .brow-date{font-size:12px;color:var(--text3);min-width:52px;flex-shrink:0}
@@ -158,7 +158,7 @@ textarea:focus{border-color:var(--accent)}
 [data-theme="dark"] .brow-running.pos{color:#c8c8c8}
 [data-theme="dark"] .brow-running.neg{color:var(--red)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
-.budget-rows{background:var(--surface)}
+.budget-rows{background:var(--surface);padding-top:6px}
 .brow.today-row{background:var(--accent-bg)}
 .brow-month-sep{padding:10px 16px 6px;font-size:15px;font-weight:700;color:#c8c8c8;letter-spacing:0.06em;text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--border);scroll-margin-top:80px;text-align:center}
 .rt-toggle{display:inline-flex;flex-direction:row;gap:4px;margin-top:6px;align-items:stretch}
@@ -936,9 +936,8 @@ async function removeBalanceCorrection(date){
   balanceCorrections.delete(date);
   await saveCorrectionsToSheet();
   closeBudgetDetail();
-  budgetData=null;
-  renderAllBudgetRows();
   showToast('Correction removed');
+  loadBudget();
 }
 
 function closeBudgetDetail(){
@@ -1034,7 +1033,7 @@ function updateSummaryCards(){
   const todaySb=localDateIso();
   const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
   document.getElementById('bsummary').innerHTML=
-    '<div style="display:flex;gap:6px;align-items:stretch;width:100%;overflow:hidden">'+
+    '<div style="display:flex;gap:6px;align-items:stretch;width:100%">'+
       // Left half: projected + chips (exactly 50%)
       '<div style="flex:0 0 calc(45% - 3px);min-width:0;display:flex;gap:4px;align-items:stretch">'+
       // LEFT: projected balance value
