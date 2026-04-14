@@ -777,6 +777,7 @@ async function loadBudget(){
         active:String(r[6]||'').toLowerCase()==='yes'});
     }
     recurringData=recurring.map((r,i)=>({...r,sheetRow:i+2}));// keep for Known tab
+    console.log('[Budget] Recurring entries:',recurring.length,recurring.map(r=>r.cat+' '+r.amount+' '+r.recurrence+' start:'+r.startIso+' active:'+r.active));
 
     // ── 2. Load manual overrides from Budget sheet (cols A-N, plain numbers) ──
     const budRows=await sheetGet(BUDGET_SHEET,'A:N',true);
@@ -852,7 +853,10 @@ async function loadBudget(){
       recurring.forEach(entry=>{
         if(!fires(entry,iso))return;
         const key=CAT_TO_KEY[entry.cat];
-        if(key)row[key]=parseFloat((row[key]+entry.amount).toFixed(2));
+        if(key){
+          row[key]=parseFloat((row[key]+entry.amount).toFixed(2));
+          if(data.length<20)console.log('[fires]',iso,entry.cat,entry.amount,'key='+key);
+        }
       });
       row.totalExpenses=row.other+row.subs+row.utils+row.savings+row.rent+row.insurance+row.medibank+row.daycare+row.gym+row.food;
       data.push(row);
