@@ -697,13 +697,20 @@ async function sheetWrite(sheet,range,values){
      body:JSON.stringify({range:sheet+'!'+range,majorDimension:'ROWS',values})});
   if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Write failed')}
 }
-async function findRowForDate(dateIso){
+async function findRowForDate(dateIso,createIfMissing=true){
   const rows=await sheetGet(BUDGET_SHEET,'A:A',true);
   for(let i=1;i<rows.length;i++){
     const cell=rows[i][0];if(!cell)continue;
     if(cellToIso(cell)===dateIso)return i+1;
   }
-  return null;
+  if(!createIfMissing)return null;
+  // Date not in sheet — append a new row with just the date and day name
+  const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+  const d=new Date(dateIso+'T00:00:00');
+  const dayName=dayNames[d.getDay()];
+  const newRow=rows.length+1;
+  await sheetWrite(BUDGET_SHEET,`A${newRow}:B${newRow}`,[[dateIso,dayName]]);
+  return newRow;
 }
 async function getCellValue(row,col){
   const rows=await sheetGet(BUDGET_SHEET,`${col}${row}`,true);
@@ -754,28 +761,132 @@ async function loadBudget(){
   showBudgetSkeleton();
   document.getElementById('budget-rows').innerHTML='<div class="empty">Loading…</div>';
   try{
-    const rows=await sheetGet(BUDGET_SHEET,'A:N',true);
-    const data=[];
-    for(let i=1;i<rows.length;i++){
-      const r=rows[i];if(!r||!r[0])continue;
+    // ── 1. Load recurring expenses ──────────────────────────────────────────
+    const recRows=await sheetGet(REC_SHEET,'A:G',true);
+    const skip=['HOW TO USE THIS SHEET','Category','Amount ($)','Start Date','Recurrence','Day of Week / Day of Month','Active?'];
+    const recurring=[];
+    for(let i=1;i<recRows.length;i++){
+      const r=recRows[i];if(!r||!r[0]||skip.includes(String(r[0])))continue;
+      const rawAmt=r[2];
+      const amount=typeof rawAmt==='number'?rawAmt:parseFloat(String(rawAmt||'').replace(/[^0-9.-]/g,''))||0;
+      const rawDay=r[5]??'';
+      const dayInfo=typeof rawDay==='number'?String(Math.round(rawDay)):String(rawDay).trim();
+      const startIso=r[3]!=null?cellToIso(r[3])||String(r[3]):'';
+      recurring.push({cat:String(r[0]||'').trim(),amount,startIso,
+        recurrence:String(r[4]||'').trim(),dayInfo,
+        active:String(r[6]||'').toLowerCase()==='yes'});
+    }
+    recurringData=recurring.map((r,i)=>({...r,sheetRow:i+2}));// keep for Known tab
+
+    // ── 2. Load manual overrides from Budget sheet (cols A-N, plain numbers) ──
+    const budRows=await sheetGet(BUDGET_SHEET,'A:N',true);
+    // Build a map: dateIso -> {other,subs,utils,savings,rent,insurance,medibank,daycare,gym,food,income}
+    const manualMap={};
+    for(let i=1;i<budRows.length;i++){
+      const r=budRows[i];if(!r||!r[0])continue;
       const iso=cellToIso(r[0]);if(!iso)continue;
-      const row={date:iso,day:r[1]||'',income:parseFloat(r[2])||0,
-        other:parseFloat(r[3])||0,subs:parseFloat(r[4])||0,utils:parseFloat(r[5])||0,
-        savings:parseFloat(r[6])||0,rent:parseFloat(r[7])||0,insurance:parseFloat(r[8])||0,
-        medibank:parseFloat(r[9])||0,daycare:parseFloat(r[10])||0,gym:parseFloat(r[11])||0,
-        food:parseFloat(r[12])||0,runningTotal:parseFloat(r[13])||0};
+      manualMap[iso]={
+        income:parseFloat(r[2])||0, other:parseFloat(r[3])||0,
+        subs:parseFloat(r[4])||0,   utils:parseFloat(r[5])||0,
+        savings:parseFloat(r[6])||0,rent:parseFloat(r[7])||0,
+        insurance:parseFloat(r[8])||0,medibank:parseFloat(r[9])||0,
+        daycare:parseFloat(r[10])||0,gym:parseFloat(r[11])||0,
+        food:parseFloat(r[12])||0
+      };
+    }
+
+    // ── 3. Determine date range ─────────────────────────────────────────────
+    // Earliest start date across all active recurring entries, or Jan 1 this year
+    const today=localDateIso();
+    const [ty]=today.split('-');
+    // End: Dec 31 of current year
+    const dateEnd=`${ty}-12-31`;
+    let dateStart=`${ty}-01-01`;
+    recurring.filter(r=>r.active&&r.startIso).forEach(r=>{
+      if(r.startIso<dateStart)dateStart=r.startIso;
+    });
+    // Also include any manual entry dates
+    Object.keys(manualMap).forEach(d=>{if(d<dateStart)dateStart=d;});
+
+    // ── 4. Helper: does a recurring entry fire on a given ISO date? ─────────
+    const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    function fires(entry,iso){
+      if(!entry.active||!entry.startIso||iso<entry.startIso)return false;
+      const rec=entry.recurrence.toUpperCase();
+      if(rec==='ONE-OFF')return iso===entry.startIso;
+      if(rec==='MONTHLY'){
+        // dayInfo is either a day-of-month number or '-' (use startIso day)
+        const dom=entry.dayInfo==='-'||entry.dayInfo===''
+          ?parseInt(entry.startIso.split('-')[2])
+          :parseInt(entry.dayInfo);
+        return parseInt(iso.split('-')[2])===dom;
+      }
+      // For interval-based: count days from start
+      const startD=new Date(entry.startIso+'T00:00:00');
+      const curD=new Date(iso+'T00:00:00');
+      const diffDays=Math.round((curD-startD)/(86400000));
+      if(rec==='WEEKLY')return diffDays%7===0;
+      if(rec==='FORTNIGHTLY')return diffDays%14===0;
+      if(rec==='4-WEEKLY')return diffDays%28===0;
+      return false;
+    }
+
+    // ── 5. Build one row per day from dateStart to dateEnd ──────────────────
+    const CAT_TO_KEY={IN:'income',Other:'other',Subscriptions:'subs',
+      Utilities:'utils',Savings:'savings',Rent:'rent',Insurance:'insurance',
+      MediBank:'medibank',Medibank:'medibank',Daycare:'daycare',Gym:'gym',Food:'food'};
+    const data=[];
+    let cur=new Date(dateStart+'T00:00:00');
+    const end=new Date(dateEnd+'T00:00:00');
+    while(cur<=end){
+      const iso=localDateIso(cur);
+      const dayName=DAY_NAMES[cur.getDay()];
+      // Start from manual overrides
+      const manual=manualMap[iso]||{};
+      const row={date:iso,day:dayName,
+        income:manual.income||0,other:manual.other||0,subs:manual.subs||0,
+        utils:manual.utils||0,savings:manual.savings||0,rent:manual.rent||0,
+        insurance:manual.insurance||0,medibank:manual.medibank||0,
+        daycare:manual.daycare||0,gym:manual.gym||0,food:manual.food||0};
+      // Add recurring amounts on top of any manual overrides
+      recurring.forEach(entry=>{
+        if(!fires(entry,iso))return;
+        const key=CAT_TO_KEY[entry.cat];
+        if(key)row[key]=parseFloat((row[key]+entry.amount).toFixed(2));
+      });
       row.totalExpenses=row.other+row.subs+row.utils+row.savings+row.rent+row.insurance+row.medibank+row.daycare+row.gym+row.food;
       data.push(row);
+      cur.setDate(cur.getDate()+1);
     }
-    budgetData=data;
-    // Load corrections from sheet (cross-device sync)
+
+    // ── 6. Chain running total in JS ────────────────────────────────────────
+    let rt=0;
+    data.forEach(row=>{
+      rt=parseFloat((rt+row.income-row.totalExpenses).toFixed(2));
+      row.runningTotal=rt;
+    });
+
+    // ── 7. Apply balance corrections on top ─────────────────────────────────
     await loadCorrectionsFromSheet();
+    if(balanceCorrections.size>0){
+      // For each correction, find its row and apply the delta from that point forward
+      const sortedCorr=[...balanceCorrections.values()].sort((a,b)=>a.date<b.date?-1:1);
+      sortedCorr.forEach(corr=>{
+        let applying=false;
+        data.forEach(row=>{
+          if(row.date===corr.date)applying=true;
+          if(applying)row.runningTotal=parseFloat((row.runningTotal+corr.delta).toFixed(2));
+        });
+      });
+    }
+
+    budgetData=data;
     // Build month tabs
     const months={};
     data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
     const keys=Object.keys(months).sort();
-    const cur=localDateIso().slice(0,7); // YYYY-MM in local timezone
-    activeBudgetMonth=keys.includes(cur)?cur:keys[keys.length-1];
+    const curMonth=localDateIso().slice(0,7); // YYYY-MM in local timezone
+    activeBudgetMonth=keys.includes(curMonth)?curMonth:keys[keys.length-1];
     const scroll=document.getElementById('month-scroll');
     // Build chips without year, plus a sticky year indicator
 const chipHtml=keys.map(k=>{const[y,m]=k.split('-');return`<button class="month-chip${k===activeBudgetMonth?' active':''}" id="mchip-${k}" onclick="scrollToMonth('${k}')">${MONTHS[parseInt(m)-1]}</button>`;}).join('');
@@ -940,14 +1051,10 @@ async function removeBalanceCorrection(date){
   if(!corr){showToast('Correction not found');return;}
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
-    // Reverse the delta: subtract it from all running totals from that date forward
-    const sheetRow=await findRowForDate(date);
-    if(!sheetRow)throw new Error('Row not found for '+date);
-    await applyDeltaToSheet(sheetRow,-corr.delta);
     balanceCorrections.delete(date);
     await saveCorrectionsToSheet();
     closeBudgetDetail();
-    showToast('Correction reversed ✓');
+    showToast('Correction removed ✓');
     loadBudget();
   }catch(e){
     showToast(e.message||'Failed to remove',3000);
@@ -1412,7 +1519,6 @@ async function runInlineSetBalance(){
     const currentRT=await getCellValue(sheetRow,'N');
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';return;}
-    await applyDeltaToSheet(sheetRow,delta);
     balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     budgetData=null;
@@ -1436,7 +1542,6 @@ async function runSetBalanceFromPopup(){
     const currentRT=await getCellValue(sheetRow,'N');
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');closeBudgetDetail();return;}
-    await applyDeltaToSheet(sheetRow,delta);
     balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     budgetData=null;
