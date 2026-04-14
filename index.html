@@ -383,7 +383,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 
     </div><!-- scroll-area -->
 
-    <div id="month-scroll-wrap" style="display:none;flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);display:none"><div class="month-scroll" id="month-scroll" style="flex:1;border-top:none;border-bottom:none;padding-right:0"></div><div id="year-chip-outer" style="flex-shrink:0;padding:8px 12px 8px 0;display:flex;align-items:center"><div id="year-chip" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:white;font-size:12px;font-weight:600;white-space:nowrap"></div></div></div>
+    <div id="month-scroll-wrap" style="display:none;flex-shrink:0;background:var(--surface);border-top:1px solid var(--border);display:none"><div class="month-scroll" id="month-scroll" style="flex:1;border-top:none;border-bottom:none;padding-right:8px"></div><div id="year-chip-outer" style="flex-shrink:0;padding:8px 12px 8px 0;display:flex;align-items:center"><div id="year-chip" style="padding:8px 10px;border:1px solid var(--border);border-radius:10px;background:var(--surface2);color:white;font-size:12px;font-weight:600;white-space:nowrap"></div></div></div>
     <nav class="nav">
       <button class="nav-btn active" id="nav-budget" onclick="switchPage('budget')">
         <svg viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
@@ -1051,17 +1051,19 @@ function updateSummaryCards(){
         '</label>'+
       '</div>'+
       '</div>'+
-      '<div class="bcard" style="flex:0 0 calc(50% - 3px);min-width:0;padding:8px 8px">'+
+      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px">'+
         '<div class="bcard-label" style="font-size:10px;margin-bottom:6px">Set balance</div>'+
-        '<div style="display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:4px;align-items:stretch">'+
-          '<div style="display:flex;align-items:stretch;gap:3px;border-bottom:1.5px solid var(--border);padding-bottom:2px">'+
-            '<span style="font-size:15px;font-weight:500;color:var(--text3);align-self:flex-end;padding-bottom:1px">$</span>'+
-            '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:15px;font-weight:600;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none">'+
+        '<div style="display:flex;gap:6px;align-items:stretch;flex:1">'+
+          '<div style="flex:1;display:flex;flex-direction:column;gap:5px;min-width:0">'+
+            '<div style="display:flex;align-items:stretch;gap:3px;border-bottom:1.5px solid var(--border);padding-bottom:3px">'+
+              '<span style="font-size:16px;font-weight:500;color:var(--text3);align-self:flex-end;padding-bottom:1px">$</span>'+
+              '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:16px;font-weight:600;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none">'+
+            '</div>'+
+            '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%">'+
           '</div>'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="grid-row:1/3;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0 6px;width:38px">'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="flex-shrink:0;width:42px;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
             calcIcon+
           '</button>'+
-          '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:10px;border:1px solid var(--border);border-radius:7px;padding:4px 6px;background:var(--surface);color:var(--text);outline:none;width:100%">'+
         '</div>'+
       '</div>'+
     '</div>';
