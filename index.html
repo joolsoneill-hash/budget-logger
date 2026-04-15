@@ -494,7 +494,7 @@ const CAT_ICONS={Other:'🛍️',Food:'🛒',Income:'💵',Subscriptions:'📱',
 const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K',Income:'C'};
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
-const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
+const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
 
 // Always use the browser's local timezone for date calculations
 function localDateIso(d){
@@ -582,7 +582,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.5</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.6</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1211,7 +1211,7 @@ function updateSummaryCards(){
         '<div style="display:flex;align-items:center;gap:6px;border-bottom:1.5px solid var(--border);padding-bottom:4px">'+
           '<span style="font-size:18px;color:var(--text3);font-weight:500">$</span>'+
           '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield">'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex-shrink:0;width:44px;height:44px;border:none;border-radius:10px;background:var(--accent);opacity:0.6;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex-shrink:0;width:44px;height:44px;border:none;border-radius:10px;background:var(--accent-text);opacity:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">'+
             calcIcon+
           '</button>'+
         '</div>'+
