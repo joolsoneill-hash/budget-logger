@@ -582,7 +582,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.2</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.3</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -820,17 +820,23 @@ async function loadBudget(){
     }
 
     // ── 3. Determine date range ─────────────────────────────────────────────
-    // Earliest start date across all active recurring entries, or Jan 1 this year
     const today=localDateIso();
     const [ty]=today.split('-');
-    // End: Dec 31 of current year
     const dateEnd=`${ty}-12-31`;
-    let dateStart=`${ty}-01-01`;
-    recurring.filter(r=>r.active&&r.startIso).forEach(r=>{
-      if(r.startIso<dateStart)dateStart=r.startIso;
-    });
+    // Start from the earliest correction date (that's where real balance data begins)
+    // Fall back to earliest manual entry, then today if nothing else
+    let dateStart=today;
+    // Load corrections early so we can use them for dateStart
+    await loadCorrectionsFromSheet();
+    if(balanceCorrections.size>0){
+      const earliest=[...balanceCorrections.keys()].sort()[0];
+      if(earliest<dateStart)dateStart=earliest;
+    }
     // Also include any manual entry dates
     Object.keys(manualMap).forEach(d=>{if(d<dateStart)dateStart=d;});
+    // But don't go further back than 30 days before today if no corrections exist
+    const thirtyDaysAgo=localDateIso(new Date(Date.now()-30*86400000));
+    if(dateStart>today)dateStart=thirtyDaysAgo;
 
     // ── 4. Helper: does a recurring entry fire on a given ISO date? ─────────
     const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
@@ -894,7 +900,7 @@ async function loadBudget(){
     });
 
     // ── 7. Apply balance corrections on top ─────────────────────────────────
-    await loadCorrectionsFromSheet();
+    // (corrections already loaded in step 3)
     if(balanceCorrections.size>0){
       // For each correction, find its row and apply the delta from that point forward
       const sortedCorr=[...balanceCorrections.values()].sort((a,b)=>a.date<b.date?-1:1);
