@@ -164,8 +164,8 @@ textarea:focus{border-color:var(--accent)}
 .brow-header{display:flex;align-items:center;padding:7px 16px;border-bottom:1.5px solid var(--border2);background:var(--surface);gap:10px}
 .budget-rows{background:var(--surface);padding-top:6px}
 .brow.today-row{background:var(--accent-bg)}
-.brow.weekend-row{background:color-mix(in srgb,var(--accent) 8%,transparent)}
-[data-theme="dark"] .brow.weekend-row{background:color-mix(in srgb,var(--accent) 12%,transparent)}
+.brow.weekend-row{background:color-mix(in srgb,var(--accent) 4%,transparent)}
+[data-theme="dark"] .brow.weekend-row{background:color-mix(in srgb,var(--accent) 6%,transparent)}
 .brow-month-sep{padding:10px 16px 6px;font-size:15px;font-weight:700;color:#c8c8c8;letter-spacing:0.06em;text-transform:uppercase;background:var(--bg);border-bottom:1px solid var(--border);scroll-margin-top:80px;text-align:center}
 .rt-toggle{display:inline-flex;flex-direction:row;gap:4px;margin-top:6px;align-items:stretch}
 .rt-toggle-btns{display:flex;flex-direction:column;gap:4px}
@@ -300,7 +300,16 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
     <div id="budget-fixed-header" style="display:none;flex-shrink:0;background:var(--surface)">
       <div class="bsummary" id="bsummary"></div>
       <div class="brow-header" id="budget-col-header" style="display:none">
-        <span class="brow-day" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Day</span>
+        <div style="display:flex;align-items:center;gap:4px" class="brow-day">
+          <span style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Day</span>
+          <button id="scroll-today-btn" onclick="scrollToToday()" title="Jump to today" style="display:none;width:22px;height:22px;border:1px solid var(--accent);border-radius:6px;background:none;color:var(--accent);cursor:pointer;padding:0;display:none;align-items:center;justify-content:center;flex-shrink:0">
+            <svg width="12" height="14" viewBox="0 0 12 16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M6 14 L6 3"/>
+              <path d="M2 7 L6 3 L10 7"/>
+              <path d="M2 14 Q2 14 6 14 Q10 14 10 14"/>
+            </svg>
+          </button>
+        </div>
         <span class="brow-date" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Date</span>
         <div class="brow-cats" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Activity</div>
         <span class="brow-total" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right">Daily</span>
@@ -503,11 +512,15 @@ const NSW_HOLIDAYS=new Set([
   '2025-01-01','2025-01-27','2025-04-18','2025-04-19','2025-04-20','2025-04-21',
   '2025-04-25','2025-06-09','2025-08-11','2025-10-06','2025-12-25','2025-12-26',
   // 2026
-  '2026-01-01','2026-01-26','2026-04-03','2026-04-04','2026-04-05','2026-04-06',
-  '2026-04-25','2026-06-08','2026-08-10','2026-10-05','2026-12-25','2026-12-26',
+  '2026-01-01','2026-01-26',
+  '2026-04-03','2026-04-04','2026-04-05','2026-04-06',
+  '2026-04-25','2026-04-27', // Anzac Day Sat + Mon substitute
+  '2026-06-08','2026-08-10','2026-10-05',
+  '2026-12-25','2026-12-28', // Christmas Fri (no sub needed), Boxing Day Sat → Mon substitute
   // 2027
   '2027-01-01','2027-01-26','2027-03-26','2027-03-27','2027-03-28','2027-03-29',
-  '2027-04-25','2027-06-14','2027-08-09','2027-10-04','2027-12-25','2027-12-27',
+  '2027-04-25','2027-04-26', // Anzac Day Sun + Mon substitute
+  '2027-06-14','2027-08-09','2027-10-04','2027-12-27','2027-12-28',
 ]);
 const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
 
@@ -597,7 +610,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.23</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.27</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -975,6 +988,16 @@ if(yearChipOuter)yearChipOuter.textContent=activeYear;
   }
 }
 
+function scrollToToday(){
+  const scrollArea=document.getElementById('scroll-area');
+  const todayRow=document.querySelector('.today-row');
+  if(todayRow&&scrollArea){
+    const containerRect=scrollArea.getBoundingClientRect();
+    const rowRect=todayRow.getBoundingClientRect();
+    const offset=rowRect.top-containerRect.top+scrollArea.scrollTop;
+    scrollArea.scrollTo({top:offset,behavior:'smooth'});
+  }
+}
 function scrollToMonth(k){
   // Find the first actual row for this month (the day row, not the separator)
   // so we land on the 1st of the month
@@ -1405,6 +1428,16 @@ function renderAllBudgetRows(){
     }
   },80);
 
+  // IntersectionObserver: show/hide "back to today" button when today row scrolls off
+  const todayRowEl=document.querySelector('.today-row');
+  const todayBtn=document.getElementById('scroll-today-btn');
+  if(todayRowEl&&todayBtn){
+    const todayObserver=new IntersectionObserver(entries=>{
+      const visible=entries[0].isIntersecting;
+      todayBtn.style.display=visible?'none':'flex';
+    },{root:document.getElementById('scroll-area'),threshold:0});
+    todayObserver.observe(todayRowEl);
+  }
   // IntersectionObserver: update month chip as user scrolls (no re-render)
   if(budgetMonthObserver)budgetMonthObserver.disconnect();
   budgetMonthObserver=new IntersectionObserver(entries=>{
