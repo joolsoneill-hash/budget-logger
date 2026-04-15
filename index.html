@@ -582,7 +582,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.3</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.4</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -752,7 +752,7 @@ async function addExpense(){
   const note=document.getElementById('note-input').value.trim();
   const dateIso=getSelectedDate();const col=COL_MAP[selectedCat];
   const btn=document.getElementById('add-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';btn.style.width='32px';
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';btn.style.width='46px';btn.style.width='32px';
   setStatus('amber','Writing to sheet…');
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired — please sign in again');
@@ -901,14 +901,18 @@ async function loadBudget(){
 
     // ── 7. Apply balance corrections on top ─────────────────────────────────
     // (corrections already loaded in step 3)
+    // Use newBalance directly: find the JS-computed RT at the correction date,
+    // calculate the real delta against that, and shift all rows from that date forward.
     if(balanceCorrections.size>0){
-      // For each correction, find its row and apply the delta from that point forward
       const sortedCorr=[...balanceCorrections.values()].sort((a,b)=>a.date<b.date?-1:1);
       sortedCorr.forEach(corr=>{
+        const corrRow=data.find(r=>r.date===corr.date);
+        if(!corrRow)return;
+        const realDelta=parseFloat((corr.newBalance-corrRow.runningTotal).toFixed(2));
         let applying=false;
         data.forEach(row=>{
           if(row.date===corr.date)applying=true;
-          if(applying)row.runningTotal=parseFloat((row.runningTotal+corr.delta).toFixed(2));
+          if(applying)row.runningTotal=parseFloat((row.runningTotal+realDelta).toFixed(2));
         });
       });
     }
@@ -1546,19 +1550,19 @@ async function runInlineSetBalance(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
-    const sheetRow=await findRowForDate(dateIso);
-    if(!sheetRow)throw new Error('No row for this date');
-    const currentRT=await getCellValue(sheetRow,'N');
+    // Compute delta from JS-computed running total (sheet N col is empty in new architecture)
+    const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
+    const currentRT=jsRow?jsRow.runningTotal:0;
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
-    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';return;}
+    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML=calcIcon;return;}
     balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
-    budgetData=null;
     document.getElementById('sb-inline-amount').value='';
     showToast('Balance set ✓');
+    btn.disabled=false;btn.innerHTML=calcIcon;btn.style.width='46px';
+    budgetData=null;
     loadBudget();
-  }catch(e){showToast(e.message||'Failed',3000);}
-  btn.disabled=false;btn.innerHTML=calcIcon;
+  }catch(e){showToast(e.message||'Failed',3000);btn.disabled=false;btn.innerHTML=calcIcon;}
 }
 async function runSetBalanceFromPopup(){
   const newBalance=parseFloat(document.getElementById('sb-popup-amount').value);
@@ -1569,16 +1573,15 @@ async function runSetBalanceFromPopup(){
   btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Recalculating…';
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
-    const sheetRow=await findRowForDate(dateIso);
-    if(!sheetRow)throw new Error('No row found for '+fmtDate(dateIso));
-    const currentRT=await getCellValue(sheetRow,'N');
+    const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
+    const currentRT=jsRow?jsRow.runningTotal:0;
     const delta=parseFloat((newBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');closeBudgetDetail();return;}
     balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
-    budgetData=null;
     closeBudgetDetail();
     showToast(`Balance set to $${newBalance.toFixed(2)} ✓`);
+    budgetData=null;
     loadBudget();
   }catch(e){showToast(e.message||'Failed',3000);}
   btn.disabled=false;btn.textContent='Set balance & recalculate';
