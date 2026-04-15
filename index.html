@@ -43,7 +43,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .topbar-logo svg{width:18px;height:18px;stroke:#c8c8c8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .topbar h1{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .topbar p{font-size:11px;color:var(--text3);margin-top:1px}
-.nav{background:var(--surface);border-top:1px solid var(--border);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:20;max-width:480px;margin:0 auto}
+.nav{background:var(--surface);border-top:1px solid var(--border);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:18;max-width:480px;margin:0 auto}
 .nav-btn{flex:1;padding:12px 4px;border:none;background:none;color:var(--text3);font-size:0;cursor:pointer;display:flex;flex-direction:column;align-items:center;-webkit-tap-highlight-color:transparent}
 .nav-btn svg{width:26px;height:26px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .nav-btn.active{color:var(--accent)}
@@ -60,7 +60,7 @@ body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg)
 .error-msg{font-size:12px;color:var(--red);margin-top:4px;display:none}
 
 .main-wrap{flex:1;overflow:hidden;display:flex;flex-direction:column;min-height:0;position:relative}
-#month-scroll-wrap{position:fixed;bottom:0;left:0;right:0;z-index:19;max-width:480px;margin:0 auto}
+#month-scroll-wrap{position:fixed;bottom:0;left:0;right:0;z-index:19;max-width:480px;margin:0 auto;transition:bottom 0.1s}
 #main-section.visible{display:flex!important}
 .scroll-area{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0;padding-bottom:var(--nav-offset,52px)}
 .section{padding:16px 20px;background:var(--surface);margin-bottom:8px}
@@ -446,7 +446,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <div>
           <div class="form-label">Recurrence</div>
           <select class="form-input" id="rec-freq" onchange="updateDayLabel()">
-            <option>Monthly</option><option>Fortnightly</option><option>4-Weekly</option><option>Weekly</option><option>One-Off</option>
+            <option>Monthly</option><option>Fortnightly</option><option>4-Weekly</option><option>Weekly</option><option>N-Weekly</option><option>One-Off</option>
           </select>
         </div>
         <div>
@@ -583,7 +583,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.15</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.17</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -594,6 +594,8 @@ function switchPage(page){
   const navHeight=document.querySelector('.nav')?.offsetHeight||52;
   const monthBarHeight=showMonthBar?(msw?.offsetHeight||49):0;
   document.getElementById('scroll-area').style.paddingBottom=(navHeight+monthBarHeight)+'px';
+  // Month bar sits directly above nav
+  if(msw)msw.style.bottom=navHeight+'px';
   // Swap topbar logo to match active tab
   const svgMap={budget:'<line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/>',set:'<line x1="12" y1="2" x2="12" y2="6"/><line x1="12" y1="18" x2="12" y2="22"/><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"/><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"/><line x1="2" y1="12" x2="6" y2="12"/><line x1="18" y1="12" x2="22" y2="12"/><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"/><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"/>',add:'<circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>',recurring:'<polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>'};
   const logoSvg=document.getElementById('topbar-logo-svg');
@@ -708,7 +710,7 @@ function showMain(){
   document.getElementById('topbar-logo-wrap').style.display='flex';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
-  switchPage('budget');setTimeout(()=>{const nav=document.querySelector('.nav');const msw=document.getElementById('month-scroll-wrap');if(nav&&msw){const nb=nav.offsetHeight||52;const mb=msw.offsetHeight||49;document.getElementById('scroll-area').style.paddingBottom=(nb+mb)+'px';}},100);
+  switchPage('budget');setTimeout(()=>{const nav=document.querySelector('.nav');const msw=document.getElementById('month-scroll-wrap');if(nav&&msw){const nb=nav.offsetHeight||52;const mb=msw.offsetHeight||49;document.getElementById('scroll-area').style.paddingBottom=(nb+mb)+'px';msw.style.bottom=nb+'px';}},100);
 }
 
 async function sheetGet(sheet,range,unformatted=false){
@@ -864,6 +866,7 @@ async function loadBudget(){
       if(rec==='WEEKLY')return diffDays%7===0;
       if(rec==='FORTNIGHTLY')return diffDays%14===0;
       if(rec==='4-WEEKLY')return diffDays%28===0;
+      if(rec==='N-WEEKLY'){const n=parseInt(entry.dayInfo)||1;return diffDays%(n*7)===0;}
       return false;
     }
 
@@ -1067,8 +1070,9 @@ function openBudgetDetail(date){
   if(!fields.length){
     body.innerHTML=
       '<p style="color:var(--text3);font-size:14px;padding:16px 0 12px;text-align:center">No activity on this day</p>'+
-      '<button onclick="switchToQuickAdd()" id="bpopup-add-btn" style="width:100%;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:white;font-size:14px;font-weight:600">'+
-      '<svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add expense</button>';
+      '<div style="display:flex;gap:8px;margin-top:4px">'+
+      '<button onclick="switchToQuickAdd()" style="flex:1;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--accent)" title="Add expense"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'+
+      '</div>';
   }else{
     body.innerHTML=fields.map(function(f){
       const isOverride=f.val!==f.rec;
@@ -1085,9 +1089,9 @@ function openBudgetDetail(date){
         '</div>';
     }).join('')+
     '<div style="display:flex;gap:8px;margin-top:12px">'+
+    '<button onclick="switchToQuickAdd()" style="flex:1;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--accent)" title="Add expense"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>'+
     '<button id="bpopup-save-btn" onclick="saveBudgetDetail()" style="flex:1;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--accent)" title="Save"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>'+
     '</div>'+
-    '<button onclick="switchToQuickAdd()" id="bpopup-add-btn" style="width:100%;margin-top:8px;padding:10px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:white;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add expense</button>'+
     '<p class="bpopup-note">Editing this day only — future recurring amounts are unchanged</p>';
   }
   document.getElementById('bpopup-wrap').classList.add('open');
@@ -1271,16 +1275,19 @@ function updateSummaryCards(){
         '</div>'+
       '</div>'+
       // RIGHT HALF: set balance
-      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;gap:6px">'+
-        '<div class="bcard-label" style="font-size:10px">Set balance</div>'+
-        '<div style="display:flex;align-items:center;gap:6px;border-bottom:1.5px solid var(--border);padding-bottom:4px">'+
-          '<span style="font-size:18px;color:var(--text3);font-weight:500">$</span>'+
-          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield">'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex-shrink:0;width:44px;height:44px;border:none;border-radius:10px;background:var(--accent-text);opacity:1;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">'+
+      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:4px">'+
+        '<div style="display:flex;align-items:stretch;gap:6px;flex:1">'+
+          '<div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">'+
+            '<div style="display:flex;align-items:center;gap:4px;border-bottom:1.5px solid var(--border);padding-bottom:2px">'+
+              '<span style="font-size:20px;color:var(--text3);font-weight:500;line-height:1">$</span>'+
+              '<input type="number" id="sb-inline-amount" placeholder="Set" inputmode="decimal" step="0.01" style="flex:1;font-size:24px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.2">'+
+            '</div>'+
+            '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box">'+
+          '</div>'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex-shrink:0;width:44px;border:none;border-radius:10px;background:var(--accent-text);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
             calcIcon+
           '</button>'+
         '</div>'+
-        '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box">'+
       '</div>'+
     '</div>';
 }
@@ -1440,7 +1447,7 @@ function renderRecurring(data){
     });
     html+='</div></div>';
   });
-  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;return 0;};
+  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}return 0;};
   const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
   const exp=data.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
   html+=`<div class="bsummary" style="margin-bottom:8px;border-radius:12px;overflow:hidden">
@@ -1454,6 +1461,7 @@ function updateDayLabel(){
   const f=document.getElementById('rec-freq').value;
   const l=document.getElementById('day-label'),i=document.getElementById('rec-day');
   if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
+  else if(f==='N-Weekly'){l.textContent='Every N weeks (e.g. 3)';i.placeholder='e.g. 3'}
   else if(f==='Weekly'||f==='Fortnightly'||f==='4-Weekly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
   else{l.textContent='Day';i.placeholder='Leave blank'}
 }
