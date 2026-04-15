@@ -302,7 +302,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <div class="brow-cats" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Activity</div>
         <span class="brow-total" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;text-align:right">Daily</span>
         <span class="brow-running" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Balance</span>
-        <span style="flex-shrink:0;width:26px;margin-left:4px"></span>
+        
       </div>
     </div>
 
@@ -582,7 +582,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.13</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.14</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1059,7 +1059,10 @@ function openBudgetDetail(date){
   const fields=allFields.filter(function(f){return f.val;});
   var body=document.getElementById('bpopup-body');
   if(!fields.length){
-    body.innerHTML='<p style="color:var(--text3);font-size:14px;padding:20px 0;text-align:center">No activity on this day</p>';
+    body.innerHTML=
+      '<p style="color:var(--text3);font-size:14px;padding:16px 0 12px;text-align:center">No activity on this day</p>'+
+      '<button onclick="switchToQuickAdd()" id="bpopup-add-btn" style="width:100%;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:white;font-size:14px;font-weight:600">'+
+      '<svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add expense</button>';
   }else{
     body.innerHTML=fields.map(function(f){
       const isOverride=f.val!==f.rec;
@@ -1078,6 +1081,7 @@ function openBudgetDetail(date){
     '<div style="display:flex;gap:8px;margin-top:12px">'+
     '<button id="bpopup-save-btn" onclick="saveBudgetDetail()" style="flex:1;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--accent)" title="Save"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>'+
     '</div>'+
+    '<button onclick="switchToQuickAdd()" id="bpopup-add-btn" style="width:100%;margin-top:8px;padding:10px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:white;font-size:14px;font-weight:600"><svg width="16" height="16" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add expense</button>'+
     '<p class="bpopup-note">Editing this day only — future recurring amounts are unchanged</p>';
   }
   document.getElementById('bpopup-wrap').classList.add('open');
@@ -1322,7 +1326,6 @@ function renderAllBudgetRows(){
       <div class="brow-cats">${p.join('')}</div>
       <span class="brow-total ${n===0?'':n>0?'pos':'neg'}">${n===0?'—':(n>0?'+':'-')+'$'+Math.abs(n).toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
       <span class="brow-running ${r.income?'income-day':rt>=0?'pos':'neg'}">${rt===0?'—':'$'+rt.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>
-      <button class="brow-add-btn" onclick="event.stopPropagation();openQuickAdd('${r.date}')" title="Add expense">+</button>
     </div>`;
   });
 
@@ -1636,6 +1639,10 @@ async function runSetBalanceFromPopup(){
     loadBudget();
   }catch(e){showToast(e.message||'Failed',3000);}
   btn.disabled=false;btn.textContent='Set balance & recalculate';
+}
+function switchToQuickAdd(){
+  if(!budgetDetailData)return;
+  openQuickAdd(budgetDetailData.date);
 }
 function openQuickAdd(dateIso){
   document.getElementById('bpopup-title').textContent='Add expense — '+fmtDate(dateIso);
