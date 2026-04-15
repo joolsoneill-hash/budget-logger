@@ -582,7 +582,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.4</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.5</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1206,16 +1206,12 @@ function updateSummaryCards(){
         '</div>'+
       '</div>'+
       // RIGHT HALF: set balance
-      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:6px">'+
-        '<div style="display:flex;align-items:stretch;gap:4px">'+
-          '<div style="flex:1;position:relative">'+
-            '<span style="position:absolute;top:6px;left:8px;font-size:11px;font-weight:500;color:var(--text3);pointer-events:none;z-index:1">Set balance</span>'+
-            '<div style="display:flex;align-items:flex-end;border-bottom:1.5px solid var(--border);padding:22px 0 3px 0">'+
-              '<span style="font-size:18px;font-weight:500;color:var(--text3);line-height:1;padding-bottom:1px">$</span>'+
-              '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1">'+
-            '</div>'+
-          '</div>'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" title="Recalculate" style="flex-shrink:0;width:46px;border:none;border-radius:8px;background:color-mix(in srgb,var(--accent) 60%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
+      '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;justify-content:space-between;gap:6px">'+
+        '<div class="bcard-label" style="font-size:10px">Set balance</div>'+
+        '<div style="display:flex;align-items:center;gap:6px;border-bottom:1.5px solid var(--border);padding-bottom:4px">'+
+          '<span style="font-size:18px;color:var(--text3);font-weight:500">$</span>'+
+          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:22px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield">'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex-shrink:0;width:44px;height:44px;border:none;border-radius:10px;background:var(--accent);opacity:0.6;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">'+
             calcIcon+
           '</button>'+
         '</div>'+
