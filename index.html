@@ -582,7 +582,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v1.0</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.13</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -873,18 +873,26 @@ async function loadBudget(){
       const dayName=DAY_NAMES[cur.getDay()];
       // Start from manual overrides
       const manual=manualMap[iso]||{};
+      // Track which categories have explicit manual overrides
+      const overridden=new Set(Object.keys(manual).filter(k=>manual[k]!==0&&manual[k]!=null));
       const row={date:iso,day:dayName,
         income:manual.income||0,other:manual.other||0,subs:manual.subs||0,
         utils:manual.utils||0,savings:manual.savings||0,rent:manual.rent||0,
         insurance:manual.insurance||0,medibank:manual.medibank||0,
-        daycare:manual.daycare||0,gym:manual.gym||0,food:manual.food||0};
-      // Add recurring amounts on top of any manual overrides
+        daycare:manual.daycare||0,gym:manual.gym||0,food:manual.food||0,
+        // Store recurring-only amounts for popup hint
+        recIncome:0,recOther:0,recSubs:0,recUtils:0,recSavings:0,recRent:0,
+        recInsurance:0,recMedibank:0,recDaycare:0,recGym:0,recFood:0};
+      // Add recurring ONLY for categories that don't have a manual override
       recurring.forEach(entry=>{
         if(!fires(entry,iso))return;
         const key=CAT_TO_KEY[entry.cat];
-        if(key){
-          row[key]=parseFloat((row[key]+entry.amount).toFixed(2));
-
+        if(!key)return;
+        const recKey='rec'+key.charAt(0).toUpperCase()+key.slice(1);
+        const recAmt=entry.amount;
+        if(recKey in row)row[recKey]=parseFloat((row[recKey]+recAmt).toFixed(2));
+        if(!overridden.has(key)){
+          row[key]=parseFloat((row[key]+recAmt).toFixed(2));
         }
       });
       row.totalExpenses=row.other+row.subs+row.utils+row.savings+row.rent+row.insurance+row.medibank+row.daycare+row.gym+row.food;
@@ -1035,32 +1043,35 @@ function openBudgetDetail(date){
   budgetDetailData=r;
   const[y,m,d]=r.date.split('-');
   document.getElementById('bpopup-title').textContent=(r.day||'').slice(0,3)+' '+parseInt(d)+' '+MONTHS_FULL[parseInt(m)-1];
-  const fields=[
-    {label:'Income',val:r.income,col:'C'},
-    {label:'Other',val:r.other,col:'D'},
-    {label:'Subscriptions',val:r.subs,col:'E'},
-    {label:'Utilities',val:r.utils,col:'F'},
-    {label:'Savings',val:r.savings,col:'G'},
-    {label:'Rent',val:r.rent,col:'H'},
-    {label:'Insurance',val:r.insurance,col:'I'},
-    {label:'Medibank',val:r.medibank,col:'J'},
-    {label:'Daycare',val:r.daycare,col:'K'},
-    {label:'Gym',val:r.gym,col:'L'},
-    {label:'Food',val:r.food,col:'M'},
-  ].filter(function(f){return f.val;});
+  const allFields=[
+    {label:'Income',val:r.income,rec:r.recIncome,col:'C'},
+    {label:'Other',val:r.other,rec:r.recOther,col:'D'},
+    {label:'Subscriptions',val:r.subs,rec:r.recSubs,col:'E'},
+    {label:'Utilities',val:r.utils,rec:r.recUtils,col:'F'},
+    {label:'Savings',val:r.savings,rec:r.recSavings,col:'G'},
+    {label:'Rent',val:r.rent,rec:r.recRent,col:'H'},
+    {label:'Insurance',val:r.insurance,rec:r.recInsurance,col:'I'},
+    {label:'Medibank',val:r.medibank,rec:r.recMedibank,col:'J'},
+    {label:'Daycare',val:r.daycare,rec:r.recDaycare,col:'K'},
+    {label:'Gym',val:r.gym,rec:r.recGym,col:'L'},
+    {label:'Food',val:r.food,rec:r.recFood,col:'M'},
+  ];
+  const fields=allFields.filter(function(f){return f.val;});
   var body=document.getElementById('bpopup-body');
   if(!fields.length){
     body.innerHTML='<p style="color:var(--text3);font-size:14px;padding:20px 0;text-align:center">No activity on this day</p>';
   }else{
     body.innerHTML=fields.map(function(f){
+      const isOverride=f.val!==f.rec;
       return '<div class="bpopup-edit-row">'+
-        '<span class="bpopup-label">'+f.label+'</span>'+
+        '<span class="bpopup-label">'+f.label+(f.rec>0&&isOverride?' <span style="font-size:10px;color:var(--text3);font-weight:400">(rec $'+f.rec.toFixed(2)+')</span>':'')+'</span>'+
         '<span style="font-size:15px;font-weight:500;color:var(--text3);padding-right:2px">$</span>'+
-        '<input class="bpopup-input" type="number" step="0.01" min="0"'+
+        '<input class="bpopup-input" type="number" step="0.01"'+
         ' id="bpinput-'+f.col+'" value="'+f.val.toFixed(2)+'"'+
-        ' data-col="'+f.col+'" data-orig="'+f.val.toFixed(2)+'">'+
+        ' placeholder="0.00"'+
+        ' data-col="'+f.col+'" data-orig="'+f.val.toFixed(2)+'" data-rec="'+f.rec.toFixed(2)+'">'+
         '<button onclick="deleteExpenseField(this)" data-col="'+f.col+'" data-date="'+r.date+'"'+
-        ' style="flex-shrink:0;width:28px;height:28px;border:none;border-radius:8px;background:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0">'+
+        ' style="flex-shrink:0;width:28px;height:28px;border:none;border-radius:8px;background:none;color:var(--text3);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0" title="Remove manual entry">'+
         '<svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>'+
         '</div>';
     }).join('')+
@@ -1160,6 +1171,7 @@ async function saveBudgetDetail(){
     inputs.forEach(function(inp){
       var newVal=parseFloat(inp.value)||0;
       var origVal=parseFloat(inp.dataset.orig)||0;
+      // Write the exact value the user entered — manual overrides recurring entirely
       if(Math.abs(newVal-origVal)>0.001)writes.push({col:inp.dataset.col,val:newVal});
     });
     if(!writes.length){showToast('No changes to save');btn.innerHTML='<svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>';btn.disabled=false;return;}
