@@ -583,7 +583,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.17</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.18</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1276,18 +1276,14 @@ function updateSummaryCards(){
       '</div>'+
       // RIGHT HALF: set balance
       '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:4px">'+
-        '<div style="display:flex;align-items:stretch;gap:6px;flex:1">'+
-          '<div style="flex:1;display:flex;flex-direction:column;gap:4px;min-width:0">'+
-            '<div style="display:flex;align-items:center;gap:4px;border-bottom:1.5px solid var(--border);padding-bottom:2px">'+
-              '<span style="font-size:20px;color:var(--text3);font-weight:500;line-height:1">$</span>'+
-              '<input type="number" id="sb-inline-amount" placeholder="Set" inputmode="decimal" step="0.01" style="flex:1;font-size:24px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.2">'+
-            '</div>'+
-            '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box">'+
-          '</div>'+
-          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex-shrink:0;width:44px;border:none;border-radius:10px;background:var(--accent-text);cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;align-self:stretch">'+
-            calcIcon+
-          '</button>'+
+        '<div style="display:flex;align-items:center;gap:4px;border-bottom:1.5px solid var(--border);padding-bottom:4px">'+
+          '<span style="font-size:20px;color:var(--text3);font-weight:500;line-height:1">$</span>'+
+          '<input type="number" id="sb-inline-amount" placeholder="Set" inputmode="decimal" step="0.01" style="flex:1;font-size:24px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.2">'+
         '</div>'+
+        '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box">'+
+        '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="width:100%;padding:7px;border:none;border-radius:8px;background:var(--accent-text);cursor:pointer;display:flex;align-items:center;justify-content:center">'+
+          calcIcon+
+        '</button>'+
       '</div>'+
     '</div>';
 }
