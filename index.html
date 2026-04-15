@@ -583,7 +583,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.19</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.20</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1295,16 +1295,23 @@ function updateSummaryCards(){
           '</label>'+
         '</div>'+
       '</div>'+
-      // RIGHT HALF: set balance
+      // RIGHT HALF: set balance — mirrors projected balance layout
       '<div class="bcard" style="flex:1;min-width:0;padding:8px 10px;display:flex;flex-direction:column;gap:4px">'+
-        '<div style="display:flex;align-items:center;gap:4px;border-bottom:1.5px solid var(--border);padding-bottom:4px">'+
+        '<div class="bcard-label" style="font-size:10px">Set balance</div>'+
+        '<div style="display:flex;align-items:center;gap:4px;margin-top:2px">'+
           '<span style="font-size:20px;color:var(--text3);font-weight:500;line-height:1">$</span>'+
-          '<input type="number" id="sb-inline-amount" placeholder="Set" inputmode="decimal" step="0.01" style="flex:1;font-size:24px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.2">'+
+          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:28px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.1">'+
         '</div>'+
-        '<input type="date" id="sb-inline-date" value="'+todaySb+'" style="font-size:11px;border:1px solid var(--border);border-radius:7px;padding:5px 6px;background:var(--surface);color:var(--text);outline:none;width:100%;box-sizing:border-box">'+
-        '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="width:100%;padding:7px;border:none;border-radius:8px;background:var(--accent-text);cursor:pointer;display:flex;align-items:center;justify-content:center">'+
-          calcIcon+
-        '</button>'+
+        '<div class="bcard-sub" style="font-size:10px" id="sb-date-display">'+todaySb.split('-').reverse().join(' / ')+'</div>'+
+        '<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'+
+          '<label style="position:relative;display:inline-flex;align-items:center;justify-content:center;padding:5px 8px;gap:4px;border:1px solid var(--border);border-radius:10px;background:var(--surface);cursor:pointer;font-size:11px;color:var(--text);white-space:nowrap">'+
+            '<svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
+            '<input type="date" id="sb-inline-date" value="'+todaySb+'" onchange="document.getElementById(\'sb-date-display\').textContent=this.value.split(\'-\').reverse().join(\' / \')" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%">'+
+          '</label>'+
+          '<button onclick="runInlineSetBalance()" id="sb-inline-btn" style="flex:1;padding:5px 8px;border:none;border-radius:10px;background:var(--accent-text);cursor:pointer;display:flex;align-items:center;justify-content:center">'+
+            calcIcon+
+          '</button>'+
+        '</div>'+
       '</div>'+
     '</div>';
 }
