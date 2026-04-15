@@ -597,7 +597,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.22</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.23</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1380,7 +1380,7 @@ function renderAllBudgetRows(){
     const isWeekend_=dow_===0||dow_===6;
     const isHoliday_=NSW_HOLIDAYS.has(r.date);
     const rowClass_=r.date===todayIso?' today-row':(isWeekend_||isHoliday_)?' weekend-row':'';
-    html+=`<div class="brow${rowClass_}" onclick="openBudgetDetail('${r.date}')">`;
+    html+=`<div class="brow${rowClass_}" onclick="openBudgetDetail('${r.date}')">
       <span class="brow-day" style="font-size:13px;color:#c8c8c8;font-weight:500">${(r.day||'').slice(0,3)}</span>
       <span class="brow-date" style="font-size:13px;color:#c8c8c8;font-weight:500">${fmtDateShort(r.date)}</span>
       <div class="brow-cats">${p.join('')}</div>
@@ -1891,7 +1891,7 @@ if(savedSecret)document.getElementById('secret-input').value=savedSecret;
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=22').catch(()=>{});
   });
 }
 // Init theme
