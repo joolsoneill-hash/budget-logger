@@ -491,6 +491,7 @@ const CAT_ICONS={Other:'🛍️',Food:'🛒',Income:'💵',Subscriptions:'📱',
 const COL_MAP={Other:'D',Food:'M',Subscriptions:'E',Utilities:'F',Gym:'L',Daycare:'K',Income:'C'};
 const MONTHS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 const MONTHS_FULL=['January','February','March','April','May','June','July','August','September','October','November','December'];
+const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
 
 // Always use the browser's local timezone for date calculations
 function localDateIso(d){
@@ -1137,7 +1138,6 @@ function getNextPayDay(fromDateIso){
   return budgetData.find(r=>r.date>fromDateIso&&r.income>0)||null;
 }
 
-const calcIcon='<svg width="20" height="20" viewBox="0 0 24 24" stroke="#c8c8c8" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="12" x2="10" y2="12"/><line x1="14" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="10" y2="16"/><line x1="14" y1="16" x2="16" y2="16"/></svg>';
 function updateSummaryCards(){
   if(!budgetData)return;
   const[cy,cm]=activeBudgetMonth.split('-');
