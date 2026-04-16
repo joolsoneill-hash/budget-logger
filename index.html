@@ -621,7 +621,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.50</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.50</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.51</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.51</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1142,6 +1142,40 @@ async function createSheet(name){
 const budgetRowMap=new Map();
 let budgetDetailData=null;
 
+// Module-level fires check for popup use (mirrors the one in loadBudget)
+function firesOnDate(entry,iso){
+  if(!entry.active||!entry.startIso||iso<entry.startIso)return false;
+  const rec=(entry.recurrence||'').toUpperCase();
+  if(rec==='ONE-OFF')return iso===entry.startIso;
+  if(rec==='MONTHLY'){
+    const dayStr=String(entry.dayInfo||'');
+    const nwd=dayStr.toUpperCase().includes('NWD');
+    const dom=dayStr==='-'||dayStr===''?parseInt(entry.startIso.split('-')[2]):parseInt(dayStr)||parseInt(entry.startIso.split('-')[2]);
+    if(!nwd)return parseInt(iso.split('-')[2])===dom;
+    const[iy,im]=iso.split('-');
+    const lastDay=new Date(parseInt(iy),parseInt(im),0).getDate();
+    let candidate=new Date(parseInt(iy),parseInt(im)-1,Math.min(dom,lastDay));
+    while(true){const dow=candidate.getDay();const cIso=localDateIso(candidate);if(dow!==0&&dow!==6&&!NSW_HOLIDAYS.has(cIso))break;candidate.setDate(candidate.getDate()-1);}
+    return localDateIso(candidate)===iso;
+  }
+  if(rec==='YEARLY'){
+    const parts=String(entry.dayInfo||'').split('/');
+    let tDay,tMon;
+    if(parts.length>=2){tDay=parseInt(parts[0]);tMon=parseInt(parts[1]);}
+    else{tDay=parseInt(entry.startIso.split('-')[2]);tMon=parseInt(entry.startIso.split('-')[1]);}
+    const[,im,id]=iso.split('-');
+    return parseInt(im)===tMon&&parseInt(id)===tDay;
+  }
+  const startD=new Date(entry.startIso+'T00:00:00');
+  const curD=new Date(iso+'T00:00:00');
+  const diffDays=Math.round((curD-startD)/86400000);
+  if(rec==='WEEKLY')return diffDays%7===0;
+  if(rec==='FORTNIGHTLY')return diffDays%14===0;
+  if(rec==='4-WEEKLY')return diffDays%28===0;
+  if(rec==='N-WEEKLY'){const n=parseInt(entry.dayInfo)||1;return diffDays%(n*7)===0;}
+  return false;
+}
+
 function openBudgetDetail(date){
   const r=budgetRowMap.get(date);
   if(!r){return;}
@@ -1161,11 +1195,12 @@ function openBudgetDetail(date){
     {label:'Food',cat:'Food',val:r.food,rec:r.recFood,col:'M'},
   ];
   const fields=allFields.filter(function(f){return f.val;});
-  // Build a lookup: category -> descriptions from recurring entries firing today
+  // Build a lookup: category -> descriptions for entries firing on THIS date
   const recDescs={};
   if(recurringData){
     recurringData.forEach(function(entry){
       if(!entry.active)return;
+      if(!firesOnDate(entry,r.date))return;
       const cat=entry.cat;
       if(!recDescs[cat])recDescs[cat]=[];
       recDescs[cat].push(entry.desc||entry.cat);
