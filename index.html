@@ -255,6 +255,9 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
     <div style="flex:1;min-width:0">
       <h1 id="page-title" style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Budget Tracker</h1>
     </div>
+    <button id="rec-refresh-btn" onclick="loadRecurring()" style="display:none;background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);-webkit-tap-highlight-color:transparent" title="Refresh known expenses">
+      <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+    </button>
     <button id="budget-refresh-btn" onclick="loadBudget()" style="display:none;background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);-webkit-tap-highlight-color:transparent" title="Refresh budget">
       <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
     </button>
@@ -370,12 +373,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           <div id="rec-month-scroll-wrap" style="background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border)">
             <div class="month-scroll" id="rec-month-scroll"></div>
           </div>
-          <div style="display:flex;justify-content:flex-end;padding:4px 12px;background:var(--surface);border-bottom:1px solid var(--border)">
-            <button class="refresh-btn" onclick="loadRecurring()">
-              <svg width="14" height="14" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-              Refresh
-            </button>
-          </div>
+
         </div>
         <div class="rec-section" id="rec-section"><div class="empty">Loading…</div></div>
       </div>
@@ -471,16 +469,16 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           <input class="form-input" type="text" id="rec-day" placeholder="e.g. 28">
         </div>
       </div>
+      <div class="form-row">
+        <div class="form-label">Start date</div>
+        <input class="form-input" type="date" id="rec-start">
+      </div>
       <div class="form-row" id="nwd-row">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)" id="nwd-label">
           <input type="checkbox" id="rec-nwd" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">
           <span>Pay on nearest working day before</span>
         </label>
         <div style="font-size:11px;color:var(--text3);margin-top:4px;padding-left:28px">If date falls on a weekend or public holiday, pay the Friday before</div>
-      </div>
-      <div class="form-row">
-        <div class="form-label">Start date</div>
-        <input class="form-input" type="date" id="rec-start">
       </div>
       <div class="form-row">
         <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)">
@@ -616,12 +614,6 @@ function setStatus(state,msg){
   }
   const txt=document.getElementById('menu-status-text');
   if(txt)txt.textContent=msg;
-  // Also update menu btn dot colour as a subtle indicator
-  const btn=document.getElementById('menu-btn');
-  if(btn){
-    const col=state==='ok'?'#639922':state==='warn'?'#EF9F27':'#E24B4A';
-    btn.style.color=col;
-  }
 }
 
 function switchPage(page){
@@ -629,7 +621,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.49</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.50</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.50</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -647,6 +639,7 @@ function switchPage(page){
   const logoSvg=document.getElementById('topbar-logo-svg');
   if(logoSvg&&svgMap[page])logoSvg.innerHTML=svgMap[page];
   document.getElementById('budget-refresh-btn').style.display=page==='budget'?'block':'none';
+  document.getElementById('rec-refresh-btn').style.display=page==='recurring'?'block':'none';
   document.getElementById('scroll-area').scrollTop=0;
   if(page==='budget'){
     if(!budgetData){
@@ -656,7 +649,11 @@ function switchPage(page){
       updateSummaryCards();
     }
   }
-  if(page==='recurring'&&!recurringData)loadRecurring();
+  if(page==='recurring'){
+    buildRecMonthScroll();
+    if(!recurringData)loadRecurring();
+    else{buildRecMonthScroll();renderRecurring(recurringData);}
+  }
 }
 
 function getSelectedDate(){
@@ -741,6 +738,7 @@ function signOut(){
   document.getElementById('menu-btn').style.display='none';
   document.getElementById('topbar-logo-wrap').style.display='none';
   document.getElementById('budget-refresh-btn').style.display='none';
+  document.getElementById('rec-refresh-btn').style.display='none';
   document.getElementById('secret-input').value='';
 }
 function showMain(){
