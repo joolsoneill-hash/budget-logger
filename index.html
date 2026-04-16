@@ -568,6 +568,7 @@ function showDebugInfo(){
   const lines=[];
   lines.push('budgetData rows: '+(budgetData?budgetData.length:0));
   lines.push('recurringData entries: '+(recurringData?recurringData.length:0));
+  lines.push('corrections: '+balanceCorrections.size+' — '+[...balanceCorrections.values()].map(c=>c.date+' $'+c.newBalance).join(', '));
   if(recurringData&&recurringData.length){
     recurringData.slice(0,5).forEach(r=>lines.push(' '+r.cat+' $'+r.amount+' '+r.recurrence+' start:'+r.startIso+' active:'+r.active));
     if(recurringData.length>5)lines.push(' ...and '+(recurringData.length-5)+' more');
@@ -609,7 +610,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.32</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.33</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1053,14 +1054,14 @@ async function loadCorrectionsFromSheet(){
     for(let i=1;i<rows.length;i++){
       const r=rows[i];
       if(!r||!r[0])continue;
-      const date=String(r[0]).trim();
+      // Date may come back as serial number, DD/MM/YYYY, or YYYY-MM-DD
+      const rawDate=r[0];
+      const date=cellToIso(rawDate)||String(rawDate).trim();
       const newBalance=parseFloat(r[1])||0;
       const delta=parseFloat(r[2])||0;
       const ts=parseFloat(r[3])||0;
-      if(date)balanceCorrections.set(date,{date,newBalance,delta,ts});
+      if(date&&date.match(/^\d{4}-\d{2}-\d{2}$/))balanceCorrections.set(date,{date,newBalance,delta,ts});
     }
-    // Sync to localStorage cache
-    try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
   }catch(e){
     // Corrections sheet may not exist yet — that's fine
   }
