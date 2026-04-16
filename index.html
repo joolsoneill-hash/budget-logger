@@ -471,6 +471,13 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           <input class="form-input" type="text" id="rec-day" placeholder="e.g. 28">
         </div>
       </div>
+      <div class="form-row" id="nwd-row" style="display:none">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)">
+          <input type="checkbox" id="rec-nwd" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">
+          <span>Pay on nearest working day before</span>
+        </label>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;padding-left:28px">If date falls on weekend or public holiday, pay the Friday before</div>
+      </div>
       <div class="form-row">
         <div class="form-label">Start date</div>
         <input class="form-input" type="date" id="rec-start">
@@ -617,7 +624,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.41</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.42</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -887,11 +894,28 @@ async function loadBudget(){
       const rec=entry.recurrence.toUpperCase();
       if(rec==='ONE-OFF')return iso===entry.startIso;
       if(rec==='MONTHLY'){
-        // dayInfo is either a day-of-month number or '-' (use startIso day)
-        const dom=entry.dayInfo==='-'||entry.dayInfo===''
+        // dayInfo may be "28" or "28 NWD" (nearest working day before)
+        const dayStr=String(entry.dayInfo||'');
+        const nwd=dayStr.toUpperCase().includes('NWD');
+        const dom=dayStr==='-'||dayStr===''
           ?parseInt(entry.startIso.split('-')[2])
-          :parseInt(entry.dayInfo);
-        return parseInt(iso.split('-')[2])===dom;
+          :parseInt(dayStr)||parseInt(entry.startIso.split('-')[2]);
+        if(!nwd){
+          return parseInt(iso.split('-')[2])===dom;
+        }
+        // NWD: find the nearest working day <= dom for this month
+        const[iy,im]=iso.split('-');
+        // Clamp dom to last day of this month
+        const lastDay=new Date(parseInt(iy),parseInt(im),0).getDate();
+        let candidate=new Date(parseInt(iy),parseInt(im)-1,Math.min(dom,lastDay));
+        // Step back until we hit a working day
+        while(true){
+          const dow=candidate.getDay();
+          const cIso=localDateIso(candidate);
+          if(dow!==0&&dow!==6&&!NSW_HOLIDAYS.has(cIso))break;
+          candidate.setDate(candidate.getDate()-1);
+        }
+        return localDateIso(candidate)===iso;
       }
       // For interval-based: count days from start
       const startD=new Date(entry.startIso+'T00:00:00');
@@ -1617,7 +1641,7 @@ function renderRecurring(data){
       html+=`<div class="rec-row" data-sheet-row="${r.sheetRow}">
         <div class="rec-body" style="opacity:${r.active?1:0.5}">
           <div class="rec-name" style="color:${r.active?'var(--text)':'var(--text3)'}">${r.desc||r.cat}</div>
-          <div class="rec-detail">${r.recurrence}${r.dayInfo?' · '+r.dayInfo:''}</div>
+          <div class="rec-detail">${r.recurrence}${r.dayInfo?' · '+String(r.dayInfo).replace(/\s*NWD/i,' (Working day)'):''}</div>
         </div>
         <div class="rec-right">
           <div class="rec-amount" style="color:${r.active?'var(--text)':'var(--text3)'};font-size:15px;font-weight:600">$${r.amount.toFixed(2)}</div>
@@ -1642,6 +1666,7 @@ function renderRecurring(data){
 function updateDayLabel(){
   const f=document.getElementById('rec-freq').value;
   const l=document.getElementById('day-label'),i=document.getElementById('rec-day');
+  document.getElementById('nwd-row').style.display=f==='Monthly'?'block':'none';
   if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
   else if(f==='N-Weekly'){l.textContent='Every N weeks (e.g. 3)';i.placeholder='e.g. 3'}
   else if(f==='Weekly'||f==='Fortnightly'||f==='4-Weekly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
@@ -1657,6 +1682,7 @@ function openAddRec(){
   document.getElementById('rec-day').value='';
   document.getElementById('rec-start').value=localDateIso();
   document.getElementById('rec-active').value='Yes';
+  document.getElementById('rec-nwd').checked=false;
   updateDayLabel();
   document.getElementById('rec-modal').classList.add('open');
 }
@@ -1668,7 +1694,9 @@ function openEditRec(sheetRow){
   document.getElementById('rec-cat').value=r.cat;
   document.getElementById('rec-amount').value=r.amount;
   document.getElementById('rec-freq').value=r.recurrence||'Monthly';
-  document.getElementById('rec-day').value=r.dayInfo||'';
+  const nwdFlag=r.dayInfo&&r.dayInfo.toString().toUpperCase().includes('NWD');
+  document.getElementById('rec-day').value=nwdFlag?r.dayInfo.toString().replace(/\s*NWD/i,'').trim():(r.dayInfo||'');
+  document.getElementById('rec-nwd').checked=nwdFlag;
   document.getElementById('rec-start').value=cellToIso(r.startDate)||localDateIso();
   document.getElementById('rec-active').value=r.active?'Yes':'No';
   updateDayLabel();
@@ -1693,7 +1721,8 @@ async function saveRecurring(){
   if(!startIso){showToast('Enter a start date');return}
   const btn=document.getElementById('save-rec-btn');
   btn.textContent='Saving…';btn.disabled=true;
-  const dayVal=(freq==='Monthly'&&day)?parseInt(day)||day:day;
+  const nwd=document.getElementById('rec-nwd').checked&&freq==='Monthly';
+  const dayVal=(freq==='Monthly'&&day)?(nwd?(parseInt(day)||day)+' NWD':parseInt(day)||day):(nwd?day+' NWD':day);
   const[sy,sm,sd]=startIso.split('-');
   const dateForSheet=`${sd}/${sm}/${sy}`;
   try{
