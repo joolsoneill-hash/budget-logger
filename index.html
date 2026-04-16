@@ -610,7 +610,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.35</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.36</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1362,7 +1362,7 @@ function updateSummaryCards(){
         '<div class="bcard-label" style="font-size:10px">Set balance</div>'+
         '<div style="display:flex;align-items:center;gap:4px;margin-top:2px">'+
           '<span style="font-size:20px;color:var(--text3);font-weight:500;line-height:1">$</span>'+
-          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" onkeydown="sbAmountKeydown(event)" style="flex:1;font-size:28px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.1">'+
+          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" style="flex:1;font-size:28px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.1">'+
         '</div>'+
         '<div class="bcard-sub" style="font-size:10px" id="sb-date-display">'+todaySb.split('-').reverse().join(' / ')+'</div>'+
         '<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'+
@@ -1935,6 +1935,13 @@ document.getElementById('balance-custom-date').max=todayIso;
 document.getElementById('balance-custom-date').value=todayIso;
 const savedSecret=ls('budget_secret');
 if(savedSecret)document.getElementById('secret-input').value=savedSecret;
+// Persistent Enter key listener for set balance input (survives re-renders)
+document.addEventListener('keydown',function(e){
+  if((e.key==='Enter'||e.keyCode===13)&&document.activeElement&&document.activeElement.id==='sb-inline-amount'){
+    e.preventDefault();
+    runInlineSetBalance();
+  }
+});
 (async()=>{
   const fromCallback=await handleCallback();
   if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain()}
