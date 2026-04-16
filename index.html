@@ -610,7 +610,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.34</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.35</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1272,6 +1272,9 @@ function setRunningTotalMode(mode){
     setTimeout(()=>scrollToDate(paydayAnchor),50);
   }
 }
+function sbAmountKeydown(e){
+  if(e.key==='Enter'||e.keyCode===13){e.preventDefault();runInlineSetBalance();}
+}
 function updateSbDateDisplay(val){
   const el=document.getElementById('sb-date-display');
   if(el&&val)el.textContent=val.split('-').reverse().join(' / ');
@@ -1359,7 +1362,7 @@ function updateSummaryCards(){
         '<div class="bcard-label" style="font-size:10px">Set balance</div>'+
         '<div style="display:flex;align-items:center;gap:4px;margin-top:2px">'+
           '<span style="font-size:20px;color:var(--text3);font-weight:500;line-height:1">$</span>'+
-          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" onkeydown="if(event.key===\'Enter\'){event.preventDefault();runInlineSetBalance();}" style="flex:1;font-size:28px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.1">'+
+          '<input type="number" id="sb-inline-amount" placeholder="0.00" inputmode="decimal" step="0.01" onkeydown="sbAmountKeydown(event)" style="flex:1;font-size:28px;font-weight:700;border:none;background:transparent;color:var(--text);outline:none;min-width:0;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield;line-height:1.1">'+
         '</div>'+
         '<div class="bcard-sub" style="font-size:10px" id="sb-date-display">'+todaySb.split('-').reverse().join(' / ')+'</div>'+
         '<div style="display:flex;gap:4px;margin-top:4px;align-items:center">'+
