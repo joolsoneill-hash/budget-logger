@@ -308,7 +308,6 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
               <path d="M2 14 Q2 14 6 14 Q10 14 10 14"/>
             </svg>
           </button>
-          <span style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Day</span>
         </div>
         <span class="brow-date" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Date</span>
         <div class="brow-cats" style="font-size:12px;color:#c8c8c8;font-weight:600;text-transform:uppercase;letter-spacing:0.05em">Activity</div>
@@ -610,7 +609,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.29</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.30</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
