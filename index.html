@@ -471,12 +471,12 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           <input class="form-input" type="text" id="rec-day" placeholder="e.g. 28">
         </div>
       </div>
-      <div class="form-row" id="nwd-row" style="display:none">
-        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)">
+      <div class="form-row" id="nwd-row">
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)" id="nwd-label">
           <input type="checkbox" id="rec-nwd" style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">
           <span>Pay on nearest working day before</span>
         </label>
-        <div style="font-size:11px;color:var(--text3);margin-top:4px;padding-left:28px">If date falls on weekend or public holiday, pay the Friday before</div>
+        <div style="font-size:11px;color:var(--text3);margin-top:4px;padding-left:28px">If date falls on a weekend or public holiday, pay the Friday before</div>
       </div>
       <div class="form-row">
         <div class="form-label">Start date</div>
@@ -624,7 +624,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.42</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.43</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1666,7 +1666,13 @@ function renderRecurring(data){
 function updateDayLabel(){
   const f=document.getElementById('rec-freq').value;
   const l=document.getElementById('day-label'),i=document.getElementById('rec-day');
-  document.getElementById('nwd-row').style.display=f==='Monthly'?'block':'none';
+  const isMonthly=f==='Monthly';
+  const nwdCb=document.getElementById('rec-nwd');
+  const nwdLabel=document.getElementById('nwd-label');
+  nwdCb.disabled=!isMonthly;
+  if(!isMonthly)nwdCb.checked=false;
+  nwdLabel.style.opacity=isMonthly?'1':'0.35';
+  nwdLabel.style.cursor=isMonthly?'pointer':'not-allowed';
   if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
   else if(f==='N-Weekly'){l.textContent='Every N weeks (e.g. 3)';i.placeholder='e.g. 3'}
   else if(f==='Weekly'||f==='Fortnightly'||f==='4-Weekly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
