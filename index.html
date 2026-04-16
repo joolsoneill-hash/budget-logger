@@ -609,7 +609,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.31</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.30</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1041,14 +1041,12 @@ function setActiveBudgetMonth(k){
 
 // Balance corrections map: date -> {date, newBalance, delta}
 const balanceCorrections=new Map();
-// Note: we no longer pre-populate from localStorage on startup —
-// the sheet is the source of truth; localStorage is write-only cache
+// Also keep localStorage as cache so pills show without waiting for sheet
+try{const bc=JSON.parse(localStorage.getItem('balance_corrections')||'[]');bc.forEach(([k,v])=>balanceCorrections.set(k,v));}catch(e){}
 
 async function loadCorrectionsFromSheet(){
   try{
     const rows=await sheetGet(CORR_SHEET,'A:D',true);
-    // Clear map first — sheet is the single source of truth
-    balanceCorrections.clear();
     if(!rows||rows.length<=1)return;
     for(let i=1;i<rows.length;i++){
       const r=rows[i];
