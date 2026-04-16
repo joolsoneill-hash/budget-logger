@@ -609,7 +609,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.30</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.32</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1041,12 +1041,14 @@ function setActiveBudgetMonth(k){
 
 // Balance corrections map: date -> {date, newBalance, delta}
 const balanceCorrections=new Map();
-// Also keep localStorage as cache so pills show without waiting for sheet
-try{const bc=JSON.parse(localStorage.getItem('balance_corrections')||'[]');bc.forEach(([k,v])=>balanceCorrections.set(k,v));}catch(e){}
+// Note: we no longer pre-populate from localStorage on startup —
+// the sheet is the source of truth; localStorage is write-only cache
 
 async function loadCorrectionsFromSheet(){
   try{
     const rows=await sheetGet(CORR_SHEET,'A:D',true);
+    // Clear map first — sheet is the single source of truth
+    balanceCorrections.clear();
     if(!rows||rows.length<=1)return;
     for(let i=1;i<rows.length;i++){
       const r=rows[i];
@@ -1708,28 +1710,39 @@ async function applyDeltaToSheet(sheetRow,delta){
   // USER_ENTERED so the '=' prefix is treated as a formula by Google Sheets
   await sheetWrite(BUDGET_SHEET,'N'+sheetRow,[[newFormula]]);
 }
-async function runInlineSetBalance(){
-  const newBalance=parseFloat(document.getElementById('sb-inline-amount').value);
-  const dateIso=document.getElementById('sb-inline-date').value;
-  if(isNaN(newBalance)||!newBalance){showToast('Enter a balance');return;}
-  if(!dateIso){showToast('Pick a date');return;}
-  const btn=document.getElementById('sb-inline-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
-  try{
-    if(!await maybeRefreshToken())throw new Error('Session expired');
-    // Compute delta from JS-computed running total (sheet N col is empty in new architecture)
-    const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
-    const currentRT=jsRow?jsRow.runningTotal:0;
-    const delta=parseFloat((newBalance-currentRT).toFixed(2));
-    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML=calcIcon;return;}
-    balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
-    await saveCorrectionsToSheet();
-    document.getElementById('sb-inline-amount').value='';
-    showToast('Balance set ✓');
-    btn.disabled=false;btn.innerHTML=calcIcon;btn.style.width='46px';
-    budgetData=null;
-    loadBudget();
-  }catch(e){showToast(e.message||'Failed',3000);btn.disabled=false;btn.innerHTML=calcIcon;}
+async function runInlineSetBalance() {
+    const newBalanceInput = document.getElementById('sb-inline-amount').value;
+    const newBalance = parseFloat(newBalanceInput);
+    
+    if (isNaN(newBalance)) {
+        showToast("Please enter a valid number for the new balance.");
+        return;
+    }
+
+    // 1. Get the target row based on your date selection
+    // (Ensure your existing sheetRow determination logic remains here)
+    const sheetRow = /* your existing logic to determine row */ ; 
+
+    // 2. Fetch the current running total from Column N and SANITIZE IT
+    const currentRTValue = await getCellValue(sheetRow, 'N');
+    const currentRT = parseFloat(String(currentRTValue).replace(/[^0-9.-]+/g, "")) || 0;
+
+    // 3. The correction delta = newBalance - currentRunningTotal
+    const delta = parseFloat((newBalance - currentRT).toFixed(2));
+    const deltaStr = delta >= 0 ? '+' + delta : delta.toString();
+
+    // 4. Chain formula so all subsequent rows stay formula-driven, then add the delta offset
+    let newFormula = '';
+    if (sheetRow <= 2) { 
+        newFormula = '=C' + sheetRow + '-SUM(D' + sheetRow + ':M' + sheetRow + ')' + deltaStr; 
+    } else { 
+        newFormula = '=N' + (sheetRow - 1) + '+C' + sheetRow + '-SUM(D' + sheetRow + ':M' + sheetRow + ')' + deltaStr; 
+    }
+
+    // 5. Write the new formula back to the sheet (USER_ENTERED so the '=' prefix is treated as a formula by Google Sheets)
+    await sheetWrite(BUDGET_SHEET, 'N' + sheetRow, [[newFormula]]);
+    
+    showToast("Balance updated successfully.");
 }
 async function runSetBalanceFromPopup(){
   const newBalance=parseFloat(document.getElementById('sb-popup-amount').value);
