@@ -610,7 +610,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.28</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.29</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -988,6 +988,21 @@ if(yearChipOuter)yearChipOuter.textContent=activeYear;
   }
 }
 
+function scrollToDate(dateIso){
+  const scrollArea=document.getElementById('scroll-area');
+  if(!scrollArea)return;
+  // Find the row element for this date
+  const allRows=scrollArea.querySelectorAll('.brow');
+  for(const row of allRows){
+    if(row.getAttribute('onclick')&&row.getAttribute('onclick').includes(dateIso)){
+      const containerRect=scrollArea.getBoundingClientRect();
+      const rowRect=row.getBoundingClientRect();
+      const offset=rowRect.top-containerRect.top+scrollArea.scrollTop;
+      scrollArea.scrollTo({top:offset,behavior:'smooth'});
+      return;
+    }
+  }
+}
 function scrollToToday(){
   const scrollArea=document.getElementById('scroll-area');
   const todayRow=document.querySelector('.today-row');
@@ -1254,6 +1269,10 @@ function setRunningTotalMode(mode){
   }
   runningTotalMode=mode;
   updateSummaryCards();
+  // Scroll table to the target pay day
+  if(mode==='payday'&&paydayAnchor){
+    setTimeout(()=>scrollToDate(paydayAnchor),50);
+  }
 }
 function updateSbDateDisplay(val){
   const el=document.getElementById('sb-date-display');
@@ -1328,6 +1347,7 @@ function updateSummaryCards(){
         (()=>{const digits=(rtDisplay||'').replace(/[^0-9]/g,'').length;const fs=digits<=4?28:digits<=5?24:digits<=6?20:16;return'<div class="bcard-val '+rtClass+'" style="font-size:'+fs+'px;margin-top:2px;line-height:1.1">'+rtDisplay+'</div>';})()+
         '<div class="bcard-sub" style="font-size:10px">'+rtSub+'</div>'+
         '<div style="display:flex;gap:4px;margin-top:4px;align-items:center;flex-wrap:wrap">'+
+          '<button onclick="scrollToToday();paydayAnchor=null;setRunningTotalMode(&quot;payday&quot;)" title="Back to today" style="width:28px;height:28px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></button>'+
           '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='payday'?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Next Pay</button>'+
           '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:11px;padding:5px 8px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='eom'&&!eomDate?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Month End</button>'+
           '<label style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border:'+(runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-bg)':'var(--surface)')+';cursor:pointer;flex-shrink:0;z-index:1">'+
