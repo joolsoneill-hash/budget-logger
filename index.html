@@ -442,7 +442,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
       <input type="hidden" id="edit-rec-row">
       <div class="form-row">
         <div class="form-label">Description</div>
-        <input class="form-input" type="text" id="rec-desc" placeholder="e.g. Netflix, Rent payment">
+        <input class="form-input" type="text" id="rec-desc" placeholder="e.g. Netflix, Rent">
       </div>
       <div class="form-row-2">
         <div>
@@ -455,8 +455,8 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           </select>
         </div>
         <div>
-          <div class="form-label">Amount ($)</div>
-          <input class="form-input" type="number" id="rec-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal">
+          <div class="form-label">Amount</div>
+          <div style="position:relative;display:flex;align-items:center"><span style="position:absolute;left:12px;font-size:15px;color:var(--text3);pointer-events:none">$</span><input class="form-input" type="number" id="rec-amount" placeholder="0.00" step="0.01" min="0" inputmode="decimal" style="padding-left:26px;-moz-appearance:textfield;-webkit-appearance:none;appearance:textfield"><style>#rec-amount::-webkit-inner-spin-button,#rec-amount::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}</style></div>
         </div>
       </div>
       <div class="form-row-2">
@@ -483,14 +483,16 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <input class="form-input" type="date" id="rec-start">
       </div>
       <div class="form-row">
-        <div class="form-label">Active</div>
-        <select class="form-input" id="rec-active">
-          <option value="Yes">Yes — active</option>
-          <option value="No">No — paused</option>
-        </select>
+        <label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:14px;color:var(--text)">
+          <input type="checkbox" id="rec-active-cb" checked style="width:18px;height:18px;accent-color:var(--accent);cursor:pointer">
+          <span>Active</span>
+        </label>
+        <input type="hidden" id="rec-active" value="Yes">
       </div>
-      <button class="save-rec-btn" id="save-rec-btn" onclick="saveRecurring()">Save to sheet</button>
-      <button class="cancel-rec-btn" onclick="closeRecModal()">Cancel</button>
+      <div style="display:flex;gap:8px;margin-top:4px">
+        <button onclick="closeRecModal()" style="flex:1;padding:13px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center"><svg width="20" height="20" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        <button class="save-rec-btn" id="save-rec-btn" onclick="saveRecurring()" style="flex:3;display:flex;align-items:center;justify-content:center;gap:8px"><svg width="20" height="20" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg></button>
+      </div>
     </div>
   </div>
 </div>
@@ -627,16 +629,16 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.47</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.48</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
   const msw=document.getElementById('month-scroll-wrap');
   const showMonthBar=page==='budget';
-  if(msw)msw.style.display=showMonthBar?'flex':'none';
-  // Adjust scroll area bottom padding so content isn't hidden behind fixed nav
+  if(msw){msw.style.display=showMonthBar?'flex':'none';}
+  // Adjust scroll area bottom padding — use fixed 49px for month bar height
   const navHeight=document.querySelector('.nav')?.offsetHeight||52;
-  const monthBarHeight=showMonthBar?(msw?.offsetHeight||49):0;
+  const monthBarHeight=showMonthBar?49:0;
   document.getElementById('scroll-area').style.paddingBottom=(navHeight+monthBarHeight)+'px';
   // Month bar sits directly above nav
   if(msw)msw.style.bottom=navHeight+'px';
@@ -754,7 +756,7 @@ function showMain(){
   document.getElementById('topbar-logo-wrap').style.display='flex';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
-  switchPage('budget');setTimeout(()=>{const nav=document.querySelector('.nav');const msw=document.getElementById('month-scroll-wrap');if(nav&&msw){const nb=nav.offsetHeight||52;const mb=msw.offsetHeight||49;document.getElementById('scroll-area').style.paddingBottom=(nb+mb)+'px';msw.style.bottom=nb+'px';}},100);
+  switchPage('budget');setTimeout(()=>{const nav=document.querySelector('.nav');const msw=document.getElementById('month-scroll-wrap');if(nav&&msw){const nb=nav.offsetHeight||52;const mb=49;document.getElementById('scroll-area').style.paddingBottom=(nb+mb)+'px';msw.style.bottom=nb+'px';}},100);
   // Pre-load recurring in background so Known tab is ready instantly
   loadRecurring();
 }
@@ -1719,7 +1721,7 @@ function openAddRec(){
   document.getElementById('rec-freq').value='Monthly';
   document.getElementById('rec-day').value='';
   document.getElementById('rec-start').value=localDateIso();
-  document.getElementById('rec-active').value='Yes';
+  document.getElementById('rec-active-cb').checked=true;
   document.getElementById('rec-nwd').checked=false;
   updateDayLabel();
   document.getElementById('rec-modal').classList.add('open');
@@ -1736,7 +1738,7 @@ function openEditRec(sheetRow){
   document.getElementById('rec-day').value=nwdFlag?r.dayInfo.toString().replace(/\s*NWD/i,'').trim():(r.dayInfo||'');
   document.getElementById('rec-nwd').checked=nwdFlag;
   document.getElementById('rec-start').value=cellToIso(r.startDate)||localDateIso();
-  document.getElementById('rec-active').value=r.active?'Yes':'No';
+  document.getElementById('rec-active-cb').checked=r.active;
   updateDayLabel();
   document.getElementById('rec-modal').classList.add('open');
 }
@@ -1752,7 +1754,7 @@ async function saveRecurring(){
   const freq=document.getElementById('rec-freq').value;
   const day=document.getElementById('rec-day').value.trim();
   const startIso=document.getElementById('rec-start').value;
-  const active=document.getElementById('rec-active').value;
+  const active=document.getElementById('rec-active-cb').checked?'Yes':'No';
   const editRow=document.getElementById('edit-rec-row').value;
   if(!desc){showToast('Enter a description');return}
   if(!amt||amt<=0){showToast('Enter a valid amount');return}
