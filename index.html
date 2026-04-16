@@ -275,6 +275,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <button onclick="toggleDarkMode()" style="width:100%;padding:12px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit">
           <span id="dark-mode-icon">🌙</span><span id="dark-mode-label">Dark mode</span>
         </button>
+        <button onclick="toggleNotifications();closeMenu()" id="notif-menu-btn" style="width:100%;padding:12px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit">🔔 <span id="notif-menu-label">Enable notifications</span></button>
         <button onclick="showDebugInfo();closeMenu()" style="width:100%;padding:12px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit">🔍 Debug info</button>
         <button onclick="signOut();closeMenu()" style="width:100%;padding:12px 14px;border:none;background:none;text-align:left;font-size:14px;color:var(--red);cursor:pointer;display:block;font-family:inherit">Sign out</button>
       </div>
@@ -621,7 +622,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.51</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.51</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.55</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1008,6 +1009,7 @@ async function loadBudget(){
 
     budgetData=data;
     paydayAnchor=null; // reset so next load starts from today
+    checkNotifications(); // fire any pending notifications
     // Build month tabs
     const months={};
     data.forEach(r=>{const[y,m]=r.date.split('-');const k=`${y}-${m}`;if(!months[k])months[k]=[];months[k].push(r);});
@@ -2165,6 +2167,123 @@ document.addEventListener('change',function(e){
   if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain()}
   else{const r=await maybeRefreshToken();if(r)showMain()}
 })();
+// ── NOTIFICATIONS ─────────────────────────────────────────────────────────
+async function toggleNotifications(){
+  if(!('Notification' in window)){showToast('Notifications not supported on this device');return;}
+  if(Notification.permission==='granted'){
+    // Already granted — show settings
+    showToast('Notifications are on. Use browser settings to disable.');
+    updateNotifMenuLabel();
+    return;
+  }
+  const perm=await Notification.requestPermission();
+  if(perm==='granted'){
+    showToast('Notifications enabled ✓');
+    ls('notif_enabled','1');
+    updateNotifMenuLabel();
+    // Fire a test notification
+    showNotif('BudgetLogger','Notifications are now enabled!',{icon:'/icon-192.png'});
+  } else {
+    showToast('Notifications blocked — check browser settings');
+  }
+}
+
+function updateNotifMenuLabel(){
+  const el=document.getElementById('notif-menu-label');
+  if(!el)return;
+  const on=Notification.permission==='granted';
+  el.textContent=on?'Notifications on ✓':'Enable notifications';
+}
+
+async function showNotif(title,body,opts={}){
+  if(!('Notification' in window)||Notification.permission!=='granted')return;
+  try{
+    const reg=await navigator.serviceWorker.ready;
+    reg.showNotification(title,{body,icon:opts.icon||'',badge:opts.badge||'',tag:opts.tag||title,...opts});
+  }catch(e){
+    // Fallback to basic Notification
+    try{new Notification(title,{body,...opts});}catch(e2){}
+  }
+}
+
+function checkNotifications(){
+  if(!('Notification' in window)||Notification.permission!=='granted'||!budgetData)return;
+  const today=localDateIso();
+  const tomorrow=localDateIso(new Date(Date.now()+86400000));
+  const shown=JSON.parse(ls('notif_shown')||'{}');
+  const mark=(key)=>{shown[key]=Date.now();ls('notif_shown',JSON.stringify(shown));};
+  const wasShown=(key)=>!!shown[key]&&(Date.now()-shown[key])<86400000*1; // once per day
+
+  // Pay day tomorrow
+  const tmrRow=budgetData.find(r=>r.date===tomorrow&&r.income>0);
+  if(tmrRow&&!wasShown('payday_'+tomorrow)){
+    showNotif('Pay day tomorrow 💵','$'+fmtAmt(tmrRow.income)+' expected',{tag:'payday_'+tomorrow});
+    mark('payday_'+tomorrow);
+  }
+
+  // Bills due this week — only send on Monday (or first app open after Monday)
+  const todayDate=new Date(today+'T00:00:00');
+  const isMonday=todayDate.getDay()===1;
+  const weekKey='bills_week_'+today; // keyed to Monday's date
+  if(isMonday&&!wasShown(weekKey)){
+    // Collect all expense days from today through Sunday (next 6 days)
+    const sunday=localDateIso(new Date(Date.now()+6*86400000));
+    const weekRows=budgetData.filter(r=>r.date>=today&&r.date<=sunday&&r.totalExpenses>0);
+    if(weekRows.length){
+      const totalWeek=weekRows.reduce((s,r)=>s+r.totalExpenses,0);
+      const dayList=weekRows.map(r=>{const[,m,d]=r.date.split('-');return parseInt(d)+' '+MONTHS[parseInt(m)-1];}).join(', ');
+      showNotif('Bills this week 💸','$'+fmtAmt(totalWeek)+' due — '+dayList,{tag:weekKey});
+      mark(weekKey);
+    }
+  }
+
+  // Monthly bill summary — fire on the 29th, covering the following month
+  if(parseInt(today.split('-')[2])===29){
+    const monthKey='monthly_summary_'+today.slice(0,7);
+    if(!wasShown(monthKey)){
+      const[cy,cm]=today.split('-');
+      // Calculate next month YYYY-MM
+      const nextMonthDate=new Date(parseInt(cy),parseInt(cm),1); // 1st of next month
+      const ny=nextMonthDate.getFullYear();
+      const nm=String(nextMonthDate.getMonth()+1).padStart(2,'0');
+      const nextMonth=`${ny}-${nm}`;
+      const nextMonthRows=budgetData.filter(r=>r.date.startsWith(nextMonth));
+      if(nextMonthRows.length){
+        const totalInc=nextMonthRows.reduce((s,r)=>s+r.income,0);
+        const totalExp=nextMonthRows.reduce((s,r)=>s+r.totalExpenses,0);
+        const net=totalInc-totalExp;
+        const monthLabel=MONTHS[parseInt(nm)-1]+' '+ny;
+        const netStr=(net>=0?'+':'')+fmtAmt(net);
+        // Find yearly expenses firing in the next month
+        const yearlyItems=recurringData?recurringData.filter(r=>{
+          if(!r.active||r.recurrence!=='Yearly')return false;
+          // Check if it fires anywhere in next month
+          return nextMonthRows.some(row=>firesOnDate(r,row.date));
+        }):[];
+        const yearlyStr=yearlyItems.length
+          ?'\nYearly: '+yearlyItems.map(r=>(r.desc||r.cat)+' $'+fmtAmt(r.amount)).join(', ')
+          :'';
+        showNotif(monthLabel+' preview 📅',
+          'Income $'+fmtAmt(totalInc)+' · Expenses $'+fmtAmt(totalExp)+' · Net '+netStr+yearlyStr,
+          {tag:monthKey});
+        mark(monthKey);
+      }
+    }
+  }
+
+  // Low balance warning — projected balance going negative in next 7 days
+  const nextWeek=localDateIso(new Date(Date.now()+7*86400000));
+  const nearNeg=budgetData.find(r=>r.date>=today&&r.date<=nextWeek&&r.runningTotal<0);
+  if(nearNeg&&!wasShown('lbal_'+nearNeg.date)){
+    const[,m,d]=nearNeg.date.split('-');
+    showNotif('Low balance warning ⚠️','Balance goes negative around '+parseInt(d)+' '+MONTHS[parseInt(m)-1],{tag:'lbal_'+nearNeg.date});
+    mark('lbal_'+nearNeg.date);
+  }
+}
+
+// Update menu label on load
+setTimeout(updateNotifMenuLabel, 500);
+
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
