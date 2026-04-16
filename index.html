@@ -622,7 +622,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.55</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.58</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1257,7 +1257,7 @@ function openBalancePopup(date){
     '<div class="bpopup-row"><span class="bpopup-label">Balance set to</span><span class="bpopup-val" style="color:var(--purple-text);font-weight:700">$'+corr.newBalance.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>'+
     '<div class="bpopup-row"><span class="bpopup-label">Adjustment</span><span class="bpopup-val">'+(corr.delta>=0?'<span style="color:var(--green)">+$'+fmtAmt(Math.abs(corr.delta))+'</span>':'<span style="color:var(--red)">-$'+fmtAmt(Math.abs(corr.delta))+'</span>')+'</span></div>'+
     '<div class="bpopup-row" style="border:none"><span class="bpopup-label">Applied to</span><span class="bpopup-val">All rows from this date forward</span></div>'+
-    '<button onclick="removeBalanceCorrection(this.dataset.d)" data-d=\''+date+'\' style="width:100%;margin-top:14px;padding:11px;border:none;border-radius:10px;background:color-mix(in srgb,var(--red) 80%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;font-family:inherit"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Remove correction</button>';
+    '<button onclick="removeBalanceCorrection(this.dataset.d)" data-d="'+date+'" style="width:100%;margin-top:14px;padding:11px;border:none;border-radius:10px;background:color-mix(in srgb,var(--red) 80%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;font-family:inherit"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Remove correction</button>';
   document.getElementById('bpopup-wrap').classList.add('open');
 }
 
@@ -1918,29 +1918,52 @@ async function applyDeltaToSheet(sheetRow,delta){
   // USER_ENTERED so the '=' prefix is treated as a formula by Google Sheets
   await sheetWrite(BUDGET_SHEET,'N'+sheetRow,[[newFormula]]);
 }
-async function runInlineSetBalance(){
+function sbTimingBefore(){closeBudgetDetail();runInlineSetBalance('before');}
+function sbTimingAfter(){closeBudgetDetail();runInlineSetBalance('after');}
+async function runInlineSetBalance(timing){
   const newBalance=parseFloat(document.getElementById('sb-inline-amount').value);
   const dateIso=document.getElementById('sb-inline-date').value;
   if(isNaN(newBalance)||newBalance===undefined||document.getElementById('sb-inline-amount').value===''){showToast('Enter a balance');return;}
   if(!dateIso){showToast('Pick a date');return;}
+  // If this day has expenses and no timing specified, ask before/after
+  if(!timing){
+    const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
+    if(jsRow&&jsRow.totalExpenses>0){
+      const[y,m,d]=dateIso.split('-');
+      const dateStr=parseInt(d)+' '+MONTHS[parseInt(m)-1];
+      document.getElementById('bpopup-title').textContent='Set balance — '+dateStr;
+      document.getElementById('bpopup-body').innerHTML=
+        '<p style="font-size:13px;color:var(--text3);padding:4px 0 14px">This day has $'+fmtAmt(jsRow.totalExpenses)+' in expenses. Is your bank balance before or after these were paid?</p>'+
+        '<div style="display:flex;gap:8px">'+
+          '<button onclick="sbTimingBefore()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">Before</button>'+
+          '<button onclick="sbTimingAfter()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">After</button>'+
+        '</div>';
+      document.getElementById('bpopup-wrap').classList.add('open');
+      return;
+    }
+  }
   const btn=document.getElementById('sb-inline-btn');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';}
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
-    // Find the JS-computed running total for this date
     const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
     if(!jsRow)throw new Error('Date '+dateIso+' not found in budget data');
+    // If "before", add the day's expenses back to get the post-expense target
+    let targetBalance=newBalance;
+    if(timing==='before'&&jsRow.totalExpenses>0){
+      targetBalance=parseFloat((newBalance-jsRow.totalExpenses).toFixed(2));
+    }
     const currentRT=jsRow.runningTotal;
-    const delta=parseFloat((newBalance-currentRT).toFixed(2));
-    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML=calcIcon;return;}
-    balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
+    const delta=parseFloat((targetBalance-currentRT).toFixed(2));
+    if(Math.abs(delta)<0.01){showToast('Balance already matches');if(btn){btn.disabled=false;btn.innerHTML=calcIcon;}return;}
+    balanceCorrections.set(dateIso,{date:dateIso,newBalance:targetBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     document.getElementById('sb-inline-amount').value='';
     showToast('Balance set ✓');
-    btn.disabled=false;btn.innerHTML=calcIcon;
+    if(btn){btn.disabled=false;btn.innerHTML=calcIcon;}
     budgetData=null;
     loadBudget();
-  }catch(e){showToast(e.message||'Failed',3000);btn.disabled=false;btn.innerHTML=calcIcon;}
+  }catch(e){showToast(e.message||'Failed',3000);if(btn){btn.disabled=false;btn.innerHTML=calcIcon;}}
 }
 async function runSetBalanceFromPopup(){
   const newBalance=parseFloat(document.getElementById('sb-popup-amount').value);
@@ -2169,7 +2192,7 @@ document.addEventListener('change',function(e){
 })();
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
 async function toggleNotifications(){
-  if(!('Notification' in window)){showToast('Notifications not supported on this device');return;}
+  if(!('Notification' in window)||!('serviceWorker' in navigator)){showToast('Notifications not supported on this device');return;}
   if(Notification.permission==='granted'){
     // Already granted — show settings
     showToast('Notifications are on. Use browser settings to disable.');
@@ -2191,7 +2214,7 @@ async function toggleNotifications(){
 function updateNotifMenuLabel(){
   const el=document.getElementById('notif-menu-label');
   if(!el)return;
-  const on=Notification.permission==='granted';
+  const on=('Notification' in window)&&Notification.permission==='granted';
   el.textContent=on?'Notifications on ✓':'Enable notifications';
 }
 
