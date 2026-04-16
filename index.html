@@ -463,7 +463,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <div>
           <div class="form-label">Recurrence</div>
           <select class="form-input" id="rec-freq" onchange="updateDayLabel()">
-            <option>Monthly</option><option>Fortnightly</option><option>4-Weekly</option><option>Weekly</option><option>N-Weekly</option><option>One-Off</option>
+            <option>Monthly</option><option>N-Weekly</option><option>Yearly</option><option>One-Off</option>
           </select>
         </div>
         <div>
@@ -629,7 +629,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.48</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.49</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -932,6 +932,15 @@ async function loadBudget(){
       if(rec==='FORTNIGHTLY')return diffDays%14===0;
       if(rec==='4-WEEKLY')return diffDays%28===0;
       if(rec==='N-WEEKLY'){const n=parseInt(entry.dayInfo)||1;return diffDays%(n*7)===0;}
+      if(rec==='YEARLY'){
+        const dayStr=String(entry.dayInfo||'');
+        const parts=dayStr.split('/');
+        let tDay,tMon;
+        if(parts.length>=2){tDay=parseInt(parts[0]);tMon=parseInt(parts[1]);}
+        else{tDay=parseInt(entry.startIso.split('-')[2]);tMon=parseInt(entry.startIso.split('-')[1]);}
+        const[iy,im,id]=iso.split('-');
+        return parseInt(im)===tMon&&parseInt(id)===tDay;
+      }
       return false;
     }
 
@@ -1555,7 +1564,7 @@ async function loadRecurring(){
 
 function freqBadge(f,active){
   if(!active)return'<span class="rec-badge badge-inactive">Paused</span>';
-  const cls={Monthly:'monthly',Fortnightly:'fortnightly','4-Weekly':'fortnightly',Weekly:'weekly','One-Off':'oneoff'}[f]||'oneoff';
+  const cls={Monthly:'monthly','N-Weekly':'weekly',Yearly:'monthly','One-Off':'oneoff',Fortnightly:'fortnightly','4-Weekly':'fortnightly',Weekly:'weekly'}[f]||'oneoff';
   return`<span class="rec-badge badge-${cls}">${f}</span>`;
 }
 
@@ -1603,7 +1612,7 @@ function updateRecSummary(){
     disc=Math.max(0,inc-fixed);
   } else if(recurringData){
     // Fall back to estimated monthly from recurring sheet
-    const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}return 0;};
+    const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
     inc=recurringData.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
     exp=recurringData.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
     disc=Math.max(0,inc-exp);
@@ -1641,10 +1650,7 @@ function renderRecurring(data){
     const k=r.cat&&groups[r.cat]!==undefined?r.cat:'Other';
     groups[k].push(r);
   });
-  let html=`<button class="add-rec-trigger" onclick="openAddRec()">
-    <svg viewBox="0 0 24 24" width="16" height="16" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Add Recurring Expense
-  </button>`;
+  let html=``;
   CAT_ORDER.forEach(cat=>{
     const items=groups[cat];
     if(!items||!items.length)return;
@@ -1665,8 +1671,9 @@ function renderRecurring(data){
     html+=`<div class="rec-card${isCollapsed?' collapsed':''}">
       <div class="rec-card-header" onclick="toggleGroup('${groupKey}')">
         <div class="rec-card-title">${icon} ${displayCat}</div>
-        <div style="display:flex;align-items:center;gap:8px">
+        <div style="display:flex;align-items:center;gap:6px">
           ${totalStr?`<span style="font-size:12px;font-weight:700;color:#c8c8c8">${totalStr}</span>`:''}
+          <button onclick="event.stopPropagation();openAddRecCat('${cat}')" title="Add" style="width:26px;height:26px;border:none;border-radius:7px;background:var(--accent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;flex-shrink:0"><svg width="14" height="14" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg></button>
           <span class="chev">&#9660;</span>
         </div>
       </div>
@@ -1690,9 +1697,10 @@ function renderRecurring(data){
     });
     html+='</div></div>';
   });
-  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}return 0;};
+  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
   const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
   const exp=data.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
+  html+=`<button onclick="openAddRec()" style="width:100%;padding:12px;border:1.5px dashed var(--border2);border-radius:12px;background:none;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Add New</button>`;
   document.getElementById('rec-section').innerHTML=html;
   updateRecSummary();
 }
@@ -1708,9 +1716,13 @@ function updateDayLabel(){
   nwdLabel.style.opacity=isMonthly?'1':'0.35';
   nwdLabel.style.cursor=isMonthly?'pointer':'not-allowed';
   if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
-  else if(f==='N-Weekly'){l.textContent='Every N weeks (e.g. 3)';i.placeholder='e.g. 3'}
-  else if(f==='Weekly'||f==='Fortnightly'||f==='4-Weekly'){l.textContent='Day of week';i.placeholder='e.g. Friday'}
+  else if(f==='N-Weekly'){l.textContent='Every N weeks';i.placeholder='e.g. 2'}
+  else if(f==='Yearly'){l.textContent='Day/Month (dd/mm)';i.placeholder='e.g. 01/07'}
   else{l.textContent='Day';i.placeholder='Leave blank'}
+}
+function openAddRecCat(cat){
+  openAddRec();
+  document.getElementById('rec-cat').value=cat;
 }
 function openAddRec(){
   document.getElementById('modal-title').textContent='Add recurring expense';
