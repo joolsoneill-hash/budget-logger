@@ -617,7 +617,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.40</span>',recurring:'Known',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.41</span>',recurring:'Known',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1587,28 +1587,37 @@ function updateRecSummary(){
 }
 
 function renderRecurring(data){
-  const groups={Monthly:[],Fortnightly:[],'4-Weekly':[],Weekly:[],'One-Off':[]};
-  data.forEach(r=>{const k=r.recurrence||'One-Off';(groups[k]||groups['One-Off']).push(r);});
+  // Group by category, in a sensible order
+  const CAT_ORDER=['IN','Rent','Savings','Utilities','Insurance','Medibank','MediBank','Daycare','Gym','Subscriptions','Food','Other'];
+  const CAT_LABELS={'IN':'Income','Rent':'Rent','Savings':'Savings','Utilities':'Utilities','Insurance':'Insurance','Medibank':'Medibank','MediBank':'Medibank','Daycare':'Daycare','Gym':'Gym','Subscriptions':'Subscriptions','Food':'Food','Other':'Other'};
+  const groups={};
+  CAT_ORDER.forEach(k=>groups[k]=[]);
+  data.forEach(r=>{
+    const k=r.cat&&groups[r.cat]!==undefined?r.cat:'Other';
+    groups[k].push(r);
+  });
   let html=`<button class="add-rec-trigger" onclick="openAddRec()">
     <svg viewBox="0 0 24 24" width="16" height="16" stroke="#378ADD" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
-    Add recurring expense
+    Add Recurring Expense
   </button>`;
-  Object.entries(groups).forEach(([freq,items])=>{
-    if(!items.length)return;
-    const isCollapsed=collapsedGroups.has(freq);
+  CAT_ORDER.forEach(cat=>{
+    const items=groups[cat];
+    if(!items||!items.length)return;
+    const label=CAT_LABELS[cat]||cat;
+    const icon=CAT_ICONS[cat]||'💸';
+    const groupKey='cat_'+cat;
+    const isCollapsed=collapsedGroups.has(groupKey);
     html+=`<div class="rec-card${isCollapsed?' collapsed':''}">
-      <div class="rec-card-header" onclick="toggleGroup('${freq}')">
-        <div class="rec-card-title">${freq}</div>
+      <div class="rec-card-header" onclick="toggleGroup('${groupKey}')">
+        <div class="rec-card-title">${icon} ${label}</div>
         <span class="chev">&#9660;</span>
       </div>
       <div class="rec-card-body">`;
     items.forEach(r=>{
-      const icon=CAT_ICONS[r.cat]||'💸';
       html+=`<div class="rec-row" data-sheet-row="${r.sheetRow}">
-        <div class="rec-icon" style="opacity:${r.active?1:0.4}">${icon}</div>
-        <div class="rec-body">
+        <div class="rec-body" style="opacity:${r.active?1:0.5}">
           <div class="rec-name" style="color:${r.active?'var(--text)':'var(--text3)'}">${r.desc||r.cat}</div>
-          <div class="rec-detail">${r.cat}${r.dayInfo?' · '+r.dayInfo:''}</div>
+          <div class="rec-detail">${r.recurrence}${r.dayInfo?' · '+r.dayInfo:''}</div>
         </div>
         <div class="rec-right">
           <div class="rec-amount" style="color:${r.active?'var(--text)':'var(--text3)'};font-size:15px;font-weight:600">$${r.amount.toFixed(2)}</div>
