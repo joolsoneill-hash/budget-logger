@@ -1067,23 +1067,19 @@ async function loadCorrectionsFromSheet(){
 }
 
 async function saveCorrectionsToSheet(){
+  // Build rows: header + one row per correction
+  const header=[['Date','Balance','Delta','Timestamp']];
+  const rows=[...balanceCorrections.values()].map(c=>[c.date,c.newBalance,c.delta,c.ts||Date.now()]);
+  const allRows=header.concat(rows);
   try{
-    // Build rows: header + one row per correction
-    const header=[['Date','Balance','Delta','Timestamp']];
-    const rows=[...balanceCorrections.values()].map(c=>[c.date,c.newBalance,c.delta,c.ts||Date.now()]);
-    const allRows=header.concat(rows);
-    // Write to Corrections sheet (clear then write)
     await sheetWrite(CORR_SHEET,`A1:D${allRows.length}`,allRows);
-    // Also sync to localStorage
-    try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e){}
   }catch(e){
-    // If sheet doesn't exist, try to create it then retry
+    // Sheet may not exist yet — create it then retry once
     try{
       await createSheet(CORR_SHEET);
-      await saveCorrectionsToSheet();
+      await sheetWrite(CORR_SHEET,`A1:D${allRows.length}`,allRows);
     }catch(e2){
-      // Fall back to localStorage only
-      try{localStorage.setItem('balance_corrections',JSON.stringify([...balanceCorrections]));}catch(e3){}
+      throw new Error('Could not save to Corrections sheet: '+e2.message);
     }
   }
 }
@@ -1710,39 +1706,29 @@ async function applyDeltaToSheet(sheetRow,delta){
   // USER_ENTERED so the '=' prefix is treated as a formula by Google Sheets
   await sheetWrite(BUDGET_SHEET,'N'+sheetRow,[[newFormula]]);
 }
-async function runInlineSetBalance() {
-    const newBalanceInput = document.getElementById('sb-inline-amount').value;
-    const newBalance = parseFloat(newBalanceInput);
-    
-    if (isNaN(newBalance)) {
-        showToast("Please enter a valid number for the new balance.");
-        return;
-    }
-
-    // 1. Get the target row based on your date selection
-    // (Ensure your existing sheetRow determination logic remains here)
-    const sheetRow = /* your existing logic to determine row */ ; 
-
-    // 2. Fetch the current running total from Column N and SANITIZE IT
-    const currentRTValue = await getCellValue(sheetRow, 'N');
-    const currentRT = parseFloat(String(currentRTValue).replace(/[^0-9.-]+/g, "")) || 0;
-
-    // 3. The correction delta = newBalance - currentRunningTotal
-    const delta = parseFloat((newBalance - currentRT).toFixed(2));
-    const deltaStr = delta >= 0 ? '+' + delta : delta.toString();
-
-    // 4. Chain formula so all subsequent rows stay formula-driven, then add the delta offset
-    let newFormula = '';
-    if (sheetRow <= 2) { 
-        newFormula = '=C' + sheetRow + '-SUM(D' + sheetRow + ':M' + sheetRow + ')' + deltaStr; 
-    } else { 
-        newFormula = '=N' + (sheetRow - 1) + '+C' + sheetRow + '-SUM(D' + sheetRow + ':M' + sheetRow + ')' + deltaStr; 
-    }
-
-    // 5. Write the new formula back to the sheet (USER_ENTERED so the '=' prefix is treated as a formula by Google Sheets)
-    await sheetWrite(BUDGET_SHEET, 'N' + sheetRow, [[newFormula]]);
-    
-    showToast("Balance updated successfully.");
+async function runInlineSetBalance(){
+  const newBalance=parseFloat(document.getElementById('sb-inline-amount').value);
+  const dateIso=document.getElementById('sb-inline-date').value;
+  if(isNaN(newBalance)||newBalance===undefined||document.getElementById('sb-inline-amount').value===''){showToast('Enter a balance');return;}
+  if(!dateIso){showToast('Pick a date');return;}
+  const btn=document.getElementById('sb-inline-btn');
+  btn.disabled=true;btn.innerHTML='<span class="spinner"></span>';
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    // Find the JS-computed running total for this date
+    const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
+    if(!jsRow)throw new Error('Date '+dateIso+' not found in budget data');
+    const currentRT=jsRow.runningTotal;
+    const delta=parseFloat((newBalance-currentRT).toFixed(2));
+    if(Math.abs(delta)<0.01){showToast('Balance already matches');btn.disabled=false;btn.innerHTML=calcIcon;return;}
+    balanceCorrections.set(dateIso,{date:dateIso,newBalance,delta,ts:Date.now()});
+    await saveCorrectionsToSheet();
+    document.getElementById('sb-inline-amount').value='';
+    showToast('Balance set ✓');
+    btn.disabled=false;btn.innerHTML=calcIcon;
+    budgetData=null;
+    loadBudget();
+  }catch(e){showToast(e.message||'Failed',3000);btn.disabled=false;btn.innerHTML=calcIcon;}
 }
 async function runSetBalanceFromPopup(){
   const newBalance=parseFloat(document.getElementById('sb-popup-amount').value);
