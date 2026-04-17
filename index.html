@@ -622,7 +622,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.59</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.61</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -998,7 +998,8 @@ async function loadBudget(){
       sortedCorr.forEach(corr=>{
         const corrRow=data.find(r=>r.date===corr.date);
         if(!corrRow)return;
-        const realDelta=parseFloat((corr.newBalance-corrRow.runningTotal).toFixed(2));
+        // Use stored delta directly — it was computed correctly at save time
+        const realDelta=corr.delta;
         let applying=false;
         data.forEach(row=>{
           if(row.date===corr.date)applying=true;
@@ -1257,18 +1258,18 @@ function openBalancePopup(date){
     '<div class="bpopup-row"><span class="bpopup-label">Balance set to</span><span class="bpopup-val" style="color:var(--purple-text);font-weight:700">$'+corr.newBalance.toLocaleString('en-AU',{minimumFractionDigits:2,maximumFractionDigits:2})+'</span></div>'+
     '<div class="bpopup-row"><span class="bpopup-label">Adjustment</span><span class="bpopup-val">'+(corr.delta>=0?'<span style="color:var(--green)">+$'+fmtAmt(Math.abs(corr.delta))+'</span>':'<span style="color:var(--red)">-$'+fmtAmt(Math.abs(corr.delta))+'</span>')+'</span></div>'+
     '<div class="bpopup-row" style="border:none"><span class="bpopup-label">Applied to</span><span class="bpopup-val">All rows from this date forward</span></div>'+
-    '<button onclick="removeBalanceCorrection(this.dataset.d)" data-d="'+date+'" style="width:100%;margin-top:14px;padding:11px;border:none;border-radius:10px;background:color-mix(in srgb,var(--red) 80%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;font-family:inherit"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Remove correction</button>';
+    '<button onclick="event.stopPropagation();removeBalanceCorrection(this.dataset.d)" data-d="'+date+'" style="width:100%;margin-top:14px;padding:11px;border:none;border-radius:10px;background:color-mix(in srgb,var(--red) 80%,transparent);color:white;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;font-size:13px;font-weight:600;font-family:inherit"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg> Remove correction</button>';
   document.getElementById('bpopup-wrap').classList.add('open');
 }
 
 async function removeBalanceCorrection(date){
   const corr=balanceCorrections.get(date);
   if(!corr){showToast('Correction not found');return;}
+  closeBudgetDetail(); // close immediately before any async work
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
     balanceCorrections.delete(date);
     await saveCorrectionsToSheet();
-    closeBudgetDetail();
     showToast('Correction removed ✓');
     loadBudget();
   }catch(e){
@@ -1961,7 +1962,7 @@ async function runInlineSetBalance(timing){
     const currentRT=jsRow.runningTotal;
     const delta=parseFloat((targetBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');if(btn){btn.disabled=false;btn.innerHTML=calcIcon;}return;}
-    balanceCorrections.set(dateIso,{date:dateIso,newBalance:displayBalance,delta,ts:Date.now()});
+    balanceCorrections.set(dateIso,{date:dateIso,newBalance:targetBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     document.getElementById('sb-inline-amount').value='';
     showToast('Balance set ✓');
