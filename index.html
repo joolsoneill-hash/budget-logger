@@ -622,7 +622,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.58</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.59</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1933,10 +1933,11 @@ async function runInlineSetBalance(timing){
       const dateStr=parseInt(d)+' '+MONTHS[parseInt(m)-1];
       document.getElementById('bpopup-title').textContent='Set balance — '+dateStr;
       document.getElementById('bpopup-body').innerHTML=
-        '<p style="font-size:13px;color:var(--text3);padding:4px 0 14px">This day has $'+fmtAmt(jsRow.totalExpenses)+' in expenses. Is your bank balance before or after these were paid?</p>'+
+        '<p style="font-size:14px;color:#c8c8c8;padding:4px 0 6px;font-weight:600">Balance Before Expenses?</p>'+
+        '<p style="font-size:12px;color:var(--text3);padding-bottom:16px">$'+fmtAmt(jsRow.totalExpenses)+' in expenses today</p>'+
         '<div style="display:flex;gap:8px">'+
-          '<button onclick="sbTimingBefore()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">Before</button>'+
-          '<button onclick="sbTimingAfter()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">After</button>'+
+          '<button onclick="sbTimingBefore()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Yes</button>'+
+          '<button onclick="sbTimingAfter()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">No</button>'+
         '</div>';
       document.getElementById('bpopup-wrap').classList.add('open');
       return;
@@ -1948,15 +1949,19 @@ async function runInlineSetBalance(timing){
     if(!await maybeRefreshToken())throw new Error('Session expired');
     const jsRow=budgetData?budgetData.find(r=>r.date===dateIso):null;
     if(!jsRow)throw new Error('Date '+dateIso+' not found in budget data');
-    // If "before", add the day's expenses back to get the post-expense target
+    // "before" = user sees balance before expenses; adjust delta to account for expenses
+    // "after"  = user sees balance after expenses; store as-is
+    // displayBalance (pill) = user's input always
+    // targetBalance (delta calc) = input minus expenses if "before"
     let targetBalance=newBalance;
     if(timing==='before'&&jsRow.totalExpenses>0){
       targetBalance=parseFloat((newBalance-jsRow.totalExpenses).toFixed(2));
     }
+    const displayBalance=timing==='before'?newBalance:targetBalance;
     const currentRT=jsRow.runningTotal;
     const delta=parseFloat((targetBalance-currentRT).toFixed(2));
     if(Math.abs(delta)<0.01){showToast('Balance already matches');if(btn){btn.disabled=false;btn.innerHTML=calcIcon;}return;}
-    balanceCorrections.set(dateIso,{date:dateIso,newBalance:targetBalance,delta,ts:Date.now()});
+    balanceCorrections.set(dateIso,{date:dateIso,newBalance:displayBalance,delta,ts:Date.now()});
     await saveCorrectionsToSheet();
     document.getElementById('sb-inline-amount').value='';
     showToast('Balance set ✓');
