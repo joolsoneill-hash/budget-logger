@@ -15,7 +15,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="theme-color" content="#5B89B8">
 <link rel="manifest" href="manifest.json">
-<title>Budget</title>
+<title>NotAnotherBudgetApp</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
@@ -42,8 +42,9 @@ html{height:100%}
 body{font-family:'Inter',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);position:relative;min-height:100%;min-height:100dvh;transition:background 0.2s,color 0.2s}
 .app{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;overflow:hidden}
 .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px 9px;flex-shrink:0;display:flex;align-items:center;gap:10px}
-.topbar-logo{width:32px;height:32px;border-radius:8px;background:var(--accent);display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.topbar-logo svg{width:18px;height:18px;stroke:#c8c8c8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.topbar-logo{width:38px;height:38px;border-radius:8px;background:var(--accent);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;gap:1px}
+.topbar-logo svg{width:16px;height:16px;stroke:#c8c8c8;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.topbar-logo .naba-text{font-size:6px;font-weight:800;color:rgba(255,255,255,0.85);letter-spacing:0.5px;line-height:1;font-family:'Inter',system-ui,sans-serif}
 .topbar h1{font-size:16px;font-weight:700;color:var(--text);letter-spacing:-0.3px}
 .topbar p{font-size:11px;color:var(--text3);margin-top:1px}
 .nav{background:var(--surface);border-top:1px solid var(--border);display:flex;position:fixed;bottom:0;left:0;right:0;z-index:18;max-width:480px;margin:0 auto}
@@ -254,9 +255,10 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
   <div class="topbar">
     <div class="topbar-logo" id="topbar-logo-wrap" style="display:none">
       <svg id="topbar-logo-svg" viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="4" y1="10" x2="4" y2="10"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
+      <span class="naba-text">NABA</span>
     </div>
     <div style="flex:1;min-width:0">
-      <h1 id="page-title" style="font-size:18px;font-weight:700;letter-spacing:-0.4px">Budget Tracker</h1>
+      <h1 id="page-title" style="font-size:18px;font-weight:700;letter-spacing:-0.4px">NotAnotherBudgetApp</h1>
     </div>
     <button id="rec-refresh-btn" onclick="loadRecurring()" style="display:none;background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);-webkit-tap-highlight-color:transparent" title="Refresh known expenses">
       <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -627,7 +629,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.68</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.71</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -1423,15 +1425,26 @@ function updateSummaryCards(){
   const last=monthRows.length?monthRows[monthRows.length-1]:null;
   let rtVal,rtSub,rtClass;
   if(runningTotalMode==='eom'){
-    // Find the row for the selected date
-    const targetDate=eomDate||(last?last.date:'');
-    const targetRow=budgetData.find(r=>r.date===targetDate);
-    rtVal=targetRow?targetRow.runningTotal:(last?last.runningTotal:null);
-    if(targetDate){
-      const[ty,tm,td]=targetDate.split('-');
+    if(eomDate){
+      // Custom date selected via calendar
+      const targetRow=budgetData.find(r=>r.date===eomDate);
+      rtVal=targetRow?targetRow.runningTotal:(last?last.runningTotal:null);
+      const[ty,tm,td]=eomDate.split('-');
       rtSub=parseInt(td)+' '+MONTHS[parseInt(tm)-1];
     }else{
-      rtSub='select a date';
+      // Find the last pay day in the active month, show balance the day before it
+      const lastPayInMonth=monthRows.filter(r=>r.income>0).pop();
+      if(lastPayInMonth){
+        const idx=budgetData.findIndex(r=>r.date===lastPayInMonth.date);
+        const dayBefore=idx>0?budgetData[idx-1]:null;
+        rtVal=dayBefore?dayBefore.runningTotal:null;
+        const[py,pm,pd]=lastPayInMonth.date.split('-');
+        rtSub='before '+parseInt(pd)+' '+MONTHS[parseInt(pm)-1];
+      }else{
+        // No payday in month — fall back to last day
+        rtVal=last?last.runningTotal:null;
+        rtSub=last?(()=>{const[,tm,td]=last.date.split('-');return parseInt(td)+' '+MONTHS[parseInt(tm)-1];})():'—';
+      }
     }
     rtClass=rtVal!=null&&rtVal>=0?'pos':'neg';
   }else{
@@ -1470,7 +1483,7 @@ function updateSummaryCards(){
         '<div style="display:flex;gap:3px;margin-top:4px;align-items:center;flex-wrap:nowrap;overflow:hidden">'+
           '<button onclick="scrollToToday();paydayAnchor=null;setRunningTotalMode(&quot;payday&quot;)" title="Back to today" style="width:28px;height:28px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text3);cursor:pointer;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;padding:0"><svg width="12" height="12" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-4.5"/></svg></button>'+
           '<button class="'+(runningTotalMode==='payday'?'active':'')+'" onclick="setRunningTotalMode(&quot;payday&quot;)" style="font-size:10px;padding:4px 6px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='payday'?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Next Pay</button>'+
-          '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:10px;padding:4px 6px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='eom'&&!eomDate?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Month End</button>'+
+          '<button class="'+(runningTotalMode==='eom'&&!eomDate?'active':'')+'" onclick="setRunningTotalMode(&quot;eom&quot;);setEomDate(&quot;&quot;)" style="font-size:10px;padding:4px 6px;border:1px solid var(--border);border-radius:10px;background:var(--surface);color:var(--text);cursor:pointer;white-space:nowrap;'+(runningTotalMode==='eom'&&!eomDate?'border:2px solid var(--accent);background:var(--accent-bg);color:var(--accent-text);font-weight:600':'')+'">Last Pay</button>'+
           '<label style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border:'+(runningTotalMode==='eom'&&eomDate?'2px solid var(--accent)':'1px solid var(--border)')+';border-radius:10px;background:'+(runningTotalMode==='eom'&&eomDate?'var(--accent-bg)':'var(--surface)')+';cursor:pointer;flex-shrink:0;z-index:1">'+
             '<svg width="13" height="13" viewBox="0 0 24 24" stroke="'+(runningTotalMode==='eom'&&eomDate?'var(--accent)':'var(--text2)')+'" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>'+
             '<input type="date" id="eom-date-input" value="'+eomDate+'" onchange="setEomDate(this.value)" style="position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%;z-index:2">'+
@@ -1664,10 +1677,8 @@ function updateRecSummary(){
     const rows=budgetData.filter(r=>r.date.startsWith(recActiveMonth));
     inc=rows.reduce((s,r)=>s+r.income,0);
     exp=rows.reduce((s,r)=>s+r.totalExpenses,0);
-    // Discretionary = income minus fixed recurring (non-food/other)
-    const fixedCats=['rent','insurance','medibank','daycare','gym','subs','utils','savings'];
-    const fixed=rows.reduce((s,r)=>s+fixedCats.reduce((ss,c)=>ss+(r[c]||0),0),0);
-    disc=Math.max(0,inc-fixed);
+    // Discretionary = income minus ALL expenses (matches the budget screen net)
+    disc=Math.max(0,inc-exp);
   } else if(recurringData){
     // Fall back to estimated monthly from recurring sheet
     const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
@@ -1748,8 +1759,6 @@ function renderRecurring(data){
         </div>
         <div class="rec-actions">
           <button class="rab" onclick="openEditRec(${r.sheetRow})" title="Edit">✏️</button>
-          <button class="rab" onclick="toggleRecActive(${r.sheetRow},${r.active})" title="${r.active?'Pause':'Resume'}">${r.active?'⏸':'▶'}</button>
-          <button class="rab" onclick="confirmDeleteRec(${r.sheetRow})" title="Delete">🗑️</button>
         </div>
       </div>`;
     });
@@ -2240,7 +2249,7 @@ async function toggleNotifications(){
     ls('notif_enabled','1');
     updateNotifMenuLabel();
     // Fire a test notification
-    showNotif('BudgetLogger','Notifications are now enabled!',{icon:'/icon-192.png'});
+    showNotif('NABA','Notifications are now enabled!',{icon:'/icon-192.png'});
   } else {
     showToast('Notifications blocked — check browser settings');
   }
@@ -2345,7 +2354,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.68').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.71').catch(()=>{});
   });
 }
 // Init theme
