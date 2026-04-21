@@ -625,7 +625,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.64</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.65</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -733,6 +733,14 @@ async function maybeRefreshToken(){
     accessToken=data.access_token;tokenExpiry=Date.now()+(data.expires_in*1000);
     saveToken(accessToken,tokenExpiry);return true;
   }catch(e){return false}
+}
+function showAuth(){
+  document.getElementById('main-section').style.display='none';
+  document.getElementById('auth-section').style.display='block';
+  document.getElementById('menu-btn').style.display='none';
+  document.getElementById('topbar-logo-wrap').style.display='none';
+  document.getElementById('budget-refresh-btn').style.display='none';
+  document.getElementById('rec-refresh-btn').style.display='none';
 }
 function signOut(){
   clearToken();ls('budget_refresh','');accessToken=null;
@@ -2204,9 +2212,16 @@ document.addEventListener('change',function(e){
   });
 });
 (async()=>{
-  const fromCallback=await handleCallback();
-  if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain()}
-  else{const r=await maybeRefreshToken();if(r)showMain()}
+  try{
+    const fromCallback=await handleCallback();
+    if(fromCallback||(accessToken&&tokenExpiry>Date.now())){showMain();return;}
+    const r=await maybeRefreshToken();
+    if(r){showMain();}
+    else{showAuth();}
+  }catch(e){
+    // Any error during init → show sign-in screen
+    showAuth();
+  }
 })();
 // ── NOTIFICATIONS ─────────────────────────────────────────────────────────
 async function toggleNotifications(){
@@ -2328,7 +2343,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.64').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.65').catch(()=>{});
   });
 }
 // Init theme
