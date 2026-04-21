@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Privacy Policy — BudgetLogger</title>
+  <style>
+    :root {
+      --bg: #f2f2f0;
+      --surface: #ffffff;
+      --border: #e8e8e5;
+      --text: #111111;
+      --text2: #555555;
+      --text3: #999999;
+      --accent: #5B89B8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f0f;
+        --surface: #1a1a1a;
+        --border: #2e2e2e;
+        --text: #f0f0f0;
+        --text2: #aaaaaa;
+        --text3: #666666;
+        --accent: #5ba3e8;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 0;
+    }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-logo {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .topbar-logo svg {
+      width: 18px;
+      height: 18px;
+      stroke: white;
+      fill: none;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .topbar h1 { font-size: 16px; font-weight: 700; flex: 1; }
+    .back-btn {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 6px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .content {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+    .hero {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .hero h2 {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 6px;
+      letter-spacing: -0.3px;
+    }
+    .hero .subtitle {
+      font-size: 13px;
+      color: var(--text3);
+    }
+    .badge {
+      display: inline-block;
+      margin-top: 14px;
+      background: #eaf3de;
+      color: #2D7D3A;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .badge { background: #0f2318; color: #4caf6e; }
+    }
+    .section {
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    .section h3 {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .section p {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.7;
+      margin-bottom: 10px;
+    }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul {
+      list-style: none;
+      padding: 0;
+    }
+    .section ul li {
+      font-size: 14px;
+      color: var(--text2);
+      line-height: 1.6;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .section ul li:last-child { border-bottom: none; }
+    .dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
+  </div>
+  <h1>BudgetLogger</h1>
+  <a class="back-btn" href="index.html">← Back</a>
+</div>
+
+<div class="content">
+
+  <div class="hero">
+    <h2>Privacy Policy</h2>
+    <p class="subtitle">Last updated: April 2026</p>
+    <span class="badge">🔒 Private use only — no data sharing</span>
+  </div>
+
+  <div class="section">
+    <h3>Overview</h3>
+    <p>BudgetLogger is a personal budgeting tool built for private use only. This app is not a commercial product and is not intended for use by the general public.</p>
+    <p>All financial data entered into BudgetLogger belongs solely to the individual user and is never shared with, sold to, or accessible by any third party.</p>
+  </div>
+
+  <div class="section">
+    <h3>Data storage</h3>
+    <ul>
+      <li><span class="dot"></span>All budget data is stored exclusively in your own Google Sheets spreadsheet, which only you can access.</li>
+      <li><span class="dot"></span>No data is stored on any external server, database, or cloud service operated by this app.</li>
+      <li><span class="dot"></span>OAuth credentials (access tokens, refresh tokens) are stored locally on your device only, using your browser's localStorage.</li>
+      <li><span class="dot"></span>App preferences (dark mode, notification settings) are stored locally on your device only.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h3>Google account access</h3>
+    <p>BudgetLogger uses Google OAuth 2.0 to access your Google Sheets spreadsheet. The app requests the minimum permissions necessary:</p>
+    <ul>
+      <li><span class="dot"></span>Read and write access to one specific Google Sheets spreadsheet (the one you provide the ID for).</li>
+      <li><span class="dot"></span>No access to your email, contacts, calendar, other files, or any other Google services.</li>
+      <li><span class="dot"></span>Your Google credentials are never transmitted to or stored by any server other than Google's own OAuth servers.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h3>Data we do not collect</h3>
+    <ul>
+      <li><span class="dot"></span>No analytics or usage tracking of any kind.</li>
+      <li><span class="dot"></span>No advertising, no ad tracking, no third-party trackers.</li>
+      <li><span class="dot"></span>No personal identifiers, IP addresses, or device information.</li>
+      <li><span class="dot"></span>No cookies beyond what is strictly necessary for authentication.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h3>Intended use</h3>
+    <p>This application is intended exclusively for private personal use by the individual who configured and deployed it. It is not designed or authorised for use by multiple users, organisations, or members of the public.</p>
+    <p>If you have accessed this application without the explicit permission of the owner, please discontinue use immediately.</p>
+  </div>
+
+  <div class="section">
+    <h3>Contact</h3>
+    <p>This app is privately operated. For questions about your data, please contact the individual who deployed this application directly.</p>
+  </div>
+
+  <div class="footer">
+    BudgetLogger — Personal use only &nbsp;·&nbsp; No data sharing &nbsp;·&nbsp; No tracking
+  </div>
+
+</div>
+</body>
+</html>
