@@ -264,6 +264,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
     <button id="budget-refresh-btn" onclick="loadBudget()" style="display:none;background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);-webkit-tap-highlight-color:transparent" title="Refresh budget">
       <svg width="16" height="16" viewBox="0 0 24 24" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
     </button>
+    <a href="privacy.html" target="_blank" style="font-size:11px;color:var(--text3);text-decoration:none;padding:6px 8px;border-radius:8px;white-space:nowrap;display:none" id="privacy-btn">Privacy</a>
     <div style="position:relative;flex-shrink:0" id="menu-container">
       <button id="menu-btn" onclick="toggleMenu()" style="background:none;border:none;cursor:pointer;padding:8px 6px;color:var(--text3);display:none;flex-direction:column;gap:3.5px;align-items:center;-webkit-tap-highlight-color:transparent">
         <span style="display:block;width:3.5px;height:3.5px;border-radius:50%;background:currentColor"></span>
@@ -625,7 +626,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.65</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.66</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -738,6 +739,7 @@ function showAuth(){
   document.getElementById('main-section').style.display='none';
   document.getElementById('auth-section').style.display='block';
   document.getElementById('menu-btn').style.display='none';
+  document.getElementById('privacy-btn').style.display='none';
   document.getElementById('topbar-logo-wrap').style.display='none';
   document.getElementById('budget-refresh-btn').style.display='none';
   document.getElementById('rec-refresh-btn').style.display='none';
@@ -763,6 +765,7 @@ function showMain(){
   main.style.minHeight='0';
 
   document.getElementById('menu-btn').style.display='flex';
+  document.getElementById('privacy-btn').style.display='block';
   document.getElementById('topbar-logo-wrap').style.display='flex';
   setStatus('ok','Connected to Google Sheets');
   renderHistory();
@@ -2343,7 +2346,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.65').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.66').catch(()=>{});
   });
 }
 // Init theme
