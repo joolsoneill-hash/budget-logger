@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <title>Terms of Service — BudgetLogger</title>
+  <style>
+    :root {
+      --bg: #f2f2f0;
+      --surface: #ffffff;
+      --border: #e8e8e5;
+      --text: #111111;
+      --text2: #555555;
+      --text3: #999999;
+      --accent: #5B89B8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0f0f0f;
+        --surface: #1a1a1a;
+        --border: #2e2e2e;
+        --text: #f0f0f0;
+        --text2: #aaaaaa;
+        --text3: #666666;
+        --accent: #5ba3e8;
+      }
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    .topbar {
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      padding: 14px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      position: sticky;
+      top: 0;
+      z-index: 10;
+    }
+    .topbar-logo {
+      width: 32px; height: 32px;
+      border-radius: 8px;
+      background: var(--accent);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .topbar-logo svg {
+      width: 18px; height: 18px;
+      stroke: white; fill: none;
+      stroke-width: 2; stroke-linecap: round; stroke-linejoin: round;
+    }
+    .topbar h1 { font-size: 16px; font-weight: 700; flex: 1; }
+    .back-btn {
+      font-size: 13px;
+      color: var(--accent);
+      text-decoration: none;
+      padding: 6px 12px;
+      border: 1px solid var(--accent);
+      border-radius: 8px;
+      white-space: nowrap;
+    }
+    .content {
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 32px 20px 60px;
+    }
+    .hero {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 28px 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+    .hero h2 { font-size: 22px; font-weight: 700; margin-bottom: 6px; letter-spacing: -0.3px; }
+    .hero .subtitle { font-size: 13px; color: var(--text3); }
+    .badge {
+      display: inline-block;
+      margin-top: 14px;
+      background: #EBF2FA;
+      color: #3A6990;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .badge { background: #1a2d3d; color: #7ec3ff; }
+    }
+    .section {
+      background: var(--surface);
+      border-radius: 14px;
+      padding: 20px 22px;
+      margin-bottom: 12px;
+      border: 1px solid var(--border);
+    }
+    .section h3 {
+      font-size: 13px; font-weight: 700;
+      color: var(--text3);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 12px;
+    }
+    .section p {
+      font-size: 14px; color: var(--text2);
+      line-height: 1.7; margin-bottom: 10px;
+    }
+    .section p:last-child { margin-bottom: 0; }
+    .section ul { list-style: none; padding: 0; }
+    .section ul li {
+      font-size: 14px; color: var(--text2);
+      line-height: 1.6;
+      padding: 6px 0;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: flex-start; gap: 10px;
+    }
+    .section ul li:last-child { border-bottom: none; }
+    .dot {
+      width: 6px; height: 6px;
+      border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      margin-top: 7px;
+    }
+    .footer {
+      text-align: center;
+      font-size: 12px;
+      color: var(--text3);
+      margin-top: 32px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+    }
+    .footer a { color: var(--accent); text-decoration: none; }
+  </style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">
+    <svg viewBox="0 0 24 24"><line x1="4" y1="22" x2="4" y2="14"/><line x1="12" y1="22" x2="12" y2="8"/><line x1="20" y1="22" x2="20" y2="3"/><line x1="2" y1="22" x2="22" y2="22"/></svg>
+  </div>
+  <h1>BudgetLogger</h1>
+  <a class="back-btn" href="index.html">← Back</a>
+</div>
+
+<div class="content">
+
+  <div class="hero">
+    <h2>Terms of Service</h2>
+    <p class="subtitle">Last updated: April 2026</p>
+    <span class="badge">👤 Private use only</span>
+  </div>
+
+  <div class="section">
+    <h3>Overview</h3>
+    <p>BudgetLogger is a personal budgeting tool developed and operated for private use only. By accessing or using this application, you confirm that you are the intended user — the individual who owns and configured this deployment.</p>
+    <p>This is not a commercial service. No warranty, guarantee, or support obligation is implied or offered.</p>
+  </div>
+
+  <div class="section">
+    <h3>Permitted use</h3>
+    <ul>
+      <li><span class="dot"></span>This application is intended solely for use by the individual who configured and deployed it.</li>
+      <li><span class="dot"></span>Use is restricted to personal household budget tracking and financial planning.</li>
+      <li><span class="dot"></span>You must not share access credentials, OAuth tokens, or your Google Sheet with any unauthorised party.</li>
+      <li><span class="dot"></span>You must not attempt to modify, reverse-engineer, or redistribute this application without permission.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h3>Prohibited use</h3>
+    <ul>
+      <li><span class="dot"></span>This application must not be used by any person other than the owner of this deployment.</li>
+      <li><span class="dot"></span>This application must not be used for commercial purposes, financial advice, or any regulated financial activity.</li>
+      <li><span class="dot"></span>This application must not be used to process financial data belonging to any third party.</li>
+      <li><span class="dot"></span>Automated access, scraping, or use via bots is strictly prohibited.</li>
+    </ul>
+  </div>
+
+  <div class="section">
+    <h3>Google services</h3>
+    <p>This application uses Google OAuth 2.0 and the Google Sheets API. Your use of these services is subject to <a href="https://policies.google.com/terms" target="_blank">Google's Terms of Service</a> and <a href="https://policies.google.com/privacy" target="_blank">Google's Privacy Policy</a>.</p>
+    <p>BudgetLogger is not affiliated with, endorsed by, or sponsored by Google LLC.</p>
+  </div>
+
+  <div class="section">
+    <h3>Data and accuracy</h3>
+    <p>All financial data is stored exclusively in your own Google Sheets spreadsheet. The application owner takes no responsibility for the accuracy, completeness, or security of data entered into the application.</p>
+    <p>BudgetLogger is a planning and tracking tool only. It does not constitute financial advice. Always consult a qualified financial adviser for financial decisions.</p>
+  </div>
+
+  <div class="section">
+    <h3>Disclaimer of warranties</h3>
+    <p>This application is provided "as is" without warranty of any kind, express or implied. The application owner makes no representations regarding the reliability, availability, or fitness for any particular purpose of this software.</p>
+    <p>Use of this application is entirely at your own risk.</p>
+  </div>
+
+  <div class="section">
+    <h3>Limitation of liability</h3>
+    <p>To the fullest extent permitted by law, the application owner shall not be liable for any direct, indirect, incidental, special, or consequential damages arising from the use or inability to use this application, including but not limited to loss of data or financial loss.</p>
+  </div>
+
+  <div class="section">
+    <h3>Changes to these terms</h3>
+    <p>These terms may be updated at any time. Continued use of the application constitutes acceptance of any revised terms. The date at the top of this page reflects the most recent revision.</p>
+  </div>
+
+  <div class="footer">
+    BudgetLogger — Private use only &nbsp;·&nbsp;
+    <a href="privacy.html">Privacy Policy</a>
+  </div>
+
+</div>
+</body>
+</html>
