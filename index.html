@@ -469,7 +469,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
         <div>
           <div class="form-label">Recurrence</div>
           <select class="form-input" id="rec-freq" onchange="updateDayLabel()">
-            <option>Monthly</option><option>N-Weekly</option><option>Yearly</option><option>One-Off</option>
+            <option>Monthly</option><option>N-Monthly</option><option>N-Weekly</option><option>Yearly</option><option>One-Off</option>
           </select>
         </div>
         <div>
@@ -629,7 +629,8 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const titles={add:'Add',budget:'Budget <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.71</span>',recurring:'Known <span style="font-size:11px;font-weight:400;color:var(--text3)">v0.54</span>',set:'Set'};
+  const APP_VER='v0.72';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
   document.getElementById('budget-fixed-header').style.display=page==='budget'?'block':'none';
@@ -946,6 +947,16 @@ async function loadBudget(){
       if(rec==='FORTNIGHTLY')return diffDays%14===0;
       if(rec==='4-WEEKLY')return diffDays%28===0;
       if(rec==='N-WEEKLY'){const n=parseInt(entry.dayInfo)||1;return diffDays%(n*7)===0;}
+      if(rec==='N-MONTHLY'){
+        const n=parseInt(entry.dayInfo)||1;
+        // Fires on same day-of-month as startIso, every n months
+        const startParts=entry.startIso.split('-');
+        const startMonth=parseInt(startParts[0])*12+parseInt(startParts[1])-1;
+        const curParts=iso.split('-');
+        const curMonth=parseInt(curParts[0])*12+parseInt(curParts[1])-1;
+        const diffMonths=curMonth-startMonth;
+        return diffMonths>=0&&diffMonths%n===0&&parseInt(curParts[2])===parseInt(startParts[2]);
+      }
       if(rec==='YEARLY'){
         const dayStr=String(entry.dayInfo||'');
         const parts=dayStr.split('/');
@@ -1635,7 +1646,7 @@ async function loadRecurring(){
 
 function freqBadge(f,active){
   if(!active)return'<span class="rec-badge badge-inactive">Paused</span>';
-  const cls={Monthly:'monthly','N-Weekly':'weekly',Yearly:'monthly','One-Off':'oneoff',Fortnightly:'fortnightly','4-Weekly':'fortnightly',Weekly:'weekly'}[f]||'oneoff';
+  const cls={Monthly:'monthly','N-Monthly':'monthly','N-Weekly':'weekly',Yearly:'monthly','One-Off':'oneoff',Fortnightly:'fortnightly','4-Weekly':'fortnightly',Weekly:'weekly'}[f]||'oneoff';
   return`<span class="rec-badge badge-${cls}">${f}</span>`;
 }
 
@@ -1681,7 +1692,7 @@ function updateRecSummary(){
     disc=Math.max(0,inc-exp);
   } else if(recurringData){
     // Fall back to estimated monthly from recurring sheet
-    const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
+    const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='N-Monthly'){const n=parseInt(r.dayInfo)||1;return r.amount/n;}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
     inc=recurringData.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
     exp=recurringData.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
     disc=Math.max(0,inc-exp);
@@ -1709,6 +1720,25 @@ function updateRecSummary(){
     '</div>';
 }
 
+function getNextFireDate(entry){
+  // Returns the next ISO date this entry fires on, from today
+  const today=localDateIso();
+  // Search forward up to 400 days
+  let d=new Date(today+'T00:00:00');
+  for(let i=0;i<400;i++){
+    const iso=localDateIso(d);
+    if(firesOnDate(entry,iso))return iso;
+    d.setDate(d.getDate()+1);
+  }
+  return null;
+}
+function friendlyFreq(r){
+  const f=r.recurrence||'';
+  const n=r.dayInfo?parseInt(r.dayInfo)||1:1;
+  if(f==='N-Weekly')return n===1?'Weekly':n===2?'Fortnightly':n===4?'4-Weekly':n+'-Weekly';
+  if(f==='N-Monthly')return n===1?'Monthly':n+'-Monthly';
+  return f;
+}
 function renderRecurring(data){
   // Group by category, in a sensible order
   const CAT_ORDER=['IN','Rent','Savings','Utilities','Insurance','Daycare','Gym','Subscriptions','Food','Other'];
@@ -1751,7 +1781,13 @@ function renderRecurring(data){
       html+=`<div class="rec-row" data-sheet-row="${r.sheetRow}">
         <div class="rec-body" style="opacity:${r.active?1:0.5}">
           <div class="rec-name" style="color:${r.active?'var(--text)':'var(--text3)'}">${r.desc||r.cat}</div>
-          <div class="rec-detail">${r.recurrence}${r.dayInfo?' · '+String(r.dayInfo).replace(/\s*NWD/i,' (Working day)'):''}</div>
+          <div class="rec-detail">${(()=>{
+            const freq=friendlyFreq(r);
+            const nwd=r.dayInfo&&String(r.dayInfo).toUpperCase().includes('NWD');
+            const next=r.active?getNextFireDate(r):null;
+            const nextStr=next?(()=>{const[,m,d]=next.split('-');return parseInt(d)+' '+MONTHS[parseInt(m)-1];})():null;
+            return freq+(nwd?' (Working day)':'')+(nextStr?' · Next: '+nextStr:'');
+          })()}</div>
         </div>
         <div class="rec-right">
           <div class="rec-amount" style="color:${r.active?'var(--text)':'var(--text3)'};font-size:15px;font-weight:600">$${fmtAmt(r.amount)}</div>
@@ -1764,7 +1800,7 @@ function renderRecurring(data){
     });
     html+='</div></div>';
   });
-  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
+  const em=r=>{if(r.recurrence==='Monthly')return r.amount;if(r.recurrence==='Fortnightly')return r.amount*2.17;if(r.recurrence==='4-Weekly')return r.amount*1.08;if(r.recurrence==='Weekly')return r.amount*4.33;if(r.recurrence==='N-Weekly'){const n=parseInt(r.dayInfo)||1;return r.amount*(4.33/n);}if(r.recurrence==='N-Monthly'){const n=parseInt(r.dayInfo)||1;return r.amount/n;}if(r.recurrence==='Yearly')return r.amount/12;return 0;};
   const inc=data.filter(r=>r.active&&r.cat==='IN').reduce((s,r)=>s+em(r),0);
   const exp=data.filter(r=>r.active&&r.cat!=='IN').reduce((s,r)=>s+em(r),0);
   html+=`<button onclick="openAddRec()" style="width:100%;padding:12px;border:1.5px dashed var(--border2);border-radius:12px;background:none;color:var(--accent);font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;margin-top:4px"><svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" fill="none" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg> Add New</button>`;
@@ -1783,6 +1819,7 @@ function updateDayLabel(){
   nwdLabel.style.opacity=isMonthly?'1':'0.35';
   nwdLabel.style.cursor=isMonthly?'pointer':'not-allowed';
   if(f==='Monthly'){l.textContent='Day of month';i.placeholder='e.g. 28'}
+  else if(f==='N-Monthly'){l.textContent='Every N months';i.placeholder='e.g. 3'}
   else if(f==='N-Weekly'){l.textContent='Every N weeks';i.placeholder='e.g. 2'}
   else if(f==='Yearly'){l.textContent='Day/Month (dd/mm)';i.placeholder='e.g. 01/07'}
   else{l.textContent='Day';i.placeholder='Leave blank'}
@@ -2354,7 +2391,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.71').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.72').catch(()=>{});
   });
 }
 // Init theme
