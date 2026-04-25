@@ -1,5 +1,5 @@
 // VERSION is injected by the app — changing it forces a new SW install
-const VERSION = '0.65';
+const VERSION = '0.73';
 const CACHE = 'budget-' + VERSION;
 
 self.addEventListener('install', () => self.skipWaiting());
