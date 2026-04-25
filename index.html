@@ -281,6 +281,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
           <span id="dark-mode-icon">🌙</span><span id="dark-mode-label">Dark mode</span>
         </button>
         <button onclick="toggleNotifications();closeMenu()" id="notif-menu-btn" style="width:100%;padding:12px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit">🔔 <span id="notif-menu-label">Enable notifications</span></button>
+        <button onclick="syncRecurringToSheet();closeMenu()" style="width:100%;padding:12px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit">📥 Sync recurring to sheet</button>
         <button onclick="showDebugInfo();closeMenu()" style="width:100%;padding:12px 14px;border:none;border-bottom:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit">🔍 Debug info</button>
         <a href="privacy.html" target="_blank" onclick="closeMenu()" style="width:100%;padding:12px 14px;border:none;border-top:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit;text-decoration:none">🔒 Privacy policy</a>
         <a href="terms.html" target="_blank" onclick="closeMenu()" style="width:100%;padding:12px 14px;border:none;border-top:1px solid var(--border);background:none;text-align:left;font-size:14px;color:var(--text);cursor:pointer;display:flex;align-items:center;gap:10px;font-family:inherit;text-decoration:none">📋 Terms of service</a>
@@ -629,7 +630,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.72';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.73';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -849,6 +850,99 @@ function showBudgetSkeleton(){
   document.getElementById('month-scroll').innerHTML='';
   const ycOuter=document.getElementById('year-chip');if(ycOuter)ycOuter.textContent='';
   document.getElementById('budget-col-header').style.display='none';
+}
+
+// ── OPTION A: Sync recurring amounts to Budget sheet ──────────────────────
+// Writes each recurring entry's amount to the Budget sheet on the dates it fires.
+// Only writes to past/present dates. Skips cells that already have a non-zero value
+// (i.e. manual overrides are never overwritten).
+async function syncRecurringToSheet(){
+  if(!recurringData||!recurringData.length){showToast('Load recurring data first');return;}
+  const btn=document.getElementById('budget-refresh-btn');
+  const origTitle=document.getElementById('page-title').innerHTML;
+  document.getElementById('page-title').innerHTML='Syncing…';
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+
+    const today=localDateIso();
+    // Determine range: 90 days back to today
+    const start=localDateIso(new Date(Date.now()-90*86400000));
+
+    // Load existing Budget sheet to avoid overwriting manual entries
+    const budRows=await sheetGet(BUDGET_SHEET,'A:M',true);
+    const existingMap={};
+    for(let i=1;i<budRows.length;i++){
+      const r=budRows[i];if(!r||!r[0])continue;
+      const iso=cellToIso(r[0]);if(!iso)continue;
+      existingMap[iso]={row:i+1,data:r};
+    }
+
+    // Column map: category key → column letter
+    const COL={income:'C',other:'D',subs:'E',utils:'F',savings:'G',
+               rent:'H',insurance:'I',medibank:'J',daycare:'K',gym:'L',food:'M'};
+    const CAT_KEY={IN:'income',Other:'other',Subscriptions:'subs',
+      Utilities:'utils',Savings:'savings',Rent:'rent',Insurance:'insurance',
+      MediBank:'medibank',Medibank:'medibank',Daycare:'daycare',Gym:'gym',Food:'food'};
+
+    // Walk each day in range
+    let writes=[];
+    let d=new Date(start+'T00:00:00');
+    const endD=new Date(today+'T00:00:00');
+    const DAY_NAMES=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+    while(d<=endD){
+      const iso=localDateIso(d);
+      // Find or create row
+      let sheetRow=existingMap[iso]?existingMap[iso].row:null;
+      let existing=existingMap[iso]?existingMap[iso].data:null;
+
+      // Check which recurring entries fire on this date
+      for(const entry of recurringData){
+        if(!entry.active)continue;
+        if(!firesOnDate(entry,iso))continue;
+        const key=CAT_KEY[entry.cat];
+        if(!key)continue;
+        const colLetter=COL[key];
+        const colIdx={'C':2,'D':3,'E':4,'F':5,'G':6,'H':7,'I':8,'J':9,'K':10,'L':11,'M':12}[colLetter];
+
+        // Skip if cell already has a non-zero value (manual override)
+        const existingVal=existing&&colIdx<existing.length?parseFloat(existing[colIdx])||0:0;
+        if(existingVal!==0)continue;
+
+        // Need to create the row first if it doesn't exist
+        if(!sheetRow){
+          sheetRow=await findRowForDate(iso,true);
+          // Reload existing to avoid re-creating
+          existingMap[iso]={row:sheetRow,data:[]};
+          existing=[];
+        }
+        writes.push({range:BUDGET_SHEET+'!'+colLetter+sheetRow,value:entry.amount});
+      }
+      d.setDate(d.getDate()+1);
+    }
+
+    if(!writes.length){
+      showToast('Nothing new to sync — all cells already populated');
+      document.getElementById('page-title').innerHTML=origTitle;
+      return;
+    }
+
+    // Batch write in groups of 20
+    for(let i=0;i<writes.length;i+=20){
+      const batch=writes.slice(i,i+20);
+      const body={valueInputOption:'USER_ENTERED',data:batch.map(w=>({range:w.range,majorDimension:'ROWS',values:[[w.value]]}))};
+      const res=await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values:batchUpdate`,
+        {method:'POST',headers:{Authorization:'Bearer '+accessToken,'Content-Type':'application/json'},body:JSON.stringify(body)});
+      if(!res.ok){const e=await res.json();throw new Error(e.error?.message||'Batch write failed');}
+    }
+
+    showToast('Synced '+writes.length+' recurring entries to Budget sheet ✓');
+    budgetData=null;
+    loadBudget();
+  }catch(e){
+    showToast(e.message||'Sync failed',4000);
+  }
+  document.getElementById('page-title').innerHTML=origTitle;
 }
 
 async function loadBudget(){
@@ -2085,28 +2179,7 @@ function openQuickAdd(dateIso){
     '<button class="bpopup-save" onclick="saveQuickAdd(this.dataset.d)" data-d=\''+dateIso+'\' style="flex:1;padding:12px;border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;background:var(--accent)"><svg width="18" height="18" viewBox="0 0 24 24" stroke="white" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg> Add</button>';
   document.getElementById('bpopup-wrap').classList.add('open');
 }
-async function saveQuickAdd(dateIso){
-  const amt=parseFloat(document.getElementById('qa-amount').value);
-  if(!amt||amt<=0){showToast('Enter an amount');return;}
-  const col=document.getElementById('qa-cat').value;
-  const note=document.getElementById('qa-note').value;
-  const btn=document.querySelector('#bpopup-body .bpopup-save');
-  btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving…';
-  try{
-    if(!await maybeRefreshToken())throw new Error('Session expired');
-    const sheetRow=await findRowForDate(dateIso);
-    if(!sheetRow)throw new Error('No row for this date');
-    const existing=await getCellValue(sheetRow,col);
-    const newVal=parseFloat(((existing||0)+amt).toFixed(2));
-    await sheetWrite(BUDGET_SHEET,col+sheetRow,[[newVal]]);
-    budgetData=null;
-    closeBudgetDetail();
-    showToast('Added $'+fmtAmt(amt)+' ✓');
-    loadBudget();
-  }catch(e){showToast(e.message||'Failed',3000);}
-  btn.disabled=false;btn.textContent='Add to sheet';
-}
-let balanceDateMode='today';
+
 
 function setBalanceDate(mode){
   balanceDateMode=mode;
@@ -2391,7 +2464,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.72').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.73').catch(()=>{});
   });
 }
 // Init theme
