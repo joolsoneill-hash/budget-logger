@@ -623,8 +623,12 @@ function showDebugInfo(){
   lines.push('recurringData entries: '+(recurringData?recurringData.length:0));
   lines.push('corrections: '+balanceCorrections.size+' — '+[...balanceCorrections.values()].map(c=>c.date+' $'+c.newBalance).join(', '));
   if(recurringData&&recurringData.length){
-    recurringData.slice(0,5).forEach(r=>lines.push(' '+r.cat+' $'+r.amount+' '+r.recurrence+' start:'+r.startIso+' active:'+r.active));
-    if(recurringData.length>5)lines.push(' ...and '+(recurringData.length-5)+' more');
+    const today=localDateIso();
+    recurringData.slice(0,8).forEach(r=>{
+      const fires=firesOnDate(r,today);
+      lines.push(' '+r.cat+' "'+r.desc+'" $'+r.amount+' '+r.recurrence+' start:'+r.startIso+' active:'+r.active+' firesToday:'+fires);
+    });
+    if(recurringData.length>8)lines.push(' ...and '+(recurringData.length-8)+' more');
   }
   if(budgetData&&budgetData.length){
     const today=localDateIso();
@@ -657,7 +661,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.89';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.90';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -2747,7 +2751,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.89').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.90').catch(()=>{});
   });
 }
 // Init theme
