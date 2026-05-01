@@ -154,24 +154,24 @@ textarea:focus{border-color:var(--accent)}
 .brow-cats{flex:1;display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 .brow-pill{font-size:11px;padding:2px 7px;border-radius:10px;white-space:nowrap;display:inline-flex;align-items:center;gap:3px}
 .brow-pill.income{background:#0d2e1a;color:#4caf6e}
-.brow-pill.cat-rent{background:#1e1a2e;color:#9b8fd4}
-.brow-pill.cat-savings{background:#0d2226;color:#4db8c8}
-.brow-pill.cat-daycare{background:#2e1a1a;color:#d47878}
-.brow-pill.cat-insurance{background:#1a2018;color:#7db865}
-.brow-pill.cat-food{background:#2e2318;color:#c89b4d}
-.brow-pill.cat-gym{background:#1a1e2e;color:#6b9fd4}
-.brow-pill.cat-subs{background:#2a1a2e;color:#c47fc4}
-.brow-pill.cat-utils{background:#2a1e12;color:#c8844d}
+.brow-pill.cat-rent{background:#1e2030;color:#7aaee8}
+.brow-pill.cat-savings{background:#1a2020;color:#4db8c8}
+.brow-pill.cat-daycare{background:#2e2010;color:#e8a84d}
+.brow-pill.cat-insurance{background:#1e2218;color:#96c46e}
+.brow-pill.cat-food{background:#2a1810;color:#e87d4d}
+.brow-pill.cat-gym{background:#10202e;color:#4da8d8}
+.brow-pill.cat-subs{background:#1e1a10;color:#d4b84d}
+.brow-pill.cat-utils{background:#2a1e10;color:#e8a04d}
 .brow-pill.cat-other{background:#1e1e1e;color:#a0a0a0}
 .brow-pill.balance{background:#1a0e2e;color:#9b6fd4;font-weight:600}
 [data-theme="light"] .brow-pill.income{background:#e6f7ec;color:#2d7d3a}
-[data-theme="light"] .brow-pill.cat-rent{background:#ece8f7;color:#5c4d9b}
-[data-theme="light"] .brow-pill.cat-savings{background:#e6f5f7;color:#2d7d8a}
-[data-theme="light"] .brow-pill.cat-daycare{background:#f7e8e8;color:#9b3a3a}
-[data-theme="light"] .brow-pill.cat-insurance{background:#ecf5e8;color:#3a6b2a}
-[data-theme="light"] .brow-pill.cat-food{background:#f7f0e6;color:#8a5e1e}
-[data-theme="light"] .brow-pill.cat-gym{background:#e8eef7;color:#2a5080}
-[data-theme="light"] .brow-pill.cat-subs{background:#f2e8f7;color:#6a2d7a}
+[data-theme="light"] .brow-pill.cat-rent{background:#e8f0f8;color:#2a5888}
+[data-theme="light"] .brow-pill.cat-savings{background:#e6f4f5;color:#2a7080}
+[data-theme="light"] .brow-pill.cat-daycare{background:#f7f0e6;color:#8a5a10}
+[data-theme="light"] .brow-pill.cat-insurance{background:#eef5e8;color:#3a6020}
+[data-theme="light"] .brow-pill.cat-food{background:#f8ece6;color:#903820}
+[data-theme="light"] .brow-pill.cat-gym{background:#e6f2f8;color:#1a5878}
+[data-theme="light"] .brow-pill.cat-subs{background:#f5f0e0;color:#7a6010}
 [data-theme="light"] .brow-pill.cat-utils{background:#f7ede6;color:#804020}
 [data-theme="light"] .brow-pill.cat-other{background:#efefef;color:#555}
 [data-theme="light"] .brow-pill.balance{background:#ede8f7;color:#4a2d8a}
@@ -657,7 +657,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.84';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.85';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -2736,7 +2736,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.84').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.85').catch(()=>{});
   });
 }
 // Init theme
