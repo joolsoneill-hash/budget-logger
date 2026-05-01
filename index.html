@@ -635,7 +635,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.79';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.80';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1649,15 +1649,15 @@ function renderAllBudgetRows(){
     const corr=balanceCorrections.get(r.date);
     if(corr)p.push(`<span class="brow-pill balance" style="cursor:pointer" onclick="event.stopPropagation();openBalancePopup('${r.date}')">⚖ Balance set $${corr.newBalance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     if(r.income)p.push(`<span class="brow-pill income draggable" data-date="${r.date}" data-cat="income" data-col="C" data-amt="${r.income}">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.rent)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="H" data-cat="rent" data-amt="${r.rent}">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.savings)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="G" data-cat="savings" data-amt="${r.savings}">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.daycare)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="K" data-cat="daycare" data-amt="${r.daycare}">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.insurance)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="I" data-cat="insurance" data-amt="${r.insurance}">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.food)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="M" data-cat="food" data-amt="${r.food}">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.gym)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="L" data-cat="gym" data-amt="${r.gym}">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.subs)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="E" data-cat="subs" data-amt="${r.subs}">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.utils)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="F" data-cat="utils" data-amt="${r.utils}">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.other)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="D" data-cat="other" data-amt="${r.other}">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.rent>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="H" data-cat="rent" data-amt="${r.rent}">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.savings>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="G" data-cat="savings" data-amt="${r.savings}">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.daycare>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="K" data-cat="daycare" data-amt="${r.daycare}">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.insurance>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="I" data-cat="insurance" data-amt="${r.insurance}">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.food>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="M" data-cat="food" data-amt="${r.food}">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.gym>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="L" data-cat="gym" data-amt="${r.gym}">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.subs>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="E" data-cat="subs" data-amt="${r.subs}">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.utils>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="F" data-cat="utils" data-amt="${r.utils}">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.other>0)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="D" data-cat="other" data-amt="${r.other}">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
     budgetRowMap.set(r.date,r);
@@ -2640,37 +2640,28 @@ async function confirmPillMove(){
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
 
-    // Get the JS-computed row data to know what's recurring vs manual
-    const fromRow_data=budgetData?budgetData.find(r=>r.date===s.fromDate):null;
-    const toRow_data=budgetData?budgetData.find(r=>r.date===s.toDate):null;
-
-    const catKeyMap={income:'income',rent:'rent',savings:'savings',utils:'utils',
-      insurance:'insurance',daycare:'daycare',gym:'gym',subs:'subs',food:'food',other:'other'};
+    // Source: write the full moved amount as a negative override so total = 0
+    // e.g. if recurring Gym=$69 and manual=$0, we write -69 → 69+(-69)=0
+    // If it was a pure manual entry (no recurring), write 0
     const recKeyMap={income:'recIncome',rent:'recRent',savings:'recSavings',utils:'recUtils',
       insurance:'recInsurance',daycare:'recDaycare',gym:'recGym',subs:'recSubs',
       food:'recFood',other:'recOther'};
-
-    const bKey=catKeyMap[s.cat]||s.cat;
+    const fromRow_data=budgetData?budgetData.find(r=>r.date===s.fromDate):null;
     const rKey=recKeyMap[s.cat];
+    const fromRec=fromRow_data&&rKey?(fromRow_data[rKey]||0):0;
 
-    // Recurring amount on source and target
-    const fromRec=fromRow_data&&rKey?fromRow_data[rKey]||0:0;
-    const toRec=toRow_data&&rKey?toRow_data[rKey]||0:0;
-
-    // On source: if there's a recurring amount, set manual to -fromRec so total = 0
-    // If no recurring, just write 0
     const fromRow=await findRowForDate(s.fromDate,false);
     if(fromRow){
-      const sourceOverride=fromRec>0?-fromRec:0;
-      await sheetWrite(BUDGET_SHEET,s.col+fromRow,[[sourceOverride]]);
+      // Write negative of recurring so recurring+override=0; if no recurring just write 0
+      const suppress=fromRec>0?-Math.abs(fromRec):0;
+      await sheetWrite(BUDGET_SHEET,s.col+fromRow,[[suppress]]);
     }
 
-    // On target: existing total + moved amount
-    // If target already has recurring, write (toRec + s.amt) as override
+    // Target: add moved amount on top of existing manual
     const toRow=await findRowForDate(s.toDate,true);
     const existingManual=await getCellValue(toRow,s.col);
-    const targetOverride=parseFloat(((existingManual||0)+s.amt).toFixed(2));
-    await sheetWrite(BUDGET_SHEET,s.col+toRow,[[targetOverride]]);
+    const targetVal=parseFloat(((existingManual||0)+s.amt).toFixed(2));
+    await sheetWrite(BUDGET_SHEET,s.col+toRow,[[targetVal]]);
 
     budgetData=null;
     showToast('Moved ✓');
@@ -2682,7 +2673,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.79').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.80').catch(()=>{});
   });
 }
 // Init theme
