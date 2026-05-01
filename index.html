@@ -630,7 +630,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.75';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.76';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -2169,7 +2169,7 @@ async function saveQuickAdd(dateIso,addToNextMonth){
   if(col==='SAVINGS_INPUT'&&addToNextMonth===undefined){
     document.getElementById('bpopup-title').textContent='Add to next month?';
     document.getElementById('bpopup-body').innerHTML=
-      '<p style="font-size:14px;color:#c8c8c8;font-weight:600;padding:4px 0 6px">Add $'+fmtAmt(amt)+' to next month's savings transfer?</p>'+
+      '<p style="font-size:14px;color:#c8c8c8;font-weight:600;padding:4px 0 6px">Add $'+fmtAmt(amt)+' to next month&#39;s savings transfer?</p>'+
       '<p style="font-size:12px;color:var(--text3);padding-bottom:16px">This will increase the savings amount for next month in your recurring expenses.</p>'+
       '<div style="display:flex;gap:8px">'+
         '<button onclick="saveQuickAddSavingsNo()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">No</button>'+
@@ -2521,7 +2521,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.75').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.76').catch(()=>{});
   });
 }
 // Init theme
