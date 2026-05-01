@@ -153,6 +153,10 @@ textarea:focus{border-color:var(--accent)}
 .brow-day{font-size:11px;color:var(--text3);min-width:30px;flex-shrink:0}
 .brow-cats{flex:1;display:flex;flex-wrap:wrap;gap:4px;min-width:0}
 .brow-pill{font-size:11px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text2);white-space:nowrap}
+.brow-pill.draggable{cursor:grab;user-select:none;touch-action:none}
+.brow-pill.dragging{opacity:0.3;cursor:grabbing}
+.brow.drag-over{outline:2px solid var(--accent);outline-offset:-2px;background:var(--accent-bg)}
+#drag-ghost{position:fixed;pointer-events:none;z-index:9999;font-size:11px;padding:4px 10px;border-radius:10px;background:var(--accent);color:white;font-weight:600;box-shadow:0 4px 12px rgba(0,0,0,0.3);display:none}
 .brow-pill.income{background:var(--green-bg);color:var(--green-text)}
 .brow-pill.expense{background:var(--surface2);color:var(--amber)}
 .brow-pill.balance{background:var(--purple-bg);color:var(--purple-text);font-weight:600}
@@ -251,6 +255,7 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 </style>
 </head>
 <body>
+<div id="drag-ghost"></div>
 <div class="app">
   <div class="topbar">
     <div class="topbar-logo" id="topbar-logo-wrap" style="display:none">
@@ -630,7 +635,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.76';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.78';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1643,16 +1648,16 @@ function renderAllBudgetRows(){
     // Show purple balance-set pill if a correction was applied on this date
     const corr=balanceCorrections.get(r.date);
     if(corr)p.push(`<span class="brow-pill balance" style="cursor:pointer" onclick="event.stopPropagation();openBalancePopup('${r.date}')">⚖ Balance set $${corr.newBalance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.income)p.push(`<span class="brow-pill income">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.rent)p.push(`<span class="brow-pill expense">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.savings)p.push(`<span class="brow-pill expense">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.daycare)p.push(`<span class="brow-pill expense">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.insurance)p.push(`<span class="brow-pill expense">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.food)p.push(`<span class="brow-pill expense">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.gym)p.push(`<span class="brow-pill expense">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.subs)p.push(`<span class="brow-pill expense">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.utils)p.push(`<span class="brow-pill expense">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    if(r.other)p.push(`<span class="brow-pill expense">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.income)p.push(`<span class="brow-pill income draggable" data-date="${r.date}" data-cat="income" data-col="C" data-amt="${r.income}">+$${r.income.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.rent)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="H" data-cat="rent" data-amt="${r.rent}">Rent $${r.rent.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.savings)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="G" data-cat="savings" data-amt="${r.savings}">Savings $${r.savings.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.daycare)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="K" data-cat="daycare" data-amt="${r.daycare}">Daycare $${r.daycare.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.insurance)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="I" data-cat="insurance" data-amt="${r.insurance}">Insurance $${r.insurance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.food)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="M" data-cat="food" data-amt="${r.food}">Food $${r.food.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.gym)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="L" data-cat="gym" data-amt="${r.gym}">Gym $${r.gym.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.subs)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="E" data-cat="subs" data-amt="${r.subs}">Subs $${r.subs.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.utils)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="F" data-cat="utils" data-amt="${r.utils}">Utils $${r.utils.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
+    if(r.other)p.push(`<span class="brow-pill expense draggable" data-date="${r.date}" data-col="D" data-cat="other" data-amt="${r.other}">Other $${r.other.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
     const n=r.income-r.totalExpenses;
     const rt=r.runningTotal;
     budgetRowMap.set(r.date,r);
@@ -1671,6 +1676,7 @@ function renderAllBudgetRows(){
   });
 
   document.getElementById('budget-rows').innerHTML=html;
+  initPillDrag();
 
   // Scroll to today's row — position it at the top of the scroll area
   const scrollArea=document.getElementById('scroll-area');
@@ -2518,10 +2524,139 @@ function checkNotifications(){
 // Update menu label on load
 setTimeout(updateNotifMenuLabel, 500);
 
+
+// ── PILL DRAG TO MOVE ──────────────────────────────────────────────────────
+let _dragState=null;
+
+function initPillDrag(){
+  const area=document.getElementById('scroll-area');
+  if(!area||area._dragInit)return;
+  area._dragInit=true;
+
+  function startDrag(pill,clientX,clientY){
+    const ghost=document.getElementById('drag-ghost');
+    ghost.textContent=pill.textContent;
+    _dragState={pill,fromDate:pill.dataset.date,col:pill.dataset.col,
+                cat:pill.dataset.cat,amt:parseFloat(pill.dataset.amt),
+                toDate:null};
+    pill.classList.add('dragging');
+    ghost.style.left=(clientX-30)+'px';
+    ghost.style.top=(clientY-20)+'px';
+    ghost.style.display='block';
+  }
+
+  function moveDrag(clientX,clientY){
+    if(!_dragState)return;
+    const ghost=document.getElementById('drag-ghost');
+    ghost.style.left=(clientX-30)+'px';
+    ghost.style.top=(clientY-20)+'px';
+    ghost.style.display='none';
+    const el=document.elementFromPoint(clientX,clientY);
+    ghost.style.display='block';
+    const row=el?el.closest('.brow'):null;
+    document.querySelectorAll('.brow.drag-over').forEach(r=>r.classList.remove('drag-over'));
+    if(row){
+      const onclick=row.getAttribute('onclick')||'';
+      const m=onclick.match(/openBudgetDetail\('([^']+)'\)/);
+      if(m&&m[1]!==_dragState.fromDate){
+        _dragState.toDate=m[1];
+        row.classList.add('drag-over');
+      }else{
+        _dragState.toDate=null;
+      }
+    }
+  }
+
+  function endDrag(){
+    if(!_dragState)return;
+    document.getElementById('drag-ghost').style.display='none';
+    document.querySelectorAll('.brow.drag-over').forEach(r=>r.classList.remove('drag-over'));
+    _dragState.pill.classList.remove('dragging');
+    if(_dragState.toDate)showDragConfirm(_dragState);
+    _dragState=null;
+  }
+
+  // ── Touch ──────────────────────────────────────────────────────────────────
+  area.addEventListener('touchstart',e=>{
+    const pill=e.target.closest('.brow-pill.draggable');
+    if(!pill)return;
+    e.stopPropagation();
+    const t=e.touches[0];
+    startDrag(pill,t.clientX,t.clientY);
+  },{passive:true});
+
+  area.addEventListener('touchmove',e=>{
+    if(!_dragState)return;
+    e.preventDefault();
+    const t=e.touches[0];
+    moveDrag(t.clientX,t.clientY);
+  },{passive:false});
+
+  area.addEventListener('touchend',()=>endDrag());
+  area.addEventListener('touchcancel',()=>endDrag());
+
+  // ── Mouse ──────────────────────────────────────────────────────────────────
+  area.addEventListener('mousedown',e=>{
+    const pill=e.target.closest('.brow-pill.draggable');
+    if(!pill)return;
+    e.preventDefault();
+    e.stopPropagation();
+    startDrag(pill,e.clientX,e.clientY);
+  });
+
+  document.addEventListener('mousemove',e=>{
+    if(!_dragState)return;
+    moveDrag(e.clientX,e.clientY);
+  });
+
+  document.addEventListener('mouseup',e=>{
+    if(!_dragState)return;
+    endDrag();
+  });
+}
+
+function showDragConfirm(state){
+  const[fy,fm,fd]=state.fromDate.split('-');
+  const[ty,tm,td]=state.toDate.split('-');
+  const fromStr=parseInt(fd)+' '+MONTHS[parseInt(fm)-1];
+  const toStr=parseInt(td)+' '+MONTHS[parseInt(tm)-1];
+  const label=state.cat.charAt(0).toUpperCase()+state.cat.slice(1);
+  document.getElementById('bpopup-title').textContent='Move expense?';
+  document.getElementById('bpopup-body').innerHTML=
+    '<p style="font-size:14px;color:#c8c8c8;padding:4px 0 12px">Move <strong>'+label+' $'+fmtAmt(state.amt)+'</strong><br>from '+fromStr+' → '+toStr+'?</p>'+
+    '<div style="display:flex;gap:8px">'+
+      '<button onclick="closeBudgetDetail()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">Cancel</button>'+
+      '<button onclick="confirmPillMove()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Move</button>'+
+    '</div>';
+  // Store state for confirmPillMove
+  window._pendingMove=state;
+  document.getElementById('bpopup-wrap').classList.add('open');
+}
+
+async function confirmPillMove(){
+  closeBudgetDetail();
+  const s=window._pendingMove;
+  if(!s)return;
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+    // Remove from source date
+    const fromRow=await findRowForDate(s.fromDate,false);
+    if(fromRow)await sheetWrite(BUDGET_SHEET,s.col+fromRow,[[0]]);
+    // Add to target date
+    const toRow=await findRowForDate(s.toDate,true);
+    const existing=await getCellValue(toRow,s.col);
+    await sheetWrite(BUDGET_SHEET,s.col+toRow,[[parseFloat(((existing||0)+s.amt).toFixed(2))]]);
+    budgetData=null;
+    showToast('Moved ✓');
+    loadBudget();
+  }catch(e){showToast(e.message||'Move failed',3000);}
+  window._pendingMove=null;
+}
+
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.76').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.78').catch(()=>{});
   });
 }
 // Init theme
