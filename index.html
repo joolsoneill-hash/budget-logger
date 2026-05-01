@@ -661,7 +661,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.91';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.92';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -2027,7 +2027,7 @@ function openEditRec(sheetRow){
   const nwdFlag=r.dayInfo&&r.dayInfo.toString().toUpperCase().includes('NWD');
   document.getElementById('rec-day').value=nwdFlag?r.dayInfo.toString().replace(/\s*NWD/i,'').trim():(r.dayInfo||'');
   document.getElementById('rec-nwd').checked=nwdFlag;
-  document.getElementById('rec-start').value=cellToIso(r.startDate)||localDateIso();
+  document.getElementById('rec-start').value=cellToIso(r.startIso)||localDateIso();
   document.getElementById('rec-active-cb').checked=r.active;
   updateDayLabel();
   document.getElementById('rec-modal').classList.add('open');
@@ -2751,7 +2751,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.91').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.92').catch(()=>{});
   });
 }
 // Init theme
