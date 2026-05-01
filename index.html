@@ -635,7 +635,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.82';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.83';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1097,13 +1097,15 @@ async function loadBudget(){
       const dayName=DAY_NAMES[cur.getDay()];
       // Start from manual overrides
       const manual=manualMap[iso]||{};
-      // Track which categories have explicit manual overrides
+      // Track which categories have explicit manual overrides (including negative suppressions)
       const overridden=new Set(Object.keys(manual).filter(k=>manual[k]!==0&&manual[k]!=null));
+      // Clamp negative values to 0 for display — negative means "suppress recurring, show nothing"
+      const mv=k=>Math.max(0,manual[k]||0);
       const row={date:iso,day:dayName,
-        income:manual.income||0,other:manual.other||0,subs:manual.subs||0,
-        utils:manual.utils||0,savings:manual.savings||0,rent:manual.rent||0,
-        insurance:manual.insurance||0,medibank:manual.medibank||0,
-        daycare:manual.daycare||0,gym:manual.gym||0,food:manual.food||0,
+        income:mv('income'),other:mv('other'),subs:mv('subs'),
+        utils:mv('utils'),savings:mv('savings'),rent:mv('rent'),
+        insurance:mv('insurance'),medibank:mv('medibank'),
+        daycare:mv('daycare'),gym:mv('gym'),food:mv('food'),
         // Store recurring-only amounts for popup hint
         recIncome:0,recOther:0,recSubs:0,recUtils:0,recSavings:0,recRent:0,
         recInsurance:0,recMedibank:0,recDaycare:0,recGym:0,recFood:0};
@@ -2703,7 +2705,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.82').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.83').catch(()=>{});
   });
 }
 // Init theme
