@@ -661,7 +661,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.90';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.91';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1809,7 +1809,7 @@ async function loadRecurring(){
       // Start date: may be serial number or formatted string
       const startDate=r[3]!=null?cellToIso(r[3])||String(r[3]):'';
       data.push({sheetRow:i+1,cat:String(r[0]||''),desc:String(r[1]||''),amount,
-        startDate,recurrence:String(r[4]||''),dayInfo,active:String(r[6]||'').toLowerCase()==='yes'});
+        startIso:startDate,recurrence:String(r[4]||''),dayInfo,active:String(r[6]||'').toLowerCase()==='yes'});
     }
     recurringData=data;
     renderRecurring(data);
@@ -2751,7 +2751,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.90').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.91').catch(()=>{});
   });
 }
 // Init theme
