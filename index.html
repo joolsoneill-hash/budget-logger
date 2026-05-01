@@ -635,7 +635,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.80';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.81';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1420,7 +1420,16 @@ async function deleteExpenseField(btn){
     if(!await maybeRefreshToken())throw new Error('Session expired');
     const sheetRow=await findRowForDate(date,false);
     if(sheetRow){
-      await sheetWrite(BUDGET_SHEET,col+sheetRow,[[0]]);
+      // Find the recurring amount for this category on this date
+      // so we can write -recAmt to suppress it (recurring + (-rec) = 0)
+      const recKeyMap={C:'recIncome',D:'recOther',E:'recSubs',F:'recUtils',
+        G:'recSavings',H:'recRent',I:'recInsurance',J:'recMedibank',
+        K:'recDaycare',L:'recGym',M:'recFood'};
+      const rKey=recKeyMap[col];
+      const rowData=budgetData?budgetData.find(r=>r.date===date):null;
+      const recAmt=rowData&&rKey?(rowData[rKey]||0):0;
+      const suppress=recAmt>0?-Math.abs(recAmt):0;
+      await sheetWrite(BUDGET_SHEET,col+sheetRow,[[suppress]]);
     }
     budgetData=null;
     closeBudgetDetail();
@@ -2673,7 +2682,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.80').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.81').catch(()=>{});
   });
 }
 // Init theme
