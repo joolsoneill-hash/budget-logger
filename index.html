@@ -635,7 +635,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.78';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.79';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -2639,13 +2639,39 @@ async function confirmPillMove(){
   if(!s)return;
   try{
     if(!await maybeRefreshToken())throw new Error('Session expired');
-    // Remove from source date
+
+    // Get the JS-computed row data to know what's recurring vs manual
+    const fromRow_data=budgetData?budgetData.find(r=>r.date===s.fromDate):null;
+    const toRow_data=budgetData?budgetData.find(r=>r.date===s.toDate):null;
+
+    const catKeyMap={income:'income',rent:'rent',savings:'savings',utils:'utils',
+      insurance:'insurance',daycare:'daycare',gym:'gym',subs:'subs',food:'food',other:'other'};
+    const recKeyMap={income:'recIncome',rent:'recRent',savings:'recSavings',utils:'recUtils',
+      insurance:'recInsurance',daycare:'recDaycare',gym:'recGym',subs:'recSubs',
+      food:'recFood',other:'recOther'};
+
+    const bKey=catKeyMap[s.cat]||s.cat;
+    const rKey=recKeyMap[s.cat];
+
+    // Recurring amount on source and target
+    const fromRec=fromRow_data&&rKey?fromRow_data[rKey]||0:0;
+    const toRec=toRow_data&&rKey?toRow_data[rKey]||0:0;
+
+    // On source: if there's a recurring amount, set manual to -fromRec so total = 0
+    // If no recurring, just write 0
     const fromRow=await findRowForDate(s.fromDate,false);
-    if(fromRow)await sheetWrite(BUDGET_SHEET,s.col+fromRow,[[0]]);
-    // Add to target date
+    if(fromRow){
+      const sourceOverride=fromRec>0?-fromRec:0;
+      await sheetWrite(BUDGET_SHEET,s.col+fromRow,[[sourceOverride]]);
+    }
+
+    // On target: existing total + moved amount
+    // If target already has recurring, write (toRec + s.amt) as override
     const toRow=await findRowForDate(s.toDate,true);
-    const existing=await getCellValue(toRow,s.col);
-    await sheetWrite(BUDGET_SHEET,s.col+toRow,[[parseFloat(((existing||0)+s.amt).toFixed(2))]]);
+    const existingManual=await getCellValue(toRow,s.col);
+    const targetOverride=parseFloat(((existingManual||0)+s.amt).toFixed(2));
+    await sheetWrite(BUDGET_SHEET,s.col+toRow,[[targetOverride]]);
+
     budgetData=null;
     showToast('Moved ✓');
     loadBudget();
@@ -2656,7 +2682,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.78').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.79').catch(()=>{});
   });
 }
 // Init theme
