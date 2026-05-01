@@ -657,7 +657,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.86';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.87';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1698,15 +1698,11 @@ function renderAllBudgetRows(){
     // Show purple balance-set pill if a correction was applied on this date
     const corr=balanceCorrections.get(r.date);
     if(corr)p.push(`<span class="brow-pill balance" style="cursor:pointer" onclick="event.stopPropagation();openBalancePopup('${r.date}')">⚖ Balance set $${corr.newBalance.toLocaleString('en-AU',{maximumFractionDigits:0})}</span>`);
-    // Build description lookup from recurringData (cat → first desc that fires today)
+    // Build description lookup from recurringData (only use entry that fires on this date)
     const descForCat=(recCat,dateIso)=>{
       if(!recurringData)return recCat;
-      // First try: find entry that fires on this specific date
       const firing=recurringData.find(e=>e.active&&e.cat===recCat&&firesOnDate(e,dateIso));
-      if(firing)return firing.desc||recCat;
-      // Fallback: any active entry for this category
-      const any=recurringData.find(e=>e.active&&e.cat===recCat);
-      return any?(any.desc||recCat):recCat;
+      return firing?(firing.desc||recCat):recCat;
     };
     // pill(cat, cssClass, col, amt, icon, recCat)
     const mkPill=(cat,cls,col,amt,icon,recCat)=>{
@@ -2744,7 +2740,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.86').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.87').catch(()=>{});
   });
 }
 // Init theme
