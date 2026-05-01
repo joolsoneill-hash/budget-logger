@@ -630,7 +630,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.74';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.75';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -2159,6 +2159,60 @@ function switchToQuickAdd(){
   if(!budgetDetailData)return;
   openQuickAdd(budgetDetailData.date);
 }
+async function saveQuickAdd(dateIso,addToNextMonth){
+  const amt=parseFloat(document.getElementById('qa-amount').value);
+  if(!amt||amt<=0){showToast('Enter an amount');return;}
+  const col=document.getElementById('qa-cat').value;
+  const note=document.getElementById('qa-note').value;
+
+  // Savings Input — ask whether to add to next month's savings transfer
+  if(col==='SAVINGS_INPUT'&&addToNextMonth===undefined){
+    document.getElementById('bpopup-title').textContent='Add to next month?';
+    document.getElementById('bpopup-body').innerHTML=
+      '<p style="font-size:14px;color:#c8c8c8;font-weight:600;padding:4px 0 6px">Add $'+fmtAmt(amt)+' to next month's savings transfer?</p>'+
+      '<p style="font-size:12px;color:var(--text3);padding-bottom:16px">This will increase the savings amount for next month in your recurring expenses.</p>'+
+      '<div style="display:flex;gap:8px">'+
+        '<button onclick="saveQuickAddSavingsNo()" style="flex:1;padding:12px;border:1px solid var(--border);border-radius:12px;background:none;color:var(--text);font-size:14px;cursor:pointer;font-family:inherit">No</button>'+
+        '<button onclick="saveQuickAddSavingsYes()" style="flex:1;padding:12px;border:none;border-radius:12px;background:var(--accent);color:white;font-size:14px;font-weight:600;cursor:pointer;font-family:inherit">Yes</button>'+
+      '</div>';
+    return;
+  }
+
+  const btn=document.querySelector('#bpopup-body .bpopup-save');
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner"></span> Saving…';}
+  try{
+    if(!await maybeRefreshToken())throw new Error('Session expired');
+
+    if(col==='SAVINGS_INPUT'){
+      // Record as a savings entry today (column G)
+      const sheetRow=await findRowForDate(dateIso);
+      if(!sheetRow)throw new Error('No row for this date');
+      const existing=await getCellValue(sheetRow,'G');
+      const newVal=parseFloat(((existing||0)+amt).toFixed(2));
+      await sheetWrite(BUDGET_SHEET,'G'+sheetRow,[[newVal]]);
+
+      // If addToNextMonth, find and update the Savings recurring entry
+      if(addToNextMonth){
+        await addToNextMonthSavings(amt);
+      }
+    }else{
+      const sheetRow=await findRowForDate(dateIso);
+      if(!sheetRow)throw new Error('No row for this date');
+      const existing=await getCellValue(sheetRow,col);
+      const newVal=parseFloat(((existing||0)+amt).toFixed(2));
+      await sheetWrite(BUDGET_SHEET,col+sheetRow,[[newVal]]);
+    }
+
+    budgetData=null;
+    closeBudgetDetail();
+    showToast('Added $'+fmtAmt(amt)+(addToNextMonth?' + next month updated':'')+' ✓');
+    loadBudget();
+  }catch(e){showToast(e.message||'Failed',3000);}
+  if(btn){btn.disabled=false;btn.textContent='Add to sheet';}
+}
+
+// Named functions to avoid quoting issues in onclick
+
 let _quickAddDate=null;
 function doQuickAddSave(){if(_quickAddDate)saveQuickAdd(_quickAddDate);}
 function openQuickAdd(dateIso){
@@ -2467,7 +2521,7 @@ setTimeout(updateNotifMenuLabel, 500);
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.74').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.75').catch(()=>{});
   });
 }
 // Init theme
