@@ -657,7 +657,7 @@ function switchPage(page){
   document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
   document.getElementById('page-'+page).classList.add('active');
   document.getElementById('nav-'+page).classList.add('active');
-  const APP_VER='v0.88';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
+  const APP_VER='v0.89';const vSpan='<span style="font-size:11px;font-weight:400;color:var(--text3)">'+APP_VER+'</span>';
   const titles={add:'Add',budget:'NotAnotherBudgetApp '+vSpan,recurring:'Known '+vSpan,set:'Set'};
   document.getElementById('page-title').innerHTML=titles[page];
   // Show/hide the budget fixed header
@@ -1722,6 +1722,7 @@ function renderAllBudgetRows(){
     p.push(mkPill('savings','cat-savings','G',r.savings,'💰','Savings'));
     p.push(mkPill('daycare','cat-daycare','K',r.daycare,'👶','Daycare'));
     p.push(mkPill('insurance','cat-insurance','I',r.insurance,'🛡️','Insurance'));
+    p.push(mkPill('medibank','cat-insurance','J',r.medibank,'🏥','MediBank'));
     p.push(mkPill('food','cat-food','M',r.food,'🛒','Food'));
     p.push(mkPill('gym','cat-gym','L',r.gym,'🏋️','Gym'));
     p.push(mkPill('subs','cat-subs','E',r.subs,'📱','Subscriptions'));
@@ -2746,7 +2747,7 @@ async function confirmPillMove(){
 // Register service worker for PWA offline support
 if('serviceWorker' in navigator){
   window.addEventListener('load',()=>{
-    navigator.serviceWorker.register('sw.js?v=0.88').catch(()=>{});
+    navigator.serviceWorker.register('sw.js?v=0.89').catch(()=>{});
   });
 }
 // Init theme
