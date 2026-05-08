@@ -1,45 +1,34 @@
-// VERSION is injected by the app — changing it forces a new SW install
-const VERSION = '0.73';
-const CACHE = 'budget-' + VERSION;
+const CACHE = 'budget-v6'; // bump this whenever you deploy
 
-self.addEventListener('install', () => self.skipWaiting());
+self.addEventListener('install', e => {
+  self.skipWaiting(); // activate immediately, don't wait
+});
 
 self.addEventListener('activate', e => {
-  // Wipe ALL old caches on every new version
+  // Delete ALL old caches
   e.waitUntil(
-    caches.keys()
-      .then(keys => Promise.all(keys.map(k => caches.delete(k))))
-      .then(() => self.clients.claim())
+    caches.keys().then(keys =>
+      Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k)))
+    ).then(() => self.clients.claim())
   );
 });
 
 self.addEventListener('fetch', e => {
   const url = new URL(e.request.url);
 
-  // HTML — always network-first, never serve stale
-  if (e.request.destination === 'document') {
+  // Always go to network for same-origin HTML — never serve stale app shell
+  if (url.origin === self.location.origin && e.request.destination === 'document') {
     e.respondWith(
-      fetch(e.request, {cache: 'no-store'})
-        .catch(() => caches.match(e.request))
+      fetch(e.request).catch(() => caches.match(e.request))
     );
     return;
   }
 
-  // Google APIs — never intercept
-  if (url.hostname.includes('googleapis.com') ||
-      url.hostname.includes('google.com')) return;
+  // Pass Google API calls straight through — never cache
+  if (!e.request.url.startsWith(self.location.origin)) return;
 
-  // Same-origin assets (icons, manifest) — cache-first
-  if (url.origin === self.location.origin) {
-    e.respondWith(
-      caches.match(e.request)
-        .then(hit => hit || fetch(e.request)
-          .then(res => {
-            const clone = res.clone();
-            caches.open(CACHE).then(c => c.put(e.request, clone));
-            return res;
-          })
-        )
-    );
-  }
+  // Cache-first for everything else (fonts, icons, sw.js itself)
+  e.respondWith(
+    caches.match(e.request).then(cached => cached || fetch(e.request))
+  );
 });
