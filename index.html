@@ -546,6 +546,15 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 <div class="toast" id="toast"></div>
 
 <script>
+// Force cache-bust: redirect to versioned URL if needed
+(function(){
+  const v='0.95';
+  const u=new URL(location.href);
+  if(u.searchParams.get('v')!==v){
+    u.searchParams.set('v',v);
+    location.replace(u.toString());
+  }
+})();
 const CLIENT_ID='493780737176-ajl3bc41qkn92ufe2qvqhs4d6aeks22d.apps.googleusercontent.com';
 const SHEET_ID='1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
 const BUDGET_SHEET='Budget';
@@ -1594,11 +1603,4 @@ function updateSummaryCards(){
   const[cy,cm]=activeBudgetMonth.split('-');
   const monthRows=budgetData.filter(r=>r.date.startsWith(cy+'-'+cm));
   const ti=monthRows.reduce((s,r)=>s+r.income,0);
-  const te=monthRows.reduce((s,r)=>s+r.totalExpenses,0);
-  const todayIso=localDateIso();
-  const last=monthRows.length?monthRows[monthRows.length-1]:null;
-  let rtVal,rtSub,rtClass;
-  if(runningTotalMode==='eom'){
-    if(eomDate){
-      // Custom date selected via calendar
-      
+  const te=monthRows.reduce((s,r)=>s+r.totalExp
