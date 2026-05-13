@@ -7,8 +7,13 @@
 <meta http-equiv="Expires" content="0">
 <title>NotAnotherBudgetApp</title>
 <script>
-// Always redirect to the latest versioned file — change v= on every deploy
-location.replace('NotAnotherBudgetApp.html?v=0.95');
+// Don't redirect if this is an OAuth callback — pass the code through
+const p = new URLSearchParams(location.search);
+if (p.get('code')) {
+  location.replace('NotAnotherBudgetApp.html' + location.search);
+} else {
+  location.replace('NotAnotherBudgetApp.html?v=0.95');
+}
 </script>
 </head>
 <body></body>
