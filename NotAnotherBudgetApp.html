@@ -546,6 +546,16 @@ select.form-input{-webkit-appearance:none;appearance:none;background-image:url("
 <div class="toast" id="toast"></div>
 
 <script>
+// Unregister any stale service workers on first load
+if('serviceWorker' in navigator){
+  navigator.serviceWorker.getRegistrations().then(regs=>{
+    regs.forEach(r=>r.unregister());
+    if(regs.length>0&&!sessionStorage.getItem('sw_cleared')){
+      sessionStorage.setItem('sw_cleared','1');
+      location.reload();
+    }
+  });
+}
 const CLIENT_ID='493780737176-ajl3bc41qkn92ufe2qvqhs4d6aeks22d.apps.googleusercontent.com';
 const SHEET_ID='1l8u9543sabr2_MpavG6hA-1FlM-nn1xL2NEVh_sO2Go';
 const BUDGET_SHEET='Budget';
