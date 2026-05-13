@@ -745,14 +745,22 @@ async function handleCallback(){
   const code=params.get('code'),state=params.get('state');
   if(!code)return false;
   history.replaceState({},'',location.pathname);
-  if(state!==ls('oauth_state')){showToast('Auth state mismatch',3000);return false}
-  const secret=ls('budget_secret');if(!secret)return false;
+  const savedState=ls('oauth_state');
+  if(state!==savedState){
+    alert('State mismatch.\nGot: '+state+'\nExpected: '+savedState);
+    return false;
+  }
+  const secret=ls('budget_secret');
+  if(!secret){
+    alert('No client secret in storage');
+    return false;
+  }
   try{
     const res=await fetch('https://oauth2.googleapis.com/token',{method:'POST',
       headers:{'Content-Type':'application/x-www-form-urlencoded'},
       body:new URLSearchParams({code,client_id:CLIENT_ID,client_secret:secret,redirect_uri:REDIRECT_URI,grant_type:'authorization_code'})});
     const data=await res.json();
-    if(data.error)throw new Error(data.error_description||data.error);
+    if(data.error){alert('Token error: '+data.error+'\n'+data.error_description);throw new Error(data.error_description||data.error);}
     accessToken=data.access_token;tokenExpiry=Date.now()+(data.expires_in*1000);
     saveToken(accessToken,tokenExpiry);
     if(data.refresh_token)ls('budget_refresh',data.refresh_token);
